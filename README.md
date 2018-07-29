@@ -26,7 +26,7 @@ List of supported installation setups for panel and daemon (installations suppor
 |                   | 18.04   | :white_check_mark: |
 | Debian            | 8       | :red_circle:       |
 |                   | 9       | :white_check_mark: |
-| CentOS            | 6       | :red_circle        |
+| CentOS            | 6       | :red_circle:       |
 |                   | 7       | :white_check_mark: |
 
 # Using the installation scripts
