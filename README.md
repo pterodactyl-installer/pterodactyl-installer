@@ -1,4 +1,4 @@
-# pterodactyl-installer
+# :bird: pterodactyl-installer
 
 Scripts for installing Pterodactyl.
 
@@ -10,10 +10,10 @@ List of supported installation setups for panel and daemon.
 
 | Operating System  | Version | nginx support | Apache support |
 | ----------------- | ------- | ------------------ | ------------------ |
-| Ubuntu            | 16.04   | :white_check_mark: | :white_check_mark: |
-|                   | 18.04   | :white_check_mark: | :white_check_mark: |
-| Debian            | 8       | :white_check_mark: | :white_check_mark: |
-|                   | 9       | :white_check_mark: | :white_check_mark: |
-| CentOS            | 7       | :white_check_mark: | :white_check_mark: |
+| Ubuntu            | 16.04   | :white_check_mark: | :red_circle: |
+|                   | 18.04   | :white_check_mark: | :red_circle: |
+| Debian            | 8       | :white_check_mark: | :red_circle: |
+|                   | 9       | :white_check_mark: | :red_circle: |
+| CentOS            | 7       | :white_check_mark: | :red_circle: |
 
 ### Supported daemon operating systemss
