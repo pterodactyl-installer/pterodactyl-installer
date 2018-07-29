@@ -1,0 +1,16 @@
+[Unit]
+Description=Pterodactyl Wings Daemon
+After=docker.service
+
+[Service]
+User=root
+#Group=some_group
+WorkingDirectory=/srv/daemon
+LimitNOFILE=4096
+PIDFile=/var/run/wings/daemon.pid
+ExecStart=/usr/bin/node /srv/daemon/src/index.js
+Restart=on-failure
+StartLimitInterval=600
+
+[Install]
+WantedBy=multi-user.target
