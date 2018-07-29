@@ -86,14 +86,14 @@ function configure {
 # set the correct folder permissions depending on OS and webserver
 function set_folder_permissions {
   # if os is ubuntu or debian, we do this
-  if ["$OS" == "debian" ] || ["$OS" == "ubuntu" ]; then
+  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
     chown -R www-data:www-data *
-  elif ["$OS" == "centos"] && ["$WEBSERVER" == "nginx" ]; then
+  elif [ "$OS" == "centos"] && [ "$WEBSERVER" == "nginx" ]; then
     chown -R nginx:nginx *
-  elif ["$OS" == "centos"] && ["$WEBSERVER" == "apache" ]; then
+  elif [ "$OS" == "centos"] && [ "$WEBSERVER" == "apache" ]; then
     chown -R apache:apache *
   else
-    print_error Invalid webserver and OS setup.
+    print_error "Invalid webserver and OS setup."
     exit 1
   fi
 }
@@ -164,6 +164,9 @@ function ubuntu_dep {
 function debian_dep {
   echo "* Installing dependencies for Debian.."
 
+  # MariaDB need dirmngr
+  apt -y install dirmngr
+
   # install PHP 7.2 using Sury's rep instead of PPA
   # this guide shows how: https://wiki.mrkakisen.net/index.php?title=Installing_PHP_7.2_on_Debian_8_and_9
   apt install ca-certificates apt-transport-https lsb-release -y
@@ -227,11 +230,19 @@ function configure_nginx {
   fi
 
   if [ "$OS" == "centos" ]; then
+      # remove default config
+      rm -rf /etc/nginx/conf.d/default
+
+      # download new config
       curl -o /etc/nginx/conf.d/pterodactyl.conf https://raw.githubusercontent.com/MrKaKisen/pterodactyl-installer/master/configs/$DL_FILE
 
       # replace all <domain> places with the correct domain
       sed -i -e "s/<domain>/${FQDN}/g" /etc/nginx/conf.d/pterodactyl.conf
   else
+      # remove default config
+      rm -rf /etc/nginx/sites-enabled/default
+
+      # download new config
       curl -o /etc/nginx/sites-available/pterodactyl.conf https://raw.githubusercontent.com/MrKaKisen/pterodactyl-installer/master/configs/$DL_FILE
 
       # replace all <domain> places with the correct domain
@@ -257,7 +268,7 @@ function configure_apache {
 function perform_install {
   echo "* Starting installation.. this might take a while!"
   # do different things depending on OS
-  if ["$OS" == "ubuntu" ]; then
+  if [ "$OS" == "ubuntu" ]; then
     apt_update
     ubuntu_dep
     install_composer
@@ -266,7 +277,7 @@ function perform_install {
     configure
     insert_cronjob
     install_pteroq
-  elif ["$OS" == "debian" ]; then
+  elif [ "$OS" == "debian" ]; then
     apt_update
     debian_dep
     install_composer
@@ -275,23 +286,23 @@ function perform_install {
     configure
     insert_cronjob
     install_pteroq
-  elif ["$OS" == "centos" ]; then
+  elif [ "$OS" == "centos" ]; then
     # coming soon
-    print_error CentOS support is coming soon.
+    print_error "CentOS support is coming soon."
     exit 1
   else
-    # run welcome script again
-    print_error OS not supported.
+    # exit
+    print_error "OS not supported."
     exit 1
   fi
 
   # perform webserver configuration
-  if ["$WEBSERVER" == "nginx" ]; then
+  if [ "$WEBSERVER" == "nginx" ]; then
     configure_nginx
-  elif ["$WEBSERVER" == "apache" ]; then
+  elif [ "$WEBSERVER" == "apache" ]; then
     configure_apache
   else
-    print_error Invalid webserver.
+    print_error "Invalid webserver."
     exit 1
   fi
 
@@ -312,12 +323,12 @@ function main {
   echo -n "* Select webserver to install pterodactyl panel with: "
   read WEBSERVER_INPUT
 
-  if ["$WEBSERVER_INPUT" == "1" ]; then
+  if [ "$WEBSERVER_INPUT" == "1" ]; then
     WEBSERVER="nginx"
   else
-    # run welcome script again
-    print_error Invalid webserver.
-    welcome
+    # exit
+    print_error "Invalid webserver."
+    main
   fi
 
   # set database credentials
@@ -353,23 +364,25 @@ function main {
   echo -n "* Assume SSL or not? (yes/no): "
   read ASSUME_SSL_INPUT
 
-  if ["$ASSUME_SSL_INPUT" == "yes" ]; then
+  if [ "$ASSUME_SSL_INPUT" == "yes" ]; then
     ASSUME_SSL=true
+  elif [ "$ASSUME_SSL_INPUT" == "no" ]; then
+    ASSUME_SSL=false
   else
-    print_error Invalid answer. Value set to no.
+    print_error "Invalid answer. Value set to no."
     ASSUME_SSL=false
   fi
 
   # confirm installation
   echo -e -n "\n* Inital configuration done. Do you wan't to continue with installation? (y/n): "
   read CONFIRM
-  if ["$CONFIRM" == "y" ]; then
+  if [ "$CONFIRM" == "y" ]; then
     perform_install
-  elif ["$CONFIRM" == "n" ]; then
+  elif [ "$CONFIRM" == "n" ]; then
     exit 0
   else
     # run welcome script again
-    print_error Invalid confirm. Will exit.
+    print_error "Invalid confirm. Will exit."
     exit 1
   fi
 
