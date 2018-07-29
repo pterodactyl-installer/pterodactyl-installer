@@ -14,12 +14,22 @@ WEBSERVER="nginx"
 OS="debian" # can
 FQDN="pterodactyl.panel"
 
+# default MySQL credentials
+MYSQL_DB="pterodactyl"
+MYSQL_USER="pterodactyl"
+MYSQL_PASSWORD="somePassword"
+
+# asume SSL
+ASSUME_SSL=false
+
 # visual functions
 function print_error {
   COLOR_RED='\033[0;31m'
   COLOR_NC='\033[0m'
 
-  echo -e "* ${COLOR_RED}error${COLOR_NC}: $1"
+  echo ""
+  echo -e "* ${COLOR_RED}ERROR${COLOR_NC}: $1"
+  echo ""
 }
 
 # other functions
@@ -27,7 +37,10 @@ function detect_distro {
   OS="$(python -c 'import platform ; print platform.dist()[0]')" | awk '{print tolower($0)}'
 }
 
-# main installation functions
+#################################
+## main installation functions ##
+#################################
+
 function install_composer {
   echo "* Installing composer.."
   curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
@@ -109,7 +122,21 @@ function install_pteroq {
   echo "* Installed pteroq!"
 }
 
-# OS specific install functions
+function create_database {
+  echo "* Creating MySQL database & user.."
+
+  mysql -e "CREATE USER '${MYSQL_USER}'@'127.0.0.1' IDENTIFIED BY '${MYSQL_PASSWORD}';"
+  mysql -e "CREATE DATABASE ${MYSQL_DB};"
+  mysql -e "GRANT ALL PRIVILEGES ON ${MYSQL_DB}.* TO '${MYSQL_USER}'@'127.0.0.1' WITH GRANT OPTION;"
+  mysql -e "FLUSH PRIVILEGES;"
+
+  echo "* MySQL database created!"
+}
+
+##################################
+# OS specific install functions ##
+##################################
+
 function apt_update {
   apt update -y && apt upgrade -y
 }
@@ -133,7 +160,6 @@ function ubuntu_dep {
 
   echo "* Dependencies for Ubuntu installed!"
 }
-
 
 function debian_dep {
   echo "* Installing dependencies for Debian.."
@@ -175,7 +201,7 @@ function centos_dep {
   curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
 
   # install dependencies
-  yum -y install install php72 php72-cli php72-gd php72-mysql php72-pdo php72-mbstring php72-tokenizer php72-bcmath php72-xml php72-fpm php72-curl php72-zip mariadb-server nginx curl tar unzip git redis
+  yum -y install install php72 php72-cli php72-php-gd php72-php-mysql php72-php-pdo php72-php-mbstring php72-php-tokenizer php72-php-bcmath php72-php-xml php72-php-fpm php72-php-curl php72-php-zip mariadb-server nginx curl tar unzip git redis
 
   # enable services
   systemctl start redis
@@ -186,17 +212,57 @@ function centos_dep {
   echo "* Dependencies for CentOS installed!"
 }
 
+
+#######################################
+## WEBSERVER CONFIGURATION FUNCTIONS ##
+#######################################
+
+function configure_nginx {
+  echo "* Configuring nginx .."
+
+  if [ "$ASSUME_SSL" == true ]; then
+    DL_FILE="nginx_ssl.conf"
+  else
+    DL_FILE="nginx.conf"
+  fi
+
+  if [ "$OS" == "centos" ]; then
+      curl -o /etc/nginx/conf.d/pterodactyl.conf https://raw.githubusercontent.com/MrKaKisen/pterodactyl-installer/master/configs/$DL_FILE
+
+      # replace all <domain> places with the correct domain
+      sed -i -e "s/<domain>/${FQDN}/g" /etc/nginx/conf.d/pterodactyl.conf
+  else
+      curl -o /etc/nginx/sites-available/pterodactyl.conf https://raw.githubusercontent.com/MrKaKisen/pterodactyl-installer/master/configs/$DL_FILE
+
+      # replace all <domain> places with the correct domain
+      sed -i -e "s/<domain>/${FQDN}/g" /etc/nginx/sites-available/pterodactyl.conf
+
+      # enable pterodactyl
+      sudo ln -s /etc/nginx/sites-available/pterodactyl.conf /etc/nginx/sites-enabled/pterodactyl.conf
+  fi
+
+  # restart nginx
+  systemctl restart nginx
+  echo "* nginx configured!"
+}
+
+function configure_apache {
+  echo "soon .."
+}
+
 ####################
 ## MAIN FUNCTIONS ##
 ####################
 
 function perform_install {
+  echo "* Starting installation.. this might take a while!"
   # do different things depending on OS
   if ["$OS" == "ubuntu" ]; then
     apt_update
     ubuntu_dep
     install_composer
     ptdl_dl
+    create_database
     configure
     insert_cronjob
     install_pteroq
@@ -205,6 +271,7 @@ function perform_install {
     debian_dep
     install_composer
     ptdl_dl
+    create_database
     configure
     insert_cronjob
     install_pteroq
@@ -217,6 +284,17 @@ function perform_install {
     print_error OS not supported.
     exit 1
   fi
+
+  # perform webserver configuration
+  if ["$WEBSERVER" == "nginx" ]; then
+    configure_nginx
+  elif ["$WEBSERVER" == "apache" ]; then
+    configure_apache
+  else
+    print_error Invalid webserver.
+    exit 1
+  fi
+
 }
 
 function main {
@@ -229,6 +307,8 @@ function main {
   echo "* [1] - nginx"
   echo -e "\e[9m* [2] - apache\e[0m - \e[1mApache not supported yet\e[0m"
 
+  echo ""
+
   echo -n "* Select webserver to install pterodactyl panel with: "
   read WEBSERVER_INPUT
 
@@ -240,7 +320,47 @@ function main {
     welcome
   fi
 
-  # confgirm installation
+  # set database credentials
+  echo "########################################################################"
+  echo "* Database configuration."
+  echo ""
+  echo "* This will be the credentials used for commuication between the MySQL"
+  echo "* database and the panel. You do not need to create the database"
+  echo "* before running this script, the script will do that for you."
+  echo ""
+
+  echo -n "* Database name (panel): "
+  read MYSQL_DB
+
+  echo -n "* Username (pterodactyl): "
+  read MYSQL_USER
+
+  echo -n "* Password (use something strong): "
+  read MYSQL_PASSWORD
+
+  echo "########################################################################"
+
+  # set FQDN
+
+  echo -n "* Set the FQDN of this panel (panel hostname): "
+  read FQDN
+
+  echo ""
+
+  echo "* This installer does not configure Let's Encrypt, but depending on if you're"
+  echo "* going to use SSL or not, we need to know which webserver configuration to use."
+  echo "* If you're unsure, use (no). "
+  echo -n "* Assume SSL or not? (yes/no): "
+  read ASSUME_SSL_INPUT
+
+  if ["$ASSUME_SSL_INPUT" == "yes" ]; then
+    ASSUME_SSL=true
+  else
+    print_error Invalid answer. Value set to no.
+    ASSUME_SSL=false
+  fi
+
+  # confirm installation
   echo -e -n "\n* Inital configuration done. Do you wan't to continue with installation? (y/n): "
   read CONFIRM
   if ["$CONFIRM" == "y" ]; then
@@ -255,6 +375,16 @@ function main {
 
 }
 
+function goodbye {
+  echo "##############################################################"
+  echo "* Pterodactyl Panel successfully installed @ $FQDN"
+  echo ""
+  echo "* Installation is using $WEBSERVER on $OS"
+  echo "##############################################################"
+
+  exit 0
+}
 
 # start main function
-main()
+main
+goodbye

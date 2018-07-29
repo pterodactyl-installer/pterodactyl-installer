@@ -1,6 +1,6 @@
 # :bird: pterodactyl-installer
 
-Scripts for installing Pterodactyl.
+Scripts for installing Pterodactyl on both Panel & Daemon.
 
 # Supported installations
 
