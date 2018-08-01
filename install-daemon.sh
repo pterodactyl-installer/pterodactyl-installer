@@ -9,6 +9,13 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
+# version
+VERSION="v0.5.6"
+
+# DL urls
+DL_URL="https://github.com/pterodactyl/daemon/releases/download/$VERSION/daemon.tar.gz"
+CONFIGS_URL="https://raw.githubusercontent.com/MrKaKisen/pterodactyl-installer/master/configs"
+
 # variables
 OS="debian"
 
@@ -153,7 +160,7 @@ function ptdl_dl {
   mkdir -p /srv/daemon /srv/daemon-data
   cd /srv/daemon
 
-  curl -L https://github.com/pterodactyl/daemon/releases/download/v0.5.6/daemon.tar.gz | tar --strip-components=1 -xzv
+  curl -L $DL_URL | tar --strip-components=1 -xzv
   npm install --only=production
 
   echo "* Done."
@@ -161,7 +168,7 @@ function ptdl_dl {
 
 function systemd_file {
   echo "* Installing systemd service.."
-  curl -o /etc/systemd/system/wings.service https://raw.githubusercontent.com/MrKaKisen/pterodactyl-installer/master/configs/wings.service
+  curl -o /etc/systemd/system/wings.service $CONFIGS_URL/wings.service
   systemctl daemon-reload
   systemctl enable wings
   echo "* Installed systemd service!"

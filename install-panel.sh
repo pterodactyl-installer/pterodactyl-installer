@@ -9,6 +9,9 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
+# version
+VERSION="v0.7.9"
+
 # variables
 WEBSERVER="nginx"
 OS="debian" # can
@@ -21,6 +24,10 @@ MYSQL_PASSWORD="somePassword"
 
 # asume SSL
 ASSUME_SSL=false
+
+# DL urls
+PANEL_URL="https://github.com/pterodactyl/panel/releases/download/$VERSION/panel.tar.gz"
+CONFIGS_URL="https://raw.githubusercontent.com/MrKaKisen/pterodactyl-installer/master/configs"
 
 # visual functions
 function print_error {
@@ -52,7 +59,7 @@ function ptdl_dl {
   mkdir -p /var/www/pterodactyl
   cd /var/www/pterodactyl
 
-  curl -Lo panel.tar.gz https://github.com/pterodactyl/panel/releases/download/v0.7.9/panel.tar.gz
+  curl -Lo panel.tar.gz $PANEL_URL
   tar --strip-components=1 -xzvf panel.tar.gz
   chmod -R 755 storage/* bootstrap/cache/
 
@@ -115,7 +122,7 @@ function insert_cronjob {
 function install_pteroq {
   echo "* Installing pteroq service.."
 
-  curl -o /etc/systemd/system/pteroq.service https://raw.githubusercontent.com/MrKaKisen/pterodactyl-installer/master/configs/pteroq.service
+  curl -o /etc/systemd/system/pteroq.service $CONFIGS_URL/pteroq.service
   systemctl enable pteroq.service
   systemctl start pteroq
 
@@ -124,11 +131,12 @@ function install_pteroq {
 
 function create_database {
   echo "* Creating MySQL database & user.."
+  echo "* MySQL might ask you for the MySQL root password. If installed correctly, the installer should have asked you to set this password earlier. Use the password you set earlier here."
 
-  mysql -e "CREATE USER '${MYSQL_USER}'@'127.0.0.1' IDENTIFIED BY '${MYSQL_PASSWORD}';"
-  mysql -e "CREATE DATABASE ${MYSQL_DB};"
-  mysql -e "GRANT ALL PRIVILEGES ON ${MYSQL_DB}.* TO '${MYSQL_USER}'@'127.0.0.1' WITH GRANT OPTION;"
-  mysql -e "FLUSH PRIVILEGES;"
+  mysql -u root -e "CREATE USER '${MYSQL_USER}'@'127.0.0.1' IDENTIFIED BY '${MYSQL_PASSWORD}';"
+  mysql -u root -e "CREATE DATABASE ${MYSQL_DB};"
+  mysql -u root -e "GRANT ALL PRIVILEGES ON ${MYSQL_DB}.* TO '${MYSQL_USER}'@'127.0.0.1' WITH GRANT OPTION;"
+  mysql -u root -e "FLUSH PRIVILEGES;"
 
   echo "* MySQL database created!"
 }
@@ -234,7 +242,7 @@ function configure_nginx {
       rm -rf /etc/nginx/conf.d/default
 
       # download new config
-      curl -o /etc/nginx/conf.d/pterodactyl.conf https://raw.githubusercontent.com/MrKaKisen/pterodactyl-installer/master/configs/$DL_FILE
+      curl -o /etc/nginx/conf.d/pterodactyl.conf $CONFIGS_URL/$DL_FILE
 
       # replace all <domain> places with the correct domain
       sed -i -e "s/<domain>/${FQDN}/g" /etc/nginx/conf.d/pterodactyl.conf
@@ -243,7 +251,7 @@ function configure_nginx {
       rm -rf /etc/nginx/sites-enabled/default
 
       # download new config
-      curl -o /etc/nginx/sites-available/pterodactyl.conf https://raw.githubusercontent.com/MrKaKisen/pterodactyl-installer/master/configs/$DL_FILE
+      curl -o /etc/nginx/sites-available/pterodactyl.conf $CONFIGS_URL/$DL_FILE
 
       # replace all <domain> places with the correct domain
       sed -i -e "s/<domain>/${FQDN}/g" /etc/nginx/sites-available/pterodactyl.conf
