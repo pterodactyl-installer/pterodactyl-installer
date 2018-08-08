@@ -195,8 +195,27 @@ function apt_update {
   apt update -y && apt upgrade -y
 }
 
-function ubuntu_dep {
-  echo "* Installing dependencies for Ubuntu.."
+function ubuntu18_dep {
+  echo "* Installing dependencies for Ubuntu 18.."
+
+  # Add "add-apt-repository" command
+  apt -y install software-properties-common
+
+  # Add additional repositories for PHP, Redis, and MariaDB
+  add-apt-repository -y ppa:chris-lea/redis-server
+  curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
+
+  # Update repositories list
+  apt update
+
+  # Install Dependencies
+  apt -y install php7.2 php7.2-cli php7.2-gd php7.2-mysql php7.2-common php7.2-xml php7.2-curl mariadb-server nginx curl tar unzip git redis-server
+
+  echo "* Dependencies for Ubuntu installed!"
+}
+
+function ubuntu16_dep {
+  echo "* Installing dependencies for Ubuntu 16.."
 
   # Add "add-apt-repository" command
   apt -y install software-properties-common
@@ -324,7 +343,15 @@ function perform_install {
   # do different things depending on OS
   if [ "$OS" == "ubuntu" ]; then
     apt_update
-    ubuntu_dep
+    # prints the version, if it's 18 or 16
+    if [ "$(python -c 'import platform ; print platform.dist()[1].split(".")[0]')" == "18"]; then
+      ubuntu18_dep
+    elif [ "$(python -c 'import platform ; print platform.dist()[1].split(".")[0]')" == "16"]; then
+      ubuntu16_dep
+    else
+      print_error "Unsupported version of Ubuntu."
+      exit 1
+    fi
     install_composer
     ptdl_dl
     create_database
@@ -342,7 +369,7 @@ function perform_install {
     install_pteroq
   elif [ "$OS" == "centos" ]; then
     # coming soon
-    print_error "CentOS support is coming soon."
+    print_error "CentOS is currently not supported, but will be in the furture."
     exit 1
   else
     # exit
