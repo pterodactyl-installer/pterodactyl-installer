@@ -9,6 +9,14 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
+# check for curl
+CURLPATH="$(which curl)"
+if [ -z "$CURLPATH" ]; then
+    echo "* curl is required in order for this script to work."
+    echo "* install using apt on Debian/Ubuntu or yum on CentOS"
+    exit 1
+fi
+
 # define version using information from GitHub
 get_latest_release() {
   curl --silent "https://api.github.com/repos/$1/releases/latest" | # Get latest release from GitHub api
@@ -35,6 +43,15 @@ function print_error {
   echo -e "* ${COLOR_RED}ERROR${COLOR_NC}: $1"
   echo ""
 }
+
+function print_brake {
+  for ((n=0;n<$1;n++));
+    do
+      echo -n "#"
+    done
+    echo ""
+}
+
 
 # other functions
 function detect_distro {
@@ -194,18 +211,18 @@ function perform_install {
 }
 
 function main {
-  echo "########################################"
+  print_brake 42
   echo "* Pterodactyl daemon installation script "
   echo "* Detecting operating system."
   detect_distro
   echo "* Running $OS."
-  echo "#########################################"
+  print_brake 42
   echo "* The installer will install Docker, required dependencies for the daemon"
   echo "* as well as the daemon itself. But it is till required to create the node"
   echo "* on the panel and then place the configuration on the node after the"
   echo "* installation finishes. Read more here:"
   echo "* https://pterodactyl.io/daemon/installing.html#configure-daemon"
-  echo "#########################################"
+  print_brake 42
   echo -n "* Proceed with installation? (y/n): "
 
   read CONFIRM
@@ -222,13 +239,13 @@ function main {
 
 function goodbye {
   echo ""
-  echo "############################"
+  print_brake 70
   echo "* Installation finished."
   echo ""
   echo "* Make sure you create the node within the panel and then "
   echo "* copy the config to the node. You may then start the daemon using "
   echo "* systemctl start wings"
-  echo "############################"
+  print_brake 70
   echo ""
 }
 

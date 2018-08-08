@@ -9,6 +9,14 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
+# check for curl
+CURLPATH="$(which curl)"
+if [ -z "$CURLPATH" ]; then
+    echo "* curl is required in order for this script to work."
+    echo "* install using apt on Debian/Ubuntu or yum on CentOS"
+    exit 1
+fi
+
 # define version using information from GitHub
 get_latest_release() {
   curl --silent "https://api.github.com/repos/$1/releases/latest" | # Get latest release from GitHub api
@@ -46,6 +54,14 @@ function print_error {
   echo ""
 }
 
+function print_brake {
+  for ((n=0;n<$1;n++));
+    do
+      echo -n "#"
+    done
+    echo ""
+}
+
 # other functions
 function detect_distro {
   OS="$(python -c 'import platform ; print platform.dist()[0]')" | awk '{print tolower($0)}'
@@ -78,13 +94,22 @@ function ptdl_dl {
 }
 
 function configure {
+  print_brake 88
   echo "* Please follow the steps below. The installer will ask you for configuration details."
+  print_brake 88
+  echo ""
   php artisan p:environment:setup
 
+  print_brake 67
   echo "* The installer will now ask you for MySQL database credentials."
+  print_brake 67
+  echo ""
   php artisan p:environment:database
 
+  print_brake 70
   echo "* The installer will now ask you for mail setup / mail credentials."
+  print_brake 70
+  echo ""
   php artisan p:environment:mail
 
   # configures database
@@ -138,12 +163,18 @@ function install_pteroq {
 
 function create_database {
   echo "* Creating MySQL database & user.."
-  echo "* MySQL might ask you for the MySQL root password. If installed correctly, the installer should have asked you to set this password earlier. Use the password you set earlier here."
+  echo "* The script should have asked you to set the MySQL root password earlier (not to be confused with the pterodactyl database user password)"
+  echo "* Enter the MySQL root password below."
 
-  mysql -u root -e "CREATE USER '${MYSQL_USER}'@'127.0.0.1' IDENTIFIED BY '${MYSQL_PASSWORD}';"
-  mysql -u root -e "CREATE DATABASE ${MYSQL_DB};"
-  mysql -u root -e "GRANT ALL PRIVILEGES ON ${MYSQL_DB}.* TO '${MYSQL_USER}'@'127.0.0.1' WITH GRANT OPTION;"
-  mysql -u root -e "FLUSH PRIVILEGES;"
+  echo -n "* Password: "
+  read MYSQL_ROOT_PASSWORD
+
+  echo "* Performing MySQL queries.."
+
+  mysql -u root -p'$MYSQL_ROOT_PASSWORD' -e "CREATE USER '${MYSQL_USER}'@'127.0.0.1' IDENTIFIED BY '${MYSQL_PASSWORD}';"
+  mysql -u root -p'$MYSQL_ROOT_PASSWORD' -e "CREATE DATABASE ${MYSQL_DB};"
+  mysql -u root -p'$MYSQL_ROOT_PASSWORD' -e "GRANT ALL PRIVILEGES ON ${MYSQL_DB}.* TO '${MYSQL_USER}'@'127.0.0.1' WITH GRANT OPTION;"
+  mysql -u root -p'$MYSQL_ROOT_PASSWORD' -e "FLUSH PRIVILEGES;"
 
   echo "* MySQL database created!"
 }
@@ -324,12 +355,12 @@ function perform_install {
 }
 
 function main {
-  echo "########################################"
+  print_brake 40
   echo "* Pterodactyl panel installation script "
   echo "* Detecting operating system."
   detect_distro
   echo "* Running $OS."
-  echo "#########################################"
+  print_brake 40
   echo "* [1] - nginx"
   echo -e "\e[9m* [2] - apache\e[0m - \e[1mApache not supported yet\e[0m"
 
@@ -347,7 +378,7 @@ function main {
   fi
 
   # set database credentials
-  echo "########################################################################"
+  print_brake 72
   echo "* Database configuration."
   echo ""
   echo "* This will be the credentials used for commuication between the MySQL"
@@ -364,7 +395,7 @@ function main {
   echo -n "* Password (use something strong): "
   read MYSQL_PASSWORD
 
-  echo "########################################################################"
+  print_brake 72
 
   # set FQDN
 
@@ -404,11 +435,11 @@ function main {
 }
 
 function goodbye {
-  echo "##############################################################"
+  print_brake 62
   echo "* Pterodactyl Panel successfully installed @ $FQDN"
   echo ""
   echo "* Installation is using $WEBSERVER on $OS"
-  echo "##############################################################"
+  print_brake 62
 
   exit 0
 }
