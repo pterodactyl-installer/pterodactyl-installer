@@ -17,6 +17,14 @@ if [ -z "$CURLPATH" ]; then
     exit 1
 fi
 
+# check for python
+PYTHONPATH="$(which python)"
+if [ -z "$PYTHONPATH" ]; then
+    echo "* Python is required in order for this script to work."
+    echo "* install using apt on Debian/Ubuntu or yum on CentOS"
+    exit 1
+fi
+
 # define version using information from GitHub
 get_latest_release() {
   curl --silent "https://api.github.com/repos/$1/releases/latest" | # Get latest release from GitHub api
@@ -64,7 +72,7 @@ function print_brake {
 
 # other functions
 function detect_distro {
-  OS="$(python -c 'import platform ; print platform.dist()[0]')" | awk '{print tolower($0)}'
+  echo "$(python -c 'import platform ; print platform.dist()[0]')" | awk '{print tolower($0)}'
 }
 
 #################################
@@ -358,7 +366,7 @@ function main {
   print_brake 40
   echo "* Pterodactyl panel installation script "
   echo "* Detecting operating system."
-  detect_distro
+  OS=$(detect_distro);
   echo "* Running $OS."
   print_brake 40
   echo "* [1] - nginx"
