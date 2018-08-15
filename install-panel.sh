@@ -172,19 +172,23 @@ function install_pteroq {
 function create_database {
   echo "* Creating MySQL database & user.."
   echo "* The script should have asked you to set the MySQL root password earlier (not to be confused with the pterodactyl database user password)"
-  echo "* Enter the MySQL root password below."
-
-  echo -n "* Password: "
-  read MYSQL_ROOT_PASSWORD
+  echo "* MySQL will now ask you to enter the password before each command."
 
   echo "* Performing MySQL queries.."
 
-  mysql -u root -p'$MYSQL_ROOT_PASSWORD' -e "CREATE USER '${MYSQL_USER}'@'127.0.0.1' IDENTIFIED BY '${MYSQL_PASSWORD}';"
-  mysql -u root -p'$MYSQL_ROOT_PASSWORD' -e "CREATE DATABASE ${MYSQL_DB};"
-  mysql -u root -p'$MYSQL_ROOT_PASSWORD' -e "GRANT ALL PRIVILEGES ON ${MYSQL_DB}.* TO '${MYSQL_USER}'@'127.0.0.1' WITH GRANT OPTION;"
-  mysql -u root -p'$MYSQL_ROOT_PASSWORD' -e "FLUSH PRIVILEGES;"
+  echo "* Create MySQL user."
+  mysql -u root -p -e "CREATE USER '${MYSQL_USER}'@'127.0.0.1' IDENTIFIED BY '${MYSQL_PASSWORD}';"
 
-  echo "* MySQL database created!"
+  echo "* Create database."
+  mysql -u root -p -e "CREATE DATABASE ${MYSQL_DB};"
+
+  echo "* Grant privileges."
+  mysql -u root -p -e "GRANT ALL PRIVILEGES ON ${MYSQL_DB}.* TO '${MYSQL_USER}'@'127.0.0.1' WITH GRANT OPTION;"
+
+  echo "* Flush privileges."
+  mysql -u root -p -e "FLUSH PRIVILEGES;"
+
+  echo "* MySQL database created & configured!"
 }
 
 ##################################
