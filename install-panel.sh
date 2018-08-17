@@ -52,6 +52,9 @@ ASSUME_SSL=false
 PANEL_URL="https://github.com/pterodactyl/panel/releases/download/$VERSION/panel.tar.gz"
 CONFIGS_URL="https://raw.githubusercontent.com/MrKaKisen/pterodactyl-installer/master/configs"
 
+# paths
+SOURCES_PATH="/etc/apt/sources.list"
+
 # visual functions
 function print_error {
   COLOR_RED='\033[0;31m'
@@ -292,6 +295,20 @@ function centos_dep {
   echo "* Dependencies for CentOS installed!"
 }
 
+#################################
+## OTHER OS SPECIFIC FUNCTIONS ##
+#################################
+
+function ubuntu_universedep {
+  if grep -q universe "$SOURCES_PATH"; then
+    # even if it detects it as already existent, we'll still run the apt command to make sure
+    add-apt-repository universe
+    echo "* Ubuntu universe repo already exists."
+  else
+    add-apt-repository universe
+  fi
+}
+
 
 #######################################
 ## WEBSERVER CONFIGURATION FUNCTIONS ##
@@ -346,11 +363,12 @@ function perform_install {
   echo "* Starting installation.. this might take a while!"
   # do different things depending on OS
   if [ "$OS" == "ubuntu" ]; then
+    ubuntu_universedep
     apt_update
     # prints the version, if it's 18 or 16
-    if [ "$(python -c 'import platform ; print platform.dist()[1].split(".")[0]')" == "18"]; then
+    if [ "$(python -c 'import platform ; print platform.dist()[1].split(".")[0]')" == "18" ]; then
       ubuntu18_dep
-    elif [ "$(python -c 'import platform ; print platform.dist()[1].split(".")[0]')" == "16"]; then
+    elif [ "$(python -c 'import platform ; print platform.dist()[1].split(".")[0]')" == "16" ]; then
       ubuntu16_dep
     else
       print_error "Unsupported version of Ubuntu."
