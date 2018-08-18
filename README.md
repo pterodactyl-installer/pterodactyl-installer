@@ -12,7 +12,8 @@ List of supported installation setups for panel and daemon (installations suppor
 
 | Operating System  | Version | nginx support      | Apache support |
 | ----------------- | ------- | ------------------ | -------------- |
-| Ubuntu            | 16.04   | :white_check_mark: | :red_circle:   |
+| Ubuntu            | 14.04   | :red_circle:       | :red_circle:   |
+|                   | 16.04   | :white_check_mark: | :red_circle:   |
 |                   | 18.04   | :white_check_mark: | :red_circle:   |
 | Debian            | 8       | :white_check_mark: | :red_circle:   |
 |                   | 9       | :white_check_mark: | :red_circle:   |
@@ -22,7 +23,8 @@ List of supported installation setups for panel and daemon (installations suppor
 
 | Operating System  | Version | Supported          |
 | ----------------- | ------- | ------------------ |
-| Ubuntu            | 16.04   | :white_check_mark: |
+| Ubuntu            | 14.04   | :red_circle:       |
+|                   | 16.04   | :white_check_mark: |
 |                   | 18.04   | :white_check_mark: |
 | Debian            | 8       | :red_circle:       |
 |                   | 9       | :white_check_mark: |
