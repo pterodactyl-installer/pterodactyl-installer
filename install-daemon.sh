@@ -66,6 +66,32 @@ function detect_distro {
   echo "$(python -c 'import platform ; print platform.dist()[0]')" | awk '{print tolower($0)}'
 }
 
+function detect_os_version {
+  echo "$(python -c 'import platform ; print platform.dist()[1].split(".")[0]')"
+}
+
+function check_os_comp {
+  if [ "$OS" == "ubuntu" ]; then
+    if [ "$OS_VERSION" == "16" ]; then
+      echo "* $OS $OS_VERSION is supported."
+    elif [ "$OS_VERSION" == "18" ]; then
+      echo "* $OS $OS_VERSION is supported."
+    else
+      echo "* $OS $OS_VERSION is not supported."
+      print_error "Unsupported OS version"
+    fi
+  elif [ "$OS" == "debian" ]; then
+    if [ "$OS_VERSION" == "9" ]; then
+      echo "* $OS $OS_VERSION is supported."
+    else
+      echo "* $OS $OS_VERSION is not supported."
+      print_error "Unsupported OS version"
+    fi
+  else
+    print_error "Unsupported OS"
+  fi
+}
+
 ############################
 ## INSTALLATION FUNCTIONS ##
 ############################
@@ -223,8 +249,13 @@ function main {
   echo "* Pterodactyl daemon installation script "
   echo "* Detecting operating system."
   OS=$(detect_distro);
-  echo "* Running $OS."
+  OS_VERSION=$(detect_os_version);
+  echo "* Running $OS version $OS_VERSION."
   print_brake 42
+
+  # checks if the system is compatible with this installation script
+  check_os_comp
+
   echo "* The installer will install Docker, required dependencies for the daemon"
   echo "* as well as the daemon itself. But it is till required to create the node"
   echo "* on the panel and then place the configuration on the node after the"

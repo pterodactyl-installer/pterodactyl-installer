@@ -11,7 +11,7 @@ Installations working at the moment. This file is temporary and will only exist 
 |                   | 9       | :white_check_mark: |
 | CentOS            | 7       | :red_circle:       |
 
-### Supported daemon operating systems
+### Working daemon operating systems
 
 | Operating System  | Version | Tested             |
 | ----------------- | ------- | ------------------ |

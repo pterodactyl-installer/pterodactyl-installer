@@ -78,6 +78,34 @@ function detect_distro {
   echo "$(python -c 'import platform ; print platform.dist()[0]')" | awk '{print tolower($0)}'
 }
 
+function detect_os_version {
+  echo "$(python -c 'import platform ; print platform.dist()[1].split(".")[0]')"
+}
+
+function check_os_comp {
+  if [ "$OS" == "ubuntu" ]; then
+    if [ "$OS_VERSION" == "16" ]; then
+      echo "* $OS $OS_VERSION is supported."
+    elif [ "$OS_VERSION" == "18" ]; then
+      echo "* $OS $OS_VERSION is supported."
+    else
+      echo "* $OS $OS_VERSION is not supported."
+      print_error "Unsupported OS version"
+    fi
+  elif [ "$OS" == "debian" ]; then
+    if [ "$OS_VERSION" == "8" ]; then
+      echo "* $OS $OS_VERSION is supported."
+    elif [ "$OS_VERSION" == "9" ]; then
+      echo "* $OS $OS_VERSION is supported."
+    else
+      echo "* $OS $OS_VERSION is not supported."
+      print_error "Unsupported OS version"
+    fi
+  else
+    print_error "Unsupported OS"
+  fi
+}
+
 #################################
 ## main installation functions ##
 #################################
@@ -366,9 +394,9 @@ function perform_install {
     ubuntu_universedep
     apt_update
     # prints the version, if it's 18 or 16
-    if [ "$(python -c 'import platform ; print platform.dist()[1].split(".")[0]')" == "18" ]; then
+    if [ "$OS_VERSION" == "18" ]; then
       ubuntu18_dep
-    elif [ "$(python -c 'import platform ; print platform.dist()[1].split(".")[0]')" == "16" ]; then
+    elif [ "$OS_VERSION" == "16" ]; then
       ubuntu16_dep
     else
       print_error "Unsupported version of Ubuntu."
@@ -416,8 +444,13 @@ function main {
   echo "* Pterodactyl panel installation script "
   echo "* Detecting operating system."
   OS=$(detect_distro);
-  echo "* Running $OS."
+  OS_VERSION=$(detect_os_version)
+  echo "* Running $OS version $OS_VERSION."
   print_brake 40
+
+  # checks if the system is compatible with this installation script
+  check_os_comp
+
   echo "* [1] - nginx"
   echo -e "\e[9m* [2] - apache\e[0m - \e[1mApache not supported yet\e[0m"
 
