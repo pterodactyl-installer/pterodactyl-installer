@@ -1,7 +1,10 @@
 #!/bin/bash
-# pterodactyl-installer daemon
+###########################################################
+# pterodactyl-installer for daemon
 # Copyright Vilhelm Prytz 2018
+#
 # https://github.com/mrkakisen/pterodactyl-installer
+###########################################################
 
 # check if user is root or not
 if [[ $EUID -ne 0 ]]; then

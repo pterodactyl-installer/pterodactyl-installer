@@ -1,7 +1,10 @@
 #!/bin/bash
-# pterodactyl-installer panel
+###########################################################
+# pterodactyl-installer for panel
 # Copyright Vilhelm Prytz 2018
+#
 # https://github.com/mrkakisen/pterodactyl-installer
+###########################################################
 
 # check if user is root or not
 if [[ $EUID -ne 0 ]]; then
