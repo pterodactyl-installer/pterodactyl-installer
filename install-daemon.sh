@@ -79,6 +79,7 @@ function check_os_comp {
     else
       echo "* $OS $OS_VERSION is not supported."
       print_error "Unsupported OS version"
+      exit 1
     fi
   elif [ "$OS" == "debian" ]; then
     if [ "$OS_VERSION" == "9" ]; then
@@ -86,6 +87,7 @@ function check_os_comp {
     else
       echo "* $OS $OS_VERSION is not supported."
       print_error "Unsupported OS version"
+      exit 1
     fi
   else
     print_error "Unsupported OS"

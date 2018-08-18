@@ -7,7 +7,7 @@ Installations working at the moment. This file is temporary and will only exist 
 | ----------------- | ------- | ------------------ |
 | Ubuntu            | 16.04   | :white_check_mark: |
 |                   | 18.04   | :white_check_mark: |
-| Debian            | 8       | :red_circle:       |
+| Debian            | 8       | :white_check_mark: |
 |                   | 9       | :white_check_mark: |
 | CentOS            | 7       | :red_circle:       |
 
