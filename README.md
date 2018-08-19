@@ -29,7 +29,7 @@ List of supported installation setups for panel and daemon (installations suppor
 | Debian            | 8       | :red_circle:       |
 |                   | 9       | :white_check_mark: |
 | CentOS            | 6       | :red_circle:       |
-|                   | 7       | :red_circle: Soon* |
+|                   | 7       | :white_check_mark: |
 
 _* CentOS is currently not supported, but it is coming soon._
 

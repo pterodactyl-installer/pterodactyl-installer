@@ -88,26 +88,38 @@ function detect_os_version {
 function check_os_comp {
   if [ "$OS" == "ubuntu" ]; then
     if [ "$OS_VERSION" == "16" ]; then
-      echo "* $OS $OS_VERSION is supported."
+      SUPPORTED=true
     elif [ "$OS_VERSION" == "18" ]; then
-      echo "* $OS $OS_VERSION is supported."
+      SUPPORTED=true
     else
-      echo "* $OS $OS_VERSION is not supported."
-      print_error "Unsupported OS version"
-      exit 1
+      SUPPORTED=false
     fi
   elif [ "$OS" == "debian" ]; then
     if [ "$OS_VERSION" == "8" ]; then
-      echo "* $OS $OS_VERSION is supported."
+      SUPPORTED=true
     elif [ "$OS_VERSION" == "9" ]; then
-      echo "* $OS $OS_VERSION is supported."
+      SUPPORTED=true
     else
-      echo "* $OS $OS_VERSION is not supported."
-      print_error "Unsupported OS version"
-      exit 1
+      SUPPORTED=false
+    fi
+  elif [ "$OS" == "centos" ]; then
+    if [ "$OS_VERSION" == "7" ]; then
+      # has not been fully tested yet to work, but will hopefully be soon
+      SUPPORTED=false
+    else
+      SUPPORTED=false
     fi
   else
+    SUPPORTED=true
+  fi
+
+  # exit if not supported
+  if [ "$SUPPORTED" == true ]; then
+    echo "* $OS $OS_VERSION is supported."
+  else
+    echo "* $OS $OS_VERSION is not supported"
     print_error "Unsupported OS"
+    exit 1
   fi
 }
 
@@ -171,9 +183,9 @@ function set_folder_permissions {
   # if os is ubuntu or debian, we do this
   if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
     chown -R www-data:www-data *
-  elif [ "$OS" == "centos"] && [ "$WEBSERVER" == "nginx" ]; then
+  elif [ "$OS" == "centos" ] && [ "$WEBSERVER" == "nginx" ]; then
     chown -R nginx:nginx *
-  elif [ "$OS" == "centos"] && [ "$WEBSERVER" == "apache" ]; then
+  elif [ "$OS" == "centos" ] && [ "$WEBSERVER" == "apache" ]; then
     chown -R apache:apache *
   else
     print_error "Invalid webserver and OS setup."
@@ -206,6 +218,10 @@ function install_pteroq {
 }
 
 function create_database {
+  if [ "$OS" == "centos" ]; then
+    mysql_secure_installation
+  fi
+
   echo "* Creating MySQL database & user.."
   echo "* The script should have asked you to set the MySQL root password earlier (not to be confused with the pterodactyl database user password)"
   echo "* MySQL will now ask you to enter the password before each command."
@@ -307,23 +323,24 @@ function centos_dep {
   yum update -y
 
   # install php7.2
-  yum -y install epel-release
-  yum -y install http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+  yum install -y epel-release https://centos7.iuscommunity.org/ius-release.rpm
   yum -y install yum-utils
-  yum-config-manager --enable remi-php72
   yum update -y
 
   # Install MariaDB
   curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
 
   # install dependencies
-  yum -y install install php72 php72-cli php72-php-gd php72-php-mysql php72-php-pdo php72-php-mbstring php72-php-tokenizer php72-php-bcmath php72-php-xml php72-php-fpm php72-php-curl php72-php-zip mariadb-server nginx curl tar unzip git redis
+  yum -y install install php72u-php php72u-common php72u-fpm php72u-cli php72u-json php72u-mysqlnd php72u-mcrypt php72u-gd php72u-mbstring php72u-pdo php72u-zip php72u-bcmath php72u-dom php72u-opcache mariadb-server nginx curl tar unzip git redis
 
   # enable services
-  systemctl start redis
+  systemctl enable mariadb
   systemctl enable redis
-  systemctl enable php72-php-fpm.service
-  sudo systemctl start php72-php-fpm.service
+  systemctl enable php-fpm.service
+  systemctl start mariadb
+  systemctl start redis
+  systemctl start php-fpm.service
+
 
   echo "* Dependencies for CentOS installed!"
 }
@@ -398,7 +415,7 @@ function perform_install {
   if [ "$OS" == "ubuntu" ]; then
     ubuntu_universedep
     apt_update
-    # prints the version, if it's 18 or 16
+    # different dependencies depending on if it's 18 or 16
     if [ "$OS_VERSION" == "18" ]; then
       ubuntu18_dep
     elif [ "$OS_VERSION" == "16" ]; then
@@ -423,9 +440,13 @@ function perform_install {
     insert_cronjob
     install_pteroq
   elif [ "$OS" == "centos" ]; then
-    # coming soon
-    print_error "CentOS is currently not supported, but will be in the furture."
-    exit 1
+    centos_dep
+    install_composer
+    ptdl_dl
+    create_database
+    configure
+    insert_cronjob
+    install_pteroq
   else
     # exit
     print_error "OS not supported."

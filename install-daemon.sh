@@ -76,24 +76,35 @@ function detect_os_version {
 function check_os_comp {
   if [ "$OS" == "ubuntu" ]; then
     if [ "$OS_VERSION" == "16" ]; then
-      echo "* $OS $OS_VERSION is supported."
+      SUPPORTED=true
     elif [ "$OS_VERSION" == "18" ]; then
-      echo "* $OS $OS_VERSION is supported."
+      SUPPORTED=true
     else
-      echo "* $OS $OS_VERSION is not supported."
-      print_error "Unsupported OS version"
-      exit 1
+      SUPPORTED=false
     fi
   elif [ "$OS" == "debian" ]; then
     if [ "$OS_VERSION" == "9" ]; then
-      echo "* $OS $OS_VERSION is supported."
+      SUPPORTED=true
     else
-      echo "* $OS $OS_VERSION is not supported."
-      print_error "Unsupported OS version"
-      exit 1
+      SUPPORTED=false
+    fi
+  elif [ "$OS" == "centos" ]; then
+    if [ "$OS_VERSION" == "7" ]; then
+      SUPPORTED=true
+    else
+      SUPPORTED=false
     fi
   else
+    SUPPORTED=false
+  fi
+
+  # exit if not supported
+  if [ "$SUPPORTED" == true ]; then
+    echo "* $OS $OS_VERSION is supported."
+  else
+    echo "* $OS $OS_VERSION is not supported"
     print_error "Unsupported OS"
+    exit 1
   fi
 }
 
@@ -119,7 +130,8 @@ function install_dep {
     yum_update
 
     # install dependencies
-    yum -y install tar unzip make gcc-g++
+    yum -y install tar unzip make gcc
+    yum -y install gcc-c++
   else
     print_error "Invalid OS."
     exit 1
