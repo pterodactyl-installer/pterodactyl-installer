@@ -45,6 +45,8 @@ Using the Pterodactyl Daemon installation script:
 
 The script will guide you through the install.
 
+*Note: On some systems it's required to be already logged in as root before executing the one-line command.*
+
 # Contributing
 
 Feel free to fork the project and send a PR! :smiley:
