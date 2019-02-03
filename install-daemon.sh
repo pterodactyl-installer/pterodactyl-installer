@@ -1,7 +1,7 @@
 #!/bin/bash
 ###########################################################
 # pterodactyl-installer for daemon
-# Copyright Vilhelm Prytz 2018
+# Copyright Vilhelm Prytz 2018-2019
 #
 # https://github.com/mrkakisen/pterodactyl-installer
 ###########################################################
