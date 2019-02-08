@@ -301,6 +301,7 @@ function goodbye {
   echo "* Make sure you create the node within the panel and then "
   echo "* copy the config to the node. You may then start the daemon using "
   echo "* systemctl start wings"
+  echo "* NOTE: It is recommended to also enable swap."
   print_brake 70
   echo ""
 }
