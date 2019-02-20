@@ -146,7 +146,7 @@ function ptdl_dl {
   composer install --no-dev --optimize-autoloader
 
   php artisan key:generate --force
-  echo "* Downloaed pterodactyl panel files & installed composer dependencies!"
+  echo "* Downloaded pterodactyl panel files & installed composer dependencies!"
 }
 
 function configure {
@@ -536,7 +536,7 @@ function main {
   fi
 
   # confirm installation
-  echo -e -n "\n* Inital configuration done. Do you wan't to continue with installation? (y/n): "
+  echo -e -n "\n* Inital configuration done. Do you wan't to continue with the installation? (y/n): "
   read CONFIRM
   if [ "$CONFIRM" == "y" ]; then
     perform_install
