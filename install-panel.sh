@@ -23,7 +23,7 @@ fi
 # check for python
 PYTHONPATH="$(which python)"
 if [ -z "$PYTHONPATH" ]; then
-    echo "* Python is required in order for this script to work."
+    echo "* python is required in order for this script to work."
     echo "* install using apt on Debian/Ubuntu or yum on CentOS"
     exit 1
 fi
