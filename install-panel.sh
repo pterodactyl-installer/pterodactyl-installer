@@ -297,7 +297,7 @@ function debian_dep {
   apt -y install dirmngr
 
   # install PHP 7.2 using Sury's rep instead of PPA
-  # this guide shows how: https://wiki.mrkakisen.net/index.php?title=Installing_PHP_7.2_on_Debian_8_and_9
+  # this guide shows how: https://vilhelmprytz.se/2018/08/22/install-php72-on-Debian-8-and-9.html 
   apt install ca-certificates apt-transport-https lsb-release -y
   sudo wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
   echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/php.list
