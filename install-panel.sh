@@ -505,7 +505,7 @@ function main {
   echo -n "* Database name (panel): "
   read MYSQL_DB_INPUT
 
-  if [ -z "$MYSQL_DB_INPUT" ] then
+  if [ -z "$MYSQL_DB_INPUT" ]; then
     MYSQL_DB="panel"
   else
     MYSQL_DB=$MYSQL_DB_INPUT
@@ -514,7 +514,7 @@ function main {
   echo -n "* Username (pterodactyl): "
   read MYSQL_USER_INPUT
 
-  if [ -z "$MYSQL_USER_INPUT" ] then
+  if [ -z "$MYSQL_USER_INPUT" ]; then
     MYSQL_USER="pterodactyl"
   else
     MYSQL_USER=$MYSQL_USER_INPUT
@@ -523,7 +523,7 @@ function main {
   echo -n "* Password (use something strong): "
   read MYSQL_PASSWORD
 
-  if [ -z "$MYSQL_PASSWORD" ] then
+  if [ -z "$MYSQL_PASSWORD" ]; then
     print_error "MySQL password cannot be empty"
     exit 1
   fi
