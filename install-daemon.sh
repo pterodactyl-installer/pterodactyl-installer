@@ -40,7 +40,7 @@ VERSION="$(get_latest_release "pterodactyl/daemon")"
 
 # DL urls
 DL_URL="https://github.com/pterodactyl/daemon/releases/download/$VERSION/daemon.tar.gz"
-CONFIGS_URL="https://raw.githubusercontent.com/MrKaKisen/pterodactyl-installer/master/configs"
+CONFIGS_URL="https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/configs"
 
 # variables
 OS="debian"

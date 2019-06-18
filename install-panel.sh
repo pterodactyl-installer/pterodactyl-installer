@@ -53,7 +53,7 @@ ASSUME_SSL=false
 
 # DL urls
 PANEL_URL="https://github.com/pterodactyl/panel/releases/download/$VERSION/panel.tar.gz"
-CONFIGS_URL="https://raw.githubusercontent.com/MrKaKisen/pterodactyl-installer/master/configs"
+CONFIGS_URL="https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/configs"
 
 # paths
 SOURCES_PATH="/etc/apt/sources.list"
