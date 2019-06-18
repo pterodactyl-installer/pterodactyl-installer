@@ -3,7 +3,7 @@
 # pterodactyl-installer for daemon
 # Copyright Vilhelm Prytz 2018-2019
 #
-# https://github.com/mrkakisen/pterodactyl-installer
+# https://github.com/VilhelmPrytz/pterodactyl-installer
 ###########################################################
 
 # check if user is root or not
