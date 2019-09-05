@@ -38,6 +38,8 @@ get_latest_release() {
 echo "* Retrieving release information.."
 VERSION="$(get_latest_release "pterodactyl/daemon")"
 
+echo "* Latest version is $VERSION"
+
 # DL urls
 DL_URL="https://github.com/pterodactyl/daemon/releases/download/$VERSION/daemon.tar.gz"
 CONFIGS_URL="https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/configs"
@@ -274,9 +276,9 @@ function main {
   check_os_comp
 
   echo "* The installer will install Docker, required dependencies for the daemon"
-  echo "* as well as the daemon itself. But it is till required to create the node"
+  echo "* as well as the daemon itself. But it is still required to create the node"
   echo "* on the panel and then place the configuration on the node after the"
-  echo "* installation finishes. Read more here:"
+  echo "* installation has finished. Read more about the process:"
   echo "* https://pterodactyl.io/daemon/installing.html#configure-daemon"
   print_brake 42
   echo -n "* Proceed with installation? (y/n): "
@@ -301,7 +303,7 @@ function goodbye {
   echo "* Make sure you create the node within the panel and then "
   echo "* copy the config to the node. You may then start the daemon using "
   echo "* systemctl start wings"
-  echo "* NOTE: It is recommended to also enable swap."
+  echo "* NOTE: It is recommended to also enable swap (for docker)."
   print_brake 70
   echo ""
 }

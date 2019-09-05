@@ -38,6 +38,8 @@ get_latest_release() {
 echo "* Retrieving release information.."
 VERSION="$(get_latest_release "pterodactyl/panel")"
 
+echo "* Latest version is $VERSION"
+
 # variables
 WEBSERVER="nginx"
 OS="debian" # can
