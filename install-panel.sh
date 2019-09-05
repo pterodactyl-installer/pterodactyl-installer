@@ -553,7 +553,7 @@ function main {
   fi
 
   # confirm installation
-  echo -e -n "\n* Inital configuration done. Do you wan't to continue with the installation? (y/n): "
+  echo -e -n "\n* Initial configuration completed. Continue with installation? (y/n): "
   read CONFIRM
   if [ "$CONFIRM" == "y" ]; then
     perform_install

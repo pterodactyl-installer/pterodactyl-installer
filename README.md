@@ -36,7 +36,7 @@ List of supported installation setups for panel and daemon (installations suppor
 
 _* Debian 10 is not listed as officially supported by Pterodactyl yet._
 
-_** CentOS 7 is only supported by this script on daemon installations, not panel._
+_** CentOS 7 is only supported by this script on daemon installations, panel installations for CentOS 7 are not supported._
 
 # Using the installation scripts
 
@@ -50,7 +50,7 @@ Using the Pterodactyl Daemon installation script:
 
 The script will guide you through the install.
 
-*Note: On some systems it's required to be already logged in as root before executing the one-line command.*
+*Note: On some systems, it's required to be already logged in as root before executing the one-line command.*
 
 # Contributing
 
