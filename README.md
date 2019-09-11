@@ -2,7 +2,7 @@
 
 Unofficial scripts for installing Pterodactyl on both Panel & Daemon.
 
-Read more about [Pterodactyl here](https://pterodactyl.io/).
+Read more about [Pterodactyl](https://pterodactyl.io/) here.
 
 # Supported installations
 

@@ -6,7 +6,7 @@
 # https://github.com/VilhelmPrytz/pterodactyl-installer
 ###########################################################
 
-# check if user is root or not
+# exit with error status code if user is not root
 if [[ $EUID -ne 0 ]]; then
   echo "This script must be run with root privileges (sudo)." 1>&2
   exit 1
@@ -44,8 +44,9 @@ echo "* Latest version is $VERSION"
 DL_URL="https://github.com/pterodactyl/daemon/releases/download/$VERSION/daemon.tar.gz"
 CONFIGS_URL="https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/configs"
 
-# variables
-OS="debian"
+# variable
+OS=$(detect_distro);
+OS_VERSION=$(detect_os_version)
 
 # visual functions
 function print_error {
@@ -266,9 +267,6 @@ function perform_install {
 function main {
   print_brake 42
   echo "* Pterodactyl daemon installation script "
-  echo "* Detecting operating system."
-  OS=$(detect_distro);
-  OS_VERSION=$(detect_os_version);
   echo "* Running $OS version $OS_VERSION."
   print_brake 42
 

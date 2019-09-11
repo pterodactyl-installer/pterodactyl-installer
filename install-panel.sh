@@ -6,7 +6,7 @@
 # https://github.com/VilhelmPrytz/pterodactyl-installer
 ###########################################################
 
-# check if user is root or not
+# exit with error status code if user is not root
 if [[ $EUID -ne 0 ]]; then
   echo "* This script must be executed with root privileges (sudo)." 1>&2
   exit 1
@@ -42,8 +42,9 @@ echo "* Latest version is $VERSION"
 
 # variables
 WEBSERVER="nginx"
-OS="debian" # can
 FQDN="pterodactyl.panel"
+OS=$(detect_distro);
+OS_VERSION=$(detect_os_version)
 
 # default MySQL credentials
 MYSQL_DB="pterodactyl"
@@ -470,9 +471,6 @@ function perform_install {
 function main {
   print_brake 40
   echo "* Pterodactyl panel installation script "
-  echo "* Detecting operating system."
-  OS=$(detect_distro);
-  OS_VERSION=$(detect_os_version)
   echo "* Running $OS version $OS_VERSION."
   print_brake 40
 
