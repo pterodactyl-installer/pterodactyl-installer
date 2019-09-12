@@ -44,10 +44,6 @@ echo "* Latest version is $VERSION"
 DL_URL="https://github.com/pterodactyl/daemon/releases/download/$VERSION/daemon.tar.gz"
 CONFIGS_URL="https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/configs"
 
-# variable
-OS=$(detect_distro);
-OS_VERSION=$(detect_os_version)
-
 # visual functions
 function print_error {
   COLOR_RED='\033[0;31m'
@@ -75,6 +71,10 @@ function detect_distro {
 function detect_os_version {
   echo "$(python -c 'import platform ; print platform.dist()[1].split(".")[0]')"
 }
+
+# OS variable
+OS=$(detect_distro);
+OS_VERSION=$(detect_os_version)
 
 function check_os_comp {
   if [ "$OS" == "ubuntu" ]; then

@@ -43,8 +43,6 @@ echo "* Latest version is $VERSION"
 # variables
 WEBSERVER="nginx"
 FQDN="pterodactyl.panel"
-OS=$(detect_distro);
-OS_VERSION=$(detect_os_version)
 
 # default MySQL credentials
 MYSQL_DB="pterodactyl"
@@ -87,6 +85,10 @@ function detect_distro {
 function detect_os_version {
   echo "$(python -c 'import platform ; print platform.dist()[1].split(".")[0]')"
 }
+
+# OS variables
+OS=$(detect_distro);
+OS_VERSION=$(detect_os_version)
 
 function check_os_comp {
   if [ "$OS" == "ubuntu" ]; then
