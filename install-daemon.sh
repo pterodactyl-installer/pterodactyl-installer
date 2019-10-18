@@ -40,7 +40,7 @@ VERSION="$(get_latest_release "pterodactyl/daemon")"
 
 echo "* Latest version is $VERSION"
 
-# DL urls
+# download URLs
 DL_URL="https://github.com/pterodactyl/daemon/releases/download/$VERSION/daemon.tar.gz"
 CONFIGS_URL="https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/configs"
 
@@ -72,7 +72,7 @@ function detect_os_version {
   echo "$(python -c 'import platform ; print platform.dist()[1].split(".")[0]')"
 }
 
-# OS variable
+# OS variables
 OS=$(detect_distro);
 OS_VERSION=$(detect_os_version)
 

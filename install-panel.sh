@@ -49,14 +49,14 @@ MYSQL_DB="pterodactyl"
 MYSQL_USER="pterodactyl"
 MYSQL_PASSWORD="somePassword"
 
-# asume SSL
+# assume SSL, will fetch different config if true
 ASSUME_SSL=false
 
-# DL urls
+# download URLs
 PANEL_URL="https://github.com/pterodactyl/panel/releases/download/$VERSION/panel.tar.gz"
 CONFIGS_URL="https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/configs"
 
-# paths
+# apt sources path
 SOURCES_PATH="/etc/apt/sources.list"
 
 # visual functions
@@ -103,6 +103,8 @@ function check_os_comp {
     if [ "$OS_VERSION" == "8" ]; then
       SUPPORTED=true
     elif [ "$OS_VERSION" == "9" ]; then
+      SUPPORTED=true
+    elif [ "$OS_VERSION" == "10" ]; then
       SUPPORTED=true
     else
       SUPPORTED=false
