@@ -117,7 +117,7 @@ function check_os_comp {
       SUPPORTED=false
     fi
   else
-    SUPPORTED=true
+    SUPPORTED=false
   fi
 
   # exit if not supported
