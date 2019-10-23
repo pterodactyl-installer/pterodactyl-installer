@@ -20,14 +20,6 @@ if [ -z "$CURLPATH" ]; then
     exit 1
 fi
 
-# check for python
-PYTHONPATH="$(which python)"
-if [ -z "$PYTHONPATH" ]; then
-    echo "* python is required in order for this script to work."
-    echo "* install using apt on Debian/Ubuntu or yum on CentOS"
-    exit 1
-fi
-
 # define version using information from GitHub
 get_latest_release() {
   curl --silent "https://api.github.com/repos/$1/releases/latest" | # Get latest release from GitHub api
@@ -79,38 +71,62 @@ function print_brake {
 
 # other functions
 function detect_distro {
-  echo "$(python -c 'import platform ; print platform.dist()[0]')" | awk '{print tolower($0)}'
-}
+  if [ -f /etc/os-release ]; then
+    # freedesktop.org and systemd
+    . /etc/os-release
+    OS=$(echo $NAME | awk '{print tolower($0)}')
+    OS_VER=$VERSION_ID
+  elif type lsb_release >/dev/null 2>&1; then
+    # linuxbase.org
+    OS=$(lsb_release -si | awk '{print tolower($0)}')
+    OS_VER=$(lsb_release -sr)
+  elif [ -f /etc/lsb-release ]; then
+    # For some versions of Debian/Ubuntu without lsb_release command
+    . /etc/lsb-release
+    OS=$(echo $DISTRIB_ID | awk '{print tolower($0)}')
+    OS_VER=$DISTRIB_RELEASE
+  elif [ -f /etc/debian_version ]; then
+    # Older Debian/Ubuntu/etc.
+    OS="debian"
+    OS_VER=$(cat /etc/debian_version)
+  elif [ -f /etc/SuSe-release ]; then
+    # Older SuSE/etc.
+    OS="SuSE"
+    OS_VER="?"
+  elif [ -f /etc/redhat-release ]; then
+    # Older Red Hat, CentOS, etc.
+    OS="Red Hat/CentOS"
+    OS_VER="?"
+  else
+    # Fall back to uname, e.g. "Linux <version>", also works for BSD, etc.
+    OS=$(uname -s)
+    OS_VER=$(uname -r)
+  fi
 
-function detect_os_version {
-  echo "$(python -c 'import platform ; print platform.dist()[1].split(".")[0]')"
+  OS_VER_MAJOR=$(echo $OS_VER | cut -d. -f1)
 }
-
-# OS variables
-OS=$(detect_distro);
-OS_VERSION=$(detect_os_version)
 
 function check_os_comp {
   if [ "$OS" == "ubuntu" ]; then
-    if [ "$OS_VERSION" == "16" ]; then
+    if [ "$OS_VER_MAJOR" == "16" ]; then
       SUPPORTED=true
-    elif [ "$OS_VERSION" == "18" ]; then
+    elif [ "$OS_VER_MAJOR" == "18" ]; then
       SUPPORTED=true
     else
       SUPPORTED=false
     fi
   elif [ "$OS" == "debian" ]; then
-    if [ "$OS_VERSION" == "8" ]; then
+    if [ "$OS_VER_MAJOR" == "8" ]; then
       SUPPORTED=true
-    elif [ "$OS_VERSION" == "9" ]; then
+    elif [ "$OS_VER_MAJOR" == "9" ]; then
       SUPPORTED=true
-    elif [ "$OS_VERSION" == "10" ]; then
+    elif [ "$OS_VER_MAJOR" == "10" ]; then
       SUPPORTED=true
     else
       SUPPORTED=false
     fi
   elif [ "$OS" == "centos" ]; then
-    if [ "$OS_VERSION" == "7" ]; then
+    if [ "$OS_VER_MAJOR" == "7" ]; then
       # has not been fully tested yet to work, but will hopefully be soon
       SUPPORTED=false
     else
@@ -122,9 +138,9 @@ function check_os_comp {
 
   # exit if not supported
   if [ "$SUPPORTED" == true ]; then
-    echo "* $OS $OS_VERSION is supported."
+    echo "* $OS $OS_VER is supported."
   else
-    echo "* $OS $OS_VERSION is not supported"
+    echo "* $OS $OS_VER is not supported"
     print_error "Unsupported OS"
     exit 1
   fi
@@ -423,9 +439,9 @@ function perform_install {
     ubuntu_universedep
     apt_update
     # different dependencies depending on if it's 18 or 16
-    if [ "$OS_VERSION" == "18" ]; then
+    if [ "$OS_VER" == "18" ]; then
       ubuntu18_dep
-    elif [ "$OS_VERSION" == "16" ]; then
+    elif [ "$OS_VER" == "16" ]; then
       ubuntu16_dep
     else
       print_error "Unsupported version of Ubuntu."
@@ -473,9 +489,12 @@ function perform_install {
 }
 
 function main {
+  # detect distro
+  detect_distro
+
   print_brake 40
   echo "* Pterodactyl panel installation script "
-  echo "* Running $OS version $OS_VERSION."
+  echo "* Running $OS version $OS_VER."
   print_brake 40
 
   # checks if the system is compatible with this installation script
