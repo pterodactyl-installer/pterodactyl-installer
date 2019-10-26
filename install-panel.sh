@@ -74,7 +74,7 @@ function detect_distro {
   if [ -f /etc/os-release ]; then
     # freedesktop.org and systemd
     . /etc/os-release
-    OS=$(echo $NAME | awk '{print tolower($0)}')
+    OS=$(echo $ID | awk '{print tolower($0)}')
     OS_VER=$VERSION_ID
   elif type lsb_release >/dev/null 2>&1; then
     # linuxbase.org
@@ -102,7 +102,8 @@ function detect_distro {
     OS=$(uname -s)
     OS_VER=$(uname -r)
   fi
-
+  
+  OS=$(echo $OS | awk '{print tolower($0)}')
   OS_VER_MAJOR=$(echo $OS_VER | cut -d. -f1)
 }
 
