@@ -439,9 +439,9 @@ function perform_install {
     ubuntu_universedep
     apt_update
     # different dependencies depending on if it's 18 or 16
-    if [ "$OS_VER" == "18" ]; then
+    if [ "$OS_VER_MAJOR" == "18" ]; then
       ubuntu18_dep
-    elif [ "$OS_VER" == "16" ]; then
+    elif [ "$OS_VER_MAJOR" == "16" ]; then
       ubuntu16_dep
     else
       print_error "Unsupported version of Ubuntu."
