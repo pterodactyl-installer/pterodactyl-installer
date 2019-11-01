@@ -1,14 +1,20 @@
 #!/bin/bash
-###########################################################
-# pterodactyl-installer for daemon
-# Copyright Vilhelm Prytz 2018-2019
+
+###################################################################
 #
+# Project 'pterodactyl-installer' for daemon
+#
+# Copyright (C) 2018 - 2019, Vilhelm Prytz, <vilhelm@prytznet.se>
+#
+# This script is not associated with the official the Pterodactyl Project.
+# Please use at your own risk.
 # https://github.com/VilhelmPrytz/pterodactyl-installer
-###########################################################
+#
+###################################################################
 
 # exit with error status code if user is not root
 if [[ $EUID -ne 0 ]]; then
-  echo "This script must be run with root privileges (sudo)." 1>&2
+  echo "* This script must be executed with root privileges (sudo)." 1>&2
   exit 1
 fi
 
@@ -36,11 +42,11 @@ echo "* Latest version is $VERSION"
 DL_URL="https://github.com/pterodactyl/daemon/releases/download/$VERSION/daemon.tar.gz"
 CONFIGS_URL="https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/configs"
 
+COLOR_RED='\033[0;31m'
+COLOR_NC='\033[0m'
+
 # visual functions
 function print_error {
-  COLOR_RED='\033[0;31m'
-  COLOR_NC='\033[0m'
-
   echo ""
   echo -e "* ${COLOR_RED}ERROR${COLOR_NC}: $1"
   echo ""
@@ -293,11 +299,15 @@ function main {
   # checks if the system is compatible with this installation script
   check_os_comp
 
+  echo "* "
   echo "* The installer will install Docker, required dependencies for the daemon"
-  echo "* as well as the daemon itself. But it is still required to create the node"
-  echo "* on the panel and then place the configuration on the node after the"
-  echo "* installation has finished. Read more about the process:"
-  echo "* https://pterodactyl.io/daemon/installing.html#configure-daemon"
+  echo "* as well as the daemon itself. But it's still required to create the node"
+  echo "* on the panel and then place the configuration file on the node manually after"
+  echo "* the installation has finished. Read more about this process on the"
+  echo "* official documentation: https://pterodactyl.io/daemon/installing.html#configure-daemon"
+  echo "* "
+  echo -e "* ${COLOR_RED}Note${COLOR_NC}: this script will not start the daemon automatically (will install systemd service, not start it)."
+  echo -e "* ${COLOR_RED}Note${COLOR_NC}: this script will not enable swap (for docker)."
   print_brake 42
   echo -n "* Proceed with installation? (y/n): "
 
@@ -316,16 +326,17 @@ function main {
 function goodbye {
   echo ""
   print_brake 70
-  echo "* Installation finished."
+  echo "* Installation completed."
   echo ""
-  echo "* Make sure you create the node within the panel and then "
-  echo "* copy the config to the node. You may then start the daemon using "
+  echo "* Make sure you create the node within the panel and then copy"
+  echo "* the config to this node. You may then start the daemon using "
   echo "* systemctl start wings"
-  echo "* NOTE: It is recommended to also enable swap (for docker)."
+  echo "* "
+  echo -e "* ${COLOR_RED}Note${COLOR_NC}: It is recommended to enable swap (for Docker, read more about it in official documentation)."
   print_brake 70
   echo ""
 }
 
-# run main
+# run script
 main
 goodbye

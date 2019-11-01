@@ -1,10 +1,16 @@
 #!/bin/bash
-###########################################################
-# pterodactyl-installer for panel
-# Copyright Vilhelm Prytz 2018-2019
+
+###################################################################
 #
+# Project 'pterodactyl-installer' for panel
+#
+# Copyright (C) 2018 - 2019, Vilhelm Prytz, <vilhelm@prytznet.se>
+#
+# This script is not associated with the official the Pterodactyl Project.
+# Please use at your own risk.
 # https://github.com/VilhelmPrytz/pterodactyl-installer
-###########################################################
+#
+###################################################################
 
 # exit with error status code if user is not root
 if [[ $EUID -ne 0 ]]; then
@@ -39,7 +45,7 @@ FQDN="pterodactyl.panel"
 # default MySQL credentials
 MYSQL_DB="pterodactyl"
 MYSQL_USER="pterodactyl"
-MYSQL_PASSWORD="somePassword"
+MYSQL_PASSWORD="password"
 
 # assume SSL, will fetch different config if true
 ASSUME_SSL=false
@@ -320,7 +326,7 @@ function debian_dep {
   # MariaDB need dirmngr
   apt -y install dirmngr
 
-  # install PHP 7.2 using Sury's rep instead of PPA
+  # install PHP 7.2 using sury's repo instead of PPA
   # this guide shows how: https://vilhelmprytz.se/2018/08/22/install-php72-on-Debian-8-and-9.html 
   apt install ca-certificates apt-transport-https lsb-release -y
   sudo wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
@@ -594,13 +600,14 @@ function main {
 function goodbye {
   print_brake 62
   echo "* Pterodactyl Panel successfully installed @ $FQDN"
-  echo ""
+  echo "* "
   echo "* Installation is using $WEBSERVER on $OS"
+  echo "* Thank you for using this script."
   print_brake 62
 
   exit 0
 }
 
-# start main function
+# run script
 main
 goodbye
