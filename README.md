@@ -20,7 +20,7 @@ List of supported installation setups for panel and daemon (installations suppor
 |                   | 10      | :white_check_mark: * | :red_circle:   |
 | CentOS            | 6       | :red_circle:         | :red_circle:   |
 |                   | 7       | :red_circle: **      | :red_circle:   |
-|		    | 8	      | :red_circle:	     | :red_circle:   |
+|		            | 8	      | :red_circle:	     | :red_circle:   |
 
 ### Supported daemon operating systems
 
@@ -34,7 +34,7 @@ List of supported installation setups for panel and daemon (installations suppor
 |                   | 10      | :red_circle: *     |
 | CentOS            | 6       | :red_circle:       |
 |                   | 7       | :white_check_mark: |
-| 		    | 8       | :red_circle:	   |
+| 		            | 8       | :red_circle:	   |
 
 _* Debian 10 is not listed as officially supported by Pterodactyl yet._
 
@@ -44,11 +44,15 @@ _** CentOS 7 is only supported by this script on daemon installations, panel ins
 
 Using the Pterodactyl Panel installation script:
 
-`bash <(curl -s https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/install-panel.sh)`
+```bash
+bash <(curl -s https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/install-panel.sh)
+```
 
 Using the Pterodactyl Daemon installation script:
 
-`bash <(curl -s https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/install-daemon.sh)`
+```bash
+bash <(curl -s https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/install-daemon.sh)
+```
 
 The script will guide you through the install.
 
