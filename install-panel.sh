@@ -320,13 +320,13 @@ function ubuntu16_dep {
   echo "* Dependencies for Ubuntu installed!"
 }
 
-function debian_dep {
-  echo "* Installing dependencies for Debian.."
+function debian_jessie_dep {
+  echo "* Installing dependencies for Debian 8/9.."
 
   # MariaDB need dirmngr
   apt -y install dirmngr
 
-  # install PHP 7.2 using sury's repo instead of PPA
+  # install PHP 7.3 using sury's repo instead of PPA
   # this guide shows how: https://vilhelmprytz.se/2018/08/22/install-php72-on-Debian-8-and-9.html 
   apt install ca-certificates apt-transport-https lsb-release -y
   sudo wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
@@ -341,9 +341,27 @@ function debian_dep {
   apt update
 
   # Install Dependencies
-  apt -y install php7.2 php7.2-cli php7.2-gd php7.2-mysql php7.2-pdo php7.2-mbstring php7.2-tokenizer php7.2-bcmath php7.2-xml php7.2-fpm php7.2-curl php7.2-zip mariadb-server nginx curl tar unzip git redis-server
+  apt -y install php7.3 php7.3-cli php7.3-gd php7.3-mysql php7.3-pdo php7.3-mbstring php7.3-tokenizer php7.3-bcmath php7.3-xml php7.3-fpm php7.3-curl php7.3-zip mariadb-server nginx curl tar unzip git redis-server
 
-  echo "* Dependencies for Debian installed!"
+  echo "* Dependencies for Debian 8/9 installed!"
+}
+
+function debian_dep {
+  echo "* Installing dependencies for Debian 10.."
+
+  # MariaDB need dirmngr
+  apt -y install dirmngr
+
+  # Install MariaDb
+  curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
+
+  # Update repositories list
+  apt update
+
+  # install dependencies
+  apt -y install php7.3 php7.3-cli php7.3-common php7.3-gd php7.3-mysql php7.3-mbstring php7.3-bcmath php7.3-xml php7.3-fpm php7.3-curl php7.3-zip mariadb-server nginx curl tar unzip git redis-server
+
+  echo "* Dependencies for Debian 10 installed!"
 }
 
 function centos_dep {
@@ -370,7 +388,6 @@ function centos_dep {
   systemctl start mariadb
   systemctl start redis
   systemctl start php-fpm.service
-
 
   echo "* Dependencies for CentOS installed!"
 }
@@ -462,7 +479,11 @@ function perform_install {
     install_pteroq
   elif [ "$OS" == "debian" ]; then
     apt_update
-    debian_dep
+    if [ "$OS_VER_MAJOR" == "8" ] || [ "$OS_VER_MAJOR" == "9" ]; then
+      debian_jessie_dep
+    elif [ "$OS_VER_MAJOR" == "10" ]; then
+      debian_dep
+    fi
     install_composer
     ptdl_dl
     create_database
