@@ -19,7 +19,7 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 # check for curl
-CURLPATH="$(which curl)"
+CURLPATH="$(command -v curl)"
 if [ -z "$CURLPATH" ]; then
     echo "* curl is required in order for this script to work."
     echo "* install using apt on Debian/Ubuntu or yum on CentOS"
@@ -75,7 +75,7 @@ function detect_distro {
   elif [ -f /etc/lsb-release ]; then
     # For some versions of Debian/Ubuntu without lsb_release command
     . /etc/lsb-release
-    OS=$(echo $DISTRIB_ID | awk '{print tolower($0)}')
+    OS=$(echo "$DISTRIB_ID" | awk '{print tolower($0)}')
     OS_VER=$DISTRIB_RELEASE
   elif [ -f /etc/debian_version ]; then
     # Older Debian/Ubuntu/etc.
