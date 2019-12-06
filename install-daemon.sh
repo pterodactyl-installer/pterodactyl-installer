@@ -66,7 +66,7 @@ function detect_distro {
   if [ -f /etc/os-release ]; then
     # freedesktop.org and systemd
     . /etc/os-release
-    OS=$(echo $ID | awk '{print tolower($0)}')
+    OS=$(echo "$ID" | awk '{print tolower($0)}')
     OS_VER=$VERSION_ID
   elif type lsb_release >/dev/null 2>&1; then
     # linuxbase.org
@@ -95,8 +95,8 @@ function detect_distro {
     OS_VER=$(uname -r)
   fi
 
-  OS=$(echo $OS | awk '{print tolower($0)}')
-  OS_VER_MAJOR=$(echo $OS_VER | cut -d. -f1)
+  OS=$(echo "$OS" | awk '{print tolower($0)}')
+  OS_VER_MAJOR=$(echo "$OS_VER" | cut -d. -f1)
 }
 
 function check_os_comp {
@@ -259,9 +259,9 @@ function install_nodejs {
 function ptdl_dl {
   echo "* Installing pterodactyl daemon .. "
   mkdir -p /srv/daemon /srv/daemon-data
-  cd /srv/daemon
+  cd /srv/daemon || exit
 
-  curl -L $DL_URL | tar --strip-components=1 -xzv
+  curl -L "$DL_URL" | tar --strip-components=1 -xzv
   npm install --only=production
 
   echo "* Done."
@@ -311,7 +311,7 @@ function main {
   print_brake 42
   echo -n "* Proceed with installation? (y/n): "
 
-  read CONFIRM
+  read -r CONFIRM
 
   if [ "$CONFIRM" == "y" ]; then
     perform_install

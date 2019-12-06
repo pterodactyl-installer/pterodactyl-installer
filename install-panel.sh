@@ -109,8 +109,8 @@ function detect_distro {
     OS_VER=$(uname -r)
   fi
   
-  OS=$(echo $OS | awk '{print tolower($0)}')
-  OS_VER_MAJOR=$(echo $OS_VER | cut -d. -f1)
+  OS=$(echo "$OS" | awk '{print tolower($0)}')
+  OS_VER_MAJOR=$(echo "$OS_VER" | cut -d. -f1)
 }
 
 function check_os_comp {
@@ -166,9 +166,9 @@ function install_composer {
 function ptdl_dl {
   echo "* Downloading pterodactyl panel files .. "
   mkdir -p /var/www/pterodactyl
-  cd /var/www/pterodactyl
+  cd /var/www/pterodactyl || exit
 
-  curl -Lo panel.tar.gz $PANEL_URL
+  curl -Lo panel.tar.gz "$PANEL_URL"
   tar --strip-components=1 -xzvf panel.tar.gz
   chmod -R 755 storage/* bootstrap/cache/
 
@@ -212,11 +212,11 @@ function configure {
 function set_folder_permissions {
   # if os is ubuntu or debian, we do this
   if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
-    chown -R www-data:www-data *
+    chown -R www-data:www-data ./*
   elif [ "$OS" == "centos" ] && [ "$WEBSERVER" == "nginx" ]; then
-    chown -R nginx:nginx *
+    chown -R nginx:nginx ./*
   elif [ "$OS" == "centos" ] && [ "$WEBSERVER" == "apache" ]; then
-    chown -R apache:apache *
+    chown -R apache:apache ./*
   else
     print_error "Invalid webserver and OS setup."
     exit 1
@@ -534,7 +534,7 @@ function main {
   echo ""
 
   echo -n "* Select webserver to install pterodactyl panel with: "
-  read WEBSERVER_INPUT
+  read -r WEBSERVER_INPUT
 
   if [ "$WEBSERVER_INPUT" == "1" ]; then
     WEBSERVER="nginx"
@@ -554,7 +554,7 @@ function main {
   echo ""
 
   echo -n "* Database name (panel): "
-  read MYSQL_DB_INPUT
+  read -r MYSQL_DB_INPUT
 
   if [ -z "$MYSQL_DB_INPUT" ]; then
     MYSQL_DB="panel"
@@ -563,7 +563,7 @@ function main {
   fi
 
   echo -n "* Username (pterodactyl): "
-  read MYSQL_USER_INPUT
+  read -r MYSQL_USER_INPUT
 
   if [ -z "$MYSQL_USER_INPUT" ]; then
     MYSQL_USER="pterodactyl"
@@ -572,7 +572,7 @@ function main {
   fi
 
   echo -n "* Password (use something strong): "
-  read MYSQL_PASSWORD
+  read -r MYSQL_PASSWORD
 
   if [ -z "$MYSQL_PASSWORD" ]; then
     print_error "MySQL password cannot be empty"
@@ -584,7 +584,7 @@ function main {
   # set FQDN
 
   echo -n "* Set the FQDN of this panel (panel hostname): "
-  read FQDN
+  read -r FQDN
 
   echo ""
 
@@ -592,7 +592,7 @@ function main {
   echo "* going to use SSL or not, we need to know which webserver configuration to use."
   echo "* If you're unsure, use (no). "
   echo -n "* Assume SSL or not? (yes/no): "
-  read ASSUME_SSL_INPUT
+  read -r ASSUME_SSL_INPUT
 
   if [ "$ASSUME_SSL_INPUT" == "yes" ]; then
     ASSUME_SSL=true
@@ -605,7 +605,7 @@ function main {
 
   # confirm installation
   echo -e -n "\n* Initial configuration completed. Continue with installation? (y/n): "
-  read CONFIRM
+  read -r CONFIRM
   if [ "$CONFIRM" == "y" ]; then
     perform_install
   elif [ "$CONFIRM" == "n" ]; then
