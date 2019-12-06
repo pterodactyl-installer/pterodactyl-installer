@@ -1,5 +1,8 @@
 # :bird: pterodactyl-installer
 
+[![Build Status](https://travis-ci.org/VilhelmPrytz/pterodactyl-installer.svg?branch=master)](https://travis-ci.org/VilhelmPrytz/utbildningsmaterial)
+[![License: GPL v3](https://img.shields.io/github/license/VilhelmPrytz/pterodactyl-installer)](LICENSE)
+
 Unofficial scripts for installing Pterodactyl on both Panel & Daemon.
 
 Read more about [Pterodactyl](https://pterodactyl.io/) here.
