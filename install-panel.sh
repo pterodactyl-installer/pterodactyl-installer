@@ -117,30 +117,33 @@ function check_os_comp {
   if [ "$OS" == "ubuntu" ]; then
     if [ "$OS_VER_MAJOR" == "16" ]; then
       SUPPORTED=true
-      PHP_VERSION="7.2"
+      PHP_SOCKET="/run/php/php7.2-fpm.sock"
     elif [ "$OS_VER_MAJOR" == "18" ]; then
       SUPPORTED=true
-      PHP_VERSION="7.2"
+      PHP_SOCKET="/run/php/php7.2-fpm.sock"
     else
       SUPPORTED=false
     fi
   elif [ "$OS" == "debian" ]; then
     if [ "$OS_VER_MAJOR" == "8" ]; then
       SUPPORTED=true
-      PHP_VERSION="7.3"
+      PHP_SOCKET="/run/php/php7.3-fpm.sock"
     elif [ "$OS_VER_MAJOR" == "9" ]; then
       SUPPORTED=true
-      PHP_VERSION="7.3"
+      PHP_SOCKET="/run/php/php7.3-fpm.sock"
     elif [ "$OS_VER_MAJOR" == "10" ]; then
       SUPPORTED=true
-      PHP_VERSION="7.3"
+      PHP_SOCKET="/run/php/php7.3-fpm.sock"
     else
       SUPPORTED=false
     fi
   elif [ "$OS" == "centos" ]; then
     if [ "$OS_VER_MAJOR" == "7" ]; then
-      # has not been fully tested yet to work, but will hopefully be soon
-      SUPPORTED=false
+      SUPPORTED=true
+      PHP_SOCKET="/var/run/php-fpm/pterodactyl.sock"
+    elif [ "$OS_VER_MAJOR" == "8" ]; then
+      SUPPORTED=true
+      PHP_SOCKET="/var/run/php-fpm/pterodactyl.sock"
     else
       SUPPORTED=false
     fi
@@ -164,7 +167,7 @@ function check_os_comp {
 
 function install_composer {
   echo "* Installing composer.."
-  curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
+  curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
   echo "* Composer installed!"
 }
 
@@ -232,7 +235,6 @@ function set_folder_permissions {
 function insert_cronjob {
   echo "* Installing cronjob.. "
 
-  # removed alternate method
   crontab -l | { cat; echo "* * * * * php /var/www/pterodactyl/artisan schedule:run >> /dev/null 2>&1"; } | crontab -
 
   echo "* Cronjob installed!"
@@ -250,6 +252,15 @@ function install_pteroq {
 
 function create_database {
   if [ "$OS" == "centos" ]; then
+    # secure MariaDB
+    echo "* MariaDB secure installation. The following are safe defaults."
+    echo "* Set root password? [Y/n] Y"
+    echo "* Remove anonymous users? [Y/n] Y"
+    echo "* Disallow root login remotely? [Y/n] Y"
+    echo "* Remove test database and access to it? [Y/n] Y"
+    echo "* Reload privilege tables now? [Y/n] Y"
+    echo "*"
+
     mysql_secure_installation
   fi
 
@@ -365,30 +376,70 @@ function debian_dep {
   echo "* Dependencies for Debian 10 installed!"
 }
 
-function centos_dep {
-  echo "* Installing dependencies for CentOS.."
+function centos7_dep {
+  echo "* Installing dependencies for CentOS 7.."
 
   # update first
   yum update -y
 
-  # install php7.2
-  yum install -y epel-release https://centos7.iuscommunity.org/ius-release.rpm
-  yum -y install yum-utils
+  # SELinux tools
+  yum install -y policycoreutils policycoreutils-python selinux-policy selinux-policy-targeted libselinux-utils setroubleshoot-server setools setools-console mcstrans
+
+  # install php7.3
+  yum install -y epel-release http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+  yum install -y yum-utils
+  yum-config-manager --disable remi-php54
+  yum-config-manager --enable remi-php73
   yum update -y
 
   # Install MariaDB
   curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
 
   # install dependencies
-  yum -y install install php72u-php php72u-common php72u-fpm php72u-cli php72u-json php72u-mysqlnd php72u-mcrypt php72u-gd php72u-mbstring php72u-pdo php72u-zip php72u-bcmath php72u-dom php72u-opcache mariadb-server nginx curl tar unzip git redis
+  yum -y install install php php-common php-fpm php-cli php-json php-mysqlnd php-mcrypt php-gd php-mbstring php-pdo php-zip php-bcmath php-dom php-opcache mariadb-server nginx curl tar zip unzip git redis
 
   # enable services
   systemctl enable mariadb
   systemctl enable redis
-  systemctl enable php-fpm.service
   systemctl start mariadb
   systemctl start redis
-  systemctl start php-fpm.service
+
+  # SELinux (allow nginx and redis)
+  setsebool -P httpd_can_network_connect 1
+  setsebool -P httpd_execmem 1
+  setsebool -P httpd_unified 1
+
+  echo "* Dependencies for CentOS installed!"
+}
+
+function centos8_dep {
+  echo "* Installing dependencies for CentOS 8.."
+
+  # update first
+  dnf update -y
+
+  # SELinux tools
+  dnf install -y policycoreutils selinux-policy selinux-policy-targeted setroubleshoot-server setools setools-console mcstrans
+
+  # Install php 7.2
+  dnf install -y php php-common php-fpm php-cli php-json php-mysqlnd php-gd php-mbstring php-pdo php-zip php-bcmath php-dom php-opcache
+
+  # MariaDB (use from official repo)
+  dnf install -y mariadb mariadb-server
+
+  # Other dependencies
+  dnf install -y nginx curl tar zip unzip git redis
+
+  # enable services
+  systemctl enable mariadb
+  systemctl enable redis
+  systemctl start mariadb
+  systemctl start redis
+
+  # SELinux (allow nginx and redis)
+  setsebool -P httpd_can_network_connect 1
+  setsebool -P httpd_execmem 1
+  setsebool -P httpd_unified 1
 
   echo "* Dependencies for CentOS installed!"
 }
@@ -405,6 +456,13 @@ function ubuntu_universedep {
   else
     add-apt-repository universe
   fi
+}
+
+function centos_php {
+  curl -o /etc/php-fpm.d/www-pterodactyl.conf $CONFIGS_URL/www-pterodactyl.conf
+
+  systemctl enable php-fpm
+  systemctl start php-fpm
 }
 
 
@@ -429,7 +487,10 @@ function configure_nginx {
       curl -o /etc/nginx/conf.d/pterodactyl.conf $CONFIGS_URL/$DL_FILE
 
       # replace all <domain> places with the correct domain
-      sed -i -e "s/<domain>/${FQDN}/g" /etc/nginx/conf.d/pterodactyl.conf
+      sed -i -e "s@<domain>@${FQDN}@g" /etc/nginx/conf.d/pterodactyl.conf
+
+      # replace all <php_socket> places with correct socket "path"
+      sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" /etc/nginx/conf.d/pterodactyl.conf
   else
       # remove default config
       rm -rf /etc/nginx/sites-enabled/default
@@ -438,10 +499,10 @@ function configure_nginx {
       curl -o /etc/nginx/sites-available/pterodactyl.conf $CONFIGS_URL/$DL_FILE
 
       # replace all <domain> places with the correct domain
-      sed -i -e "s/<domain>/${FQDN}/g" /etc/nginx/sites-available/pterodactyl.conf
+      sed -i -e "s@<domain>@${FQDN}@g" /etc/nginx/sites-available/pterodactyl.conf
 
-      # replace all <php_version> places with correct version
-      sed -i -e "s/<php_version>/${PHP_VERSION}/g" /etc/nginx/sites-available/pterodactyl.conf
+      # replace all <php_socket> places with correct socket "path"
+      sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" /etc/nginx/sites-available/pterodactyl.conf
 
       # enable pterodactyl
       sudo ln -s /etc/nginx/sites-available/pterodactyl.conf /etc/nginx/sites-enabled/pterodactyl.conf
@@ -495,7 +556,12 @@ function perform_install {
     insert_cronjob
     install_pteroq
   elif [ "$OS" == "centos" ]; then
-    centos_dep
+    if [ "$OS_VER_MAJOR" == "7" ]; then
+      centos7_dep
+    elif [ "$OS_VER_MAJOR" == "8" ]; then
+      centos8_dep
+    fi
+    centos_php
     install_composer
     ptdl_dl
     create_database
@@ -628,6 +694,7 @@ function goodbye {
   echo "* "
   echo "* Installation is using $WEBSERVER on $OS"
   echo "* Thank you for using this script."
+  echo -e "* ${COLOR_RED}Note${COLOR_NC}: This script does not configure any firewalls for you. 80/443 (HTTP/HTTPS) is required to be open."
   print_brake 62
 
   exit 0

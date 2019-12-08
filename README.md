@@ -13,17 +13,17 @@ List of supported installation setups for panel and daemon (installations suppor
 
 ### Supported panel operating systems and webservers
 
-| Operating System  | Version | nginx support        | Apache support |
-| ----------------- | ------- | -------------------- | -------------- |
-| Ubuntu            | 14.04   | :red_circle:         | :red_circle:   |
-|                   | 16.04   | :white_check_mark:   | :red_circle:   |
-|                   | 18.04   | :white_check_mark:   | :red_circle:   |
-| Debian            | 8       | :white_check_mark:   | :red_circle:   |
-|                   | 9       | :white_check_mark:   | :red_circle:   |
-|                   | 10      | :white_check_mark:   | :red_circle:   |
-| CentOS            | 6       | :red_circle:         | :red_circle:   |
-|                   | 7       | :red_circle: **      | :red_circle:   |
-|                   | 8       | :red_circle:         | :red_circle:   |
+| Operating System  | Version | nginx support        | Apache support | PHP Version |
+| ----------------- | ------- | -------------------- | -------------- | ----------- |
+| Ubuntu            | 14.04   | :red_circle:         | :red_circle:   |             |
+|                   | 16.04   | :white_check_mark:   | :red_circle:   | 7.2         |
+|                   | 18.04   | :white_check_mark:   | :red_circle:   | 7.2         |
+| Debian            | 8       | :white_check_mark:   | :red_circle:   | 7.3         |
+|                   | 9       | :white_check_mark:   | :red_circle:   | 7.3         |
+|                   | 10      | :white_check_mark:   | :red_circle:   | 7.3         |
+| CentOS            | 6       | :red_circle:         | :red_circle:   |             |
+|                   | 7       | :white_check_mark:   | :red_circle:   | 7.3         |
+|                   | 8       | :white_check_mark:   | :red_circle:   | 7.2         |
 
 ### Supported daemon operating systems
 
@@ -37,11 +37,9 @@ List of supported installation setups for panel and daemon (installations suppor
 |                   | 10      | :white_check_mark: * |
 | CentOS            | 6       | :red_circle:         |
 |                   | 7       | :white_check_mark:   |
-|                   | 8       | :red_circle:         |
+|                   | 8       | :white_check_mark:   |
 
 _* Debian 10 is not listed as officially supported by Pterodactyl yet._
-
-_** CentOS 7 is only supported by this script on daemon installations, panel installations for CentOS 7 are not supported._
 
 ## Using the installation scripts
 
@@ -60,6 +58,81 @@ bash <(curl -s https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-instal
 The script will guide you through the install.
 
 *Note: On some systems, it's required to be already logged in as root before executing the one-line command.*
+
+## Firewall setup
+
+The installation scripts do not configure your firewall automatically.
+
+### Debian/Ubuntu
+
+On Debian and Ubuntu, `ufw` can be used. Install it using `apt`.
+
+```bash
+apt install -y ufw
+```
+
+#### Panel
+
+Allow HTTP/HTTPS connections for panel installation.
+
+```bash
+ufw allow http
+ufw allow https
+```
+
+#### Daemon
+
+Allow 8080 and 2022.
+
+```bash
+ufw allow 8080
+ufw allow 2022
+```
+
+#### Enable the firewall
+
+Make sure to also enable SSH (or allow SSH from your IP only, depending on your setup).
+
+```bash
+ufw allow ssh
+```
+
+Enable the firewall.
+
+```bash
+ufw enable
+```
+
+### CentOS
+
+On CentOS, `firewall-cmd` can be used.
+
+#### Panel
+
+Allow HTTP and HTTPS.
+
+```bash
+firewall-cmd --add-service=http --permanent
+firewall-cmd --add-service=https --permanent
+```
+
+#### Daemon
+
+Allow 8080 and 2022.
+
+```bash
+firewall-cmd --add-port 8080/tcp --permanent
+firewall-cmd --add-port 2022/tcp --permanent
+firewall-cmd --permanent --zone=trusted --change-interface=docker0
+```
+
+#### Enable the firewall
+
+Reload the firewall to enable the changes.
+
+```bash
+firewall-cmd --reload
+```
 
 ## Contributing
 
