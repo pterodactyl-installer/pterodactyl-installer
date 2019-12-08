@@ -232,7 +232,6 @@ function set_folder_permissions {
 function insert_cronjob {
   echo "* Installing cronjob.. "
 
-  # removed alternate method
   crontab -l | { cat; echo "* * * * * php /var/www/pterodactyl/artisan schedule:run >> /dev/null 2>&1"; } | crontab -
 
   echo "* Cronjob installed!"
@@ -250,6 +249,15 @@ function install_pteroq {
 
 function create_database {
   if [ "$OS" == "centos" ]; then
+    # secure MariaDB
+    echo "* MariaDB secure installation. The following are safe defaults."
+    echo "* Set root password? [Y/n] Y"
+    echo "* Remove anonymous users? [Y/n] Y"
+    echo "* Disallow root login remotely? [Y/n] Y"
+    echo "* Remove test database and access to it? [Y/n] Y"
+    echo "* Reload privilege tables now? [Y/n] Y"
+    echo "*"
+
     mysql_secure_installation
   fi
 
@@ -398,17 +406,6 @@ function centos7_dep {
   setsebool -P httpd_execmem 1
   setsebool -P httpd_unified 1
 
-  # secure MariaDB
-  echo "* MariaDB secure installation. The following are safe defaults."
-  echo "* Set root password? [Y/n] Y"
-  echo "* Remove anonymous users? [Y/n] Y"
-  echo "* Disallow root login remotely? [Y/n] Y"
-  echo "* Remove test database and access to it? [Y/n] Y"
-  echo "* Reload privilege tables now? [Y/n] Y"
-  echo "*"
-
-  mysql_secure_installation
-
   echo "* Dependencies for CentOS installed!"
 }
 
@@ -461,7 +458,10 @@ function configure_nginx {
       curl -o /etc/nginx/conf.d/pterodactyl.conf $CONFIGS_URL/$DL_FILE
 
       # replace all <domain> places with the correct domain
-      sed -i -e "s/<domain>/${FQDN}/g" /etc/nginx/conf.d/pterodactyl.conf
+      sed -i -e "s@<domain>@${FQDN}@g" /etc/nginx/conf.d/pterodactyl.conf
+
+      # replace all <php_socket> places with correct socket "path"
+      sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" /etc/nginx/conf.d/pterodactyl.conf
   else
       # remove default config
       rm -rf /etc/nginx/sites-enabled/default
@@ -470,10 +470,10 @@ function configure_nginx {
       curl -o /etc/nginx/sites-available/pterodactyl.conf $CONFIGS_URL/$DL_FILE
 
       # replace all <domain> places with the correct domain
-      sed -i -e "s/<domain>/${FQDN}/g" /etc/nginx/sites-available/pterodactyl.conf
+      sed -i -e "s@<domain>@${FQDN}@g" /etc/nginx/sites-available/pterodactyl.conf
 
       # replace all <php_socket> places with correct socket "path"
-      sed -i -e "s/<php_socket>/${PHP_SOCKET}/g" /etc/nginx/sites-available/pterodactyl.conf
+      sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" /etc/nginx/sites-available/pterodactyl.conf
 
       # enable pterodactyl
       sudo ln -s /etc/nginx/sites-available/pterodactyl.conf /etc/nginx/sites-enabled/pterodactyl.conf
@@ -665,6 +665,7 @@ function goodbye {
   echo "* "
   echo "* Installation is using $WEBSERVER on $OS"
   echo "* Thank you for using this script."
+  echo -e "* ${COLOR_RED}Note${COLOR_NC}: This script does not configure any firewalls for you. 80/443 (HTTP/HTTPS) is required to be open."
   print_brake 62
 
   exit 0
