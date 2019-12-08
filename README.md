@@ -59,6 +59,81 @@ The script will guide you through the install.
 
 *Note: On some systems, it's required to be already logged in as root before executing the one-line command.*
 
+## Firewall setup
+
+The installation scripts do not configure your firewall automatically.
+
+### Debian/Ubuntu
+
+On Debian and Ubuntu, `ufw` can be used. Install it using `apt`.
+
+```bash
+apt install -y ufw
+```
+
+#### Panel
+
+Allow HTTP/HTTPS connections for panel installation.
+
+```bash
+ufw allow http
+ufw allow https
+```
+
+#### Daemon
+
+Allow 8080 and 2022.
+
+```bash
+ufw allow 8080
+ufw allow 2022
+```
+
+#### Enable the firewall
+
+Make sure to also enable SSH (or allow SSH from your IP only, depending on your setup).
+
+```bash
+ufw allow ssh
+```
+
+Enable the firewall.
+
+```bash
+ufw enable
+```
+
+### CentOS
+
+On CentOS, `firewall-cmd` can be used.
+
+#### Panel
+
+Allow HTTP and HTTPS.
+
+```bash
+firewall-cmd --add-service=http --permanent
+firewall-cmd --add-service=https --permanent
+```
+
+#### Daemon
+
+Allow 8080 and 2022.
+
+```bash
+firewall-cmd --add-port 8080/tcp --permanent
+firewall-cmd --add-port 2022/tcp --permanent
+firewall-cmd --permanent --zone=trusted --change-interface=docker0
+```
+
+#### Enable the firewall
+
+Reload the firewall to enable the changes.
+
+```bash
+firewall-cmd --reload
+```
+
 ## Contributing
 
 Feel free to fork the project and send a PR! :smiley:
