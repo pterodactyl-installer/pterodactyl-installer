@@ -1,16 +1,16 @@
 #!/bin/bash
 
-###################################################################
-#
-# Project 'pterodactyl-installer' for panel
-#
-# Copyright (C) 2018 - 2019, Vilhelm Prytz, <vilhelm@prytznet.se>
-#
-# This script is not associated with the official the Pterodactyl Project.
-# Please use at your own risk.
-# https://github.com/VilhelmPrytz/pterodactyl-installer
-#
-###################################################################
+########################################################################
+#                                                                      #
+# Project 'pterodactyl-installer' for panel                            #
+#                                                                      #
+# Copyright (C) 2018 - 2019, Vilhelm Prytz, <vilhelm@prytznet.se>      #
+#                                                                      #
+# This script is not associated with the official Pterodactyl Project. #
+# Please use at your own risk.                                         #
+# https://github.com/VilhelmPrytz/pterodactyl-installer                #
+#                                                                      #
+########################################################################
 
 # exit with error status code if user is not root
 if [[ $EUID -ne 0 ]]; then
@@ -117,18 +117,23 @@ function check_os_comp {
   if [ "$OS" == "ubuntu" ]; then
     if [ "$OS_VER_MAJOR" == "16" ]; then
       SUPPORTED=true
+      PHP_VERSION="7.2"
     elif [ "$OS_VER_MAJOR" == "18" ]; then
       SUPPORTED=true
+      PHP_VERSION="7.2"
     else
       SUPPORTED=false
     fi
   elif [ "$OS" == "debian" ]; then
     if [ "$OS_VER_MAJOR" == "8" ]; then
       SUPPORTED=true
+      PHP_VERSION="7.3"
     elif [ "$OS_VER_MAJOR" == "9" ]; then
       SUPPORTED=true
+      PHP_VERSION="7.3"
     elif [ "$OS_VER_MAJOR" == "10" ]; then
       SUPPORTED=true
+      PHP_VERSION="7.3"
     else
       SUPPORTED=false
     fi
@@ -228,10 +233,6 @@ function insert_cronjob {
   echo "* Installing cronjob.. "
 
   # removed alternate method
-  #crontab -l > mycron
-  #echo "* * * * * php /var/www/pterodactyl/artisan schedule:run >> /dev/null 2>&1" >> mycron
-  #crontab mycron
-  #rm mycron
   crontab -l | { cat; echo "* * * * * php /var/www/pterodactyl/artisan schedule:run >> /dev/null 2>&1"; } | crontab -
 
   echo "* Cronjob installed!"
@@ -438,6 +439,9 @@ function configure_nginx {
 
       # replace all <domain> places with the correct domain
       sed -i -e "s/<domain>/${FQDN}/g" /etc/nginx/sites-available/pterodactyl.conf
+
+      # replace all <php_version> places with correct version
+      sed -i -e "s/<php_version>/${PHP_VERSION}/g" /etc/nginx/sites-available/pterodactyl.conf
 
       # enable pterodactyl
       sudo ln -s /etc/nginx/sites-available/pterodactyl.conf /etc/nginx/sites-enabled/pterodactyl.conf

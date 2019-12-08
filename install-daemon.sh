@@ -1,16 +1,16 @@
 #!/bin/bash
 
-###################################################################
-#
-# Project 'pterodactyl-installer' for daemon
-#
-# Copyright (C) 2018 - 2019, Vilhelm Prytz, <vilhelm@prytznet.se>
-#
-# This script is not associated with the official the Pterodactyl Project.
-# Please use at your own risk.
-# https://github.com/VilhelmPrytz/pterodactyl-installer
-#
-###################################################################
+########################################################################
+#                                                                      #
+# Project 'pterodactyl-installer' for daemon                           #
+#                                                                      #
+# Copyright (C) 2018 - 2019, Vilhelm Prytz, <vilhelm@prytznet.se>      #
+#                                                                      #
+# This script is not associated with the official Pterodactyl Project. #
+# Please use at your own risk.                                         #
+# https://github.com/VilhelmPrytz/pterodactyl-installer                #
+#                                                                      #
+########################################################################
 
 # exit with error status code if user is not root
 if [[ $EUID -ne 0 ]]; then
@@ -110,6 +110,8 @@ function check_os_comp {
     fi
   elif [ "$OS" == "debian" ]; then
     if [ "$OS_VER_MAJOR" == "9" ]; then
+      SUPPORTED=true
+    elif [ "$OS_VER_MAJOR" == "10" ]; then
       SUPPORTED=true
     else
       SUPPORTED=false
@@ -247,11 +249,14 @@ function install_docker {
 }
 
 function install_nodejs {
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
-    curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+  if [ "$OS" == "debian" ]; then
+    curl -sL https://deb.nodesource.com/setup_10.x | bash -
+    apt-get install -y nodejs
+  elif [ "$OS" == "ubuntu" ]; then
+    curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
     apt -y install nodejs
   elif [ "$OS" == "centos" ]; then
-    curl --silent --location https://rpm.nodesource.com/setup_8.x | sudo bash -
+    curl --silent --location https://rpm.nodesource.com/setup_10.x | sudo bash -
     yum -y install nodejs
   fi
 }
