@@ -141,6 +141,9 @@ function check_os_comp {
     if [ "$OS_VER_MAJOR" == "7" ]; then
       SUPPORTED=true
       PHP_SOCKET="/var/run/php-fpm/pterodactyl.sock"
+    if [ "$OS_VER_MAJOR" == "8" ]; then
+      SUPPORTED=true
+      PHP_SOCKET="/var/run/php-fpm/pterodactyl.sock"
     else
       SUPPORTED=false
     fi
@@ -382,7 +385,7 @@ function centos7_dep {
   # SELinux tools
   yum install -y policycoreutils policycoreutils-python selinux-policy selinux-policy-targeted libselinux-utils setroubleshoot-server setools setools-console mcstrans
 
-  # install php7.2
+  # install php7.3
   yum install -y epel-release http://rpms.remirepo.net/enterprise/remi-release-7.rpm
   yum install -y yum-utils
   yum-config-manager --disable remi-php54
@@ -401,7 +404,7 @@ function centos7_dep {
   systemctl start mariadb
   systemctl start redis
 
-  # SELinux
+  # SELinux (allow nginx and redis)
   setsebool -P httpd_can_network_connect 1
   setsebool -P httpd_execmem 1
   setsebool -P httpd_unified 1
@@ -411,6 +414,32 @@ function centos7_dep {
 
 function centos8_dep {
   echo "* Installing dependencies for CentOS 8.."
+
+  # update first
+  dnf update -y
+
+  # SELinux tools
+  dnf install -y policycoreutils selinux-policy selinux-policy-targeted setroubleshoot-server setools setools-console mcstrans
+
+  # Install php 7.2
+  dnf install -y php php-common php-fpm php-cli php-json php-mysqlnd php-gd php-mbstring php-pdo php-zip php-bcmath php-dom php-opcache
+
+  # MariaDB (use from official repo)
+  dnf install -y mariadb mariadb-server
+
+  # Other dependencies
+  dnf install -y nginx curl tar zip unzip git redis
+
+  # enable services
+  systemctl enable mariadb
+  systemctl enable redis
+  systemctl start mariadb
+  systemctl start redis
+
+  # SELinux (allow nginx and redis)
+  setsebool -P httpd_can_network_connect 1
+  setsebool -P httpd_execmem 1
+  setsebool -P httpd_unified 1
 
   echo "* Dependencies for CentOS installed!"
 }

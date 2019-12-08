@@ -13,17 +13,17 @@ List of supported installation setups for panel and daemon (installations suppor
 
 ### Supported panel operating systems and webservers
 
-| Operating System  | Version | nginx support        | Apache support |
-| ----------------- | ------- | -------------------- | -------------- |
-| Ubuntu            | 14.04   | :red_circle:         | :red_circle:   |
-|                   | 16.04   | :white_check_mark:   | :red_circle:   |
-|                   | 18.04   | :white_check_mark:   | :red_circle:   |
-| Debian            | 8       | :white_check_mark:   | :red_circle:   |
-|                   | 9       | :white_check_mark:   | :red_circle:   |
-|                   | 10      | :white_check_mark:   | :red_circle:   |
-| CentOS            | 6       | :red_circle:         | :red_circle:   |
-|                   | 7       | :red_circle: **      | :red_circle:   |
-|                   | 8       | :red_circle:         | :red_circle:   |
+| Operating System  | Version | nginx support        | Apache support | PHP Version |
+| ----------------- | ------- | -------------------- | -------------- | ----------- |
+| Ubuntu            | 14.04   | :red_circle:         | :red_circle:   |             |
+|                   | 16.04   | :white_check_mark:   | :red_circle:   | 7.2         |
+|                   | 18.04   | :white_check_mark:   | :red_circle:   | 7.2         |
+| Debian            | 8       | :white_check_mark:   | :red_circle:   | 7.3         |
+|                   | 9       | :white_check_mark:   | :red_circle:   | 7.3         |
+|                   | 10      | :white_check_mark:   | :red_circle:   | 7.3         |
+| CentOS            | 6       | :red_circle:         | :red_circle:   |             |
+|                   | 7       | :white_check_mark:   | :red_circle:   | 7.3         |
+|                   | 8       | :white_check_mark:   | :red_circle:   | 7.2         |
 
 ### Supported daemon operating systems
 
@@ -40,8 +40,6 @@ List of supported installation setups for panel and daemon (installations suppor
 |                   | 8       | :red_circle:         |
 
 _* Debian 10 is not listed as officially supported by Pterodactyl yet._
-
-_** CentOS 7 is only supported by this script on daemon installations, panel installations for CentOS 7 are not supported._
 
 ## Using the installation scripts
 
