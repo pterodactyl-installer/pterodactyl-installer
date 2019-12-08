@@ -472,8 +472,8 @@ function configure_nginx {
       # replace all <domain> places with the correct domain
       sed -i -e "s/<domain>/${FQDN}/g" /etc/nginx/sites-available/pterodactyl.conf
 
-      # replace all <php_version> places with correct version
-      sed -i -e "s/<php_version>/${PHP_VERSION}/g" /etc/nginx/sites-available/pterodactyl.conf
+      # replace all <php_socket> places with correct socket "path"
+      sed -i -e "s/<php_socket>/${PHP_SOCKET}/g" /etc/nginx/sites-available/pterodactyl.conf
 
       # enable pterodactyl
       sudo ln -s /etc/nginx/sites-available/pterodactyl.conf /etc/nginx/sites-enabled/pterodactyl.conf
