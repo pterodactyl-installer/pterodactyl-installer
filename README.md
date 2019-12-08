@@ -7,6 +7,8 @@ Unofficial scripts for installing Pterodactyl on both Panel & Daemon.
 
 Read more about [Pterodactyl](https://pterodactyl.io/) here. This script is not associated with the official Pterodactyl Project.
 
+This project is available at [GitHub](https://github.com/VilhelmPrytz/pterodactyl-installer) with read-only forks available at [GitLab](https://gitlab.com/vilhelm/pterodactyl-installer) and [Bitbucket](https://bitbucket.org/prytz/pterodactyl-installer/src/master/).
+
 ## Supported installations
 
 List of supported installation setups for panel and daemon (installations supported by this installation script).
