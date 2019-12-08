@@ -119,6 +119,8 @@ function check_os_comp {
   elif [ "$OS" == "centos" ]; then
     if [ "$OS_VER_MAJOR" == "7" ]; then
       SUPPORTED=true
+    elif [ "$OS_VER_MAJOR" == "8" ]; then
+      SUPPORTED=true
     else
       SUPPORTED=false
     fi
@@ -139,10 +141,6 @@ function check_os_comp {
 ############################
 ## INSTALLATION FUNCTIONS ##
 ############################
-function yum_update {
-  yum update -y
-}
-
 function apt_update {
   apt update -y
   apt upgrade -y
@@ -155,11 +153,19 @@ function install_dep {
     # install dependencies
     apt -y install tar unzip make gcc g++ python
   elif [ "$OS" == "centos" ]; then
-    yum_update
+    if [ "$OS_VER_MAJOR" == "7" ]; then
+      yum -y update
 
-    # install dependencies
-    yum -y install tar unzip make gcc
-    yum -y install gcc-c++
+      # install dependencies
+      yum -y install tar unzip make gcc gcc-c++ python
+    elif [ "$OS_VER_MAJOR" == "8" ]; then
+      dnf -y update
+
+      # install dependencies
+      dnf install -y tar unzip make gcc gcc-c++ python2
+
+      alternatives --set python /usr/bin/python2
+    fi
   else
     print_error "Invalid OS."
     exit 1
@@ -227,18 +233,27 @@ function install_docker {
     systemctl enable docker
 
   elif [ "$OS" == "centos" ]; then
-    # install dependencies for Docker
-    yum install -y yum-utils \
-      device-mapper-persistent-data \
-      lvm2
+    if [ "$OS_VER_MAJOR" == "7" ]; then
+      # install dependencies for Docker
+      yum install -y yum-utils device-mapper-persistent-data lvm2
 
-    # add repo to yum
-    yum-config-manager \
-      --add-repo \
-      https://download.docker.com/linux/centos/docker-ce.repo
+      # add repo to yum
+      yum-config-manager \
+        --add-repo \
+        https://download.docker.com/linux/centos/docker-ce.repo
 
-    # install Docker
-    yum install -y docker-ce
+      # install Docker
+      yum install -y docker-ce
+    elif [ "$OS_VER_MAJOR" == "8" ]; then
+      # install dependencies for Docker
+      dnf install -y dnf-utils device-mapper-persistent-data lvm2
+
+      # add repo to dnf
+      dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
+
+      # install Docker
+      dnf install -y docker-ce --nobest
+    fi
 
     # make sure it's enabled & running
     systemctl start docker
@@ -257,7 +272,12 @@ function install_nodejs {
     apt -y install nodejs
   elif [ "$OS" == "centos" ]; then
     curl --silent --location https://rpm.nodesource.com/setup_10.x | sudo bash -
-    yum -y install nodejs
+
+    if [ "$OS_VER_MAJOR" == "7" ]; then
+      yum -y install nodejs
+    elif [ "$OS_VER_MAJOR" == "8" ]; then
+      dnf -y install nodejs
+    fi
   fi
 }
 
@@ -338,6 +358,7 @@ function goodbye {
   echo "* systemctl start wings"
   echo "* "
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: It is recommended to enable swap (for Docker, read more about it in official documentation)."
+  echo -e "* ${COLOR_RED}Note${COLOR_NC}: This script does not configure your firewall. Ports 8080 and 2022 needs to be open."
   print_brake 70
   echo ""
 }

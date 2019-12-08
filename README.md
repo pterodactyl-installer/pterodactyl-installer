@@ -37,7 +37,7 @@ List of supported installation setups for panel and daemon (installations suppor
 |                   | 10      | :white_check_mark: * |
 | CentOS            | 6       | :red_circle:         |
 |                   | 7       | :white_check_mark:   |
-|                   | 8       | :red_circle:         |
+|                   | 8       | :white_check_mark:   |
 
 _* Debian 10 is not listed as officially supported by Pterodactyl yet._
 
