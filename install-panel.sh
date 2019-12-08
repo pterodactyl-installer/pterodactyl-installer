@@ -141,7 +141,7 @@ function check_os_comp {
     if [ "$OS_VER_MAJOR" == "7" ]; then
       SUPPORTED=true
       PHP_SOCKET="/var/run/php-fpm/pterodactyl.sock"
-    if [ "$OS_VER_MAJOR" == "8" ]; then
+    elif [ "$OS_VER_MAJOR" == "8" ]; then
       SUPPORTED=true
       PHP_SOCKET="/var/run/php-fpm/pterodactyl.sock"
     else
