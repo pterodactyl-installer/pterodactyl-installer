@@ -271,16 +271,16 @@ function create_database {
   echo "* Performing MySQL queries.."
 
   echo "* Create MySQL user."
-  mysql -u root -p -e "CREATE USER '${MYSQL_USER}'@'127.0.0.1' IDENTIFIED BY '${MYSQL_PASSWORD}';"
+  mysql -u root -e "CREATE USER '${MYSQL_USER}'@'127.0.0.1' IDENTIFIED BY '${MYSQL_PASSWORD}';"
 
   echo "* Create database."
-  mysql -u root -p -e "CREATE DATABASE ${MYSQL_DB};"
+  mysql -u root -e "CREATE DATABASE ${MYSQL_DB};"
 
   echo "* Grant privileges."
-  mysql -u root -p -e "GRANT ALL PRIVILEGES ON ${MYSQL_DB}.* TO '${MYSQL_USER}'@'127.0.0.1' WITH GRANT OPTION;"
+  mysql -u root -e "GRANT ALL PRIVILEGES ON ${MYSQL_DB}.* TO '${MYSQL_USER}'@'127.0.0.1' WITH GRANT OPTION;"
 
   echo "* Flush privileges."
-  mysql -u root -p -e "FLUSH PRIVILEGES;"
+  mysql -u root -e "FLUSH PRIVILEGES;"
 
   echo "* MySQL database created & configured!"
 }
