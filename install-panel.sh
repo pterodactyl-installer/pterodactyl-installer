@@ -262,27 +262,38 @@ function create_database {
     echo "*"
 
     mysql_secure_installation
+
+    echo "* The script should have asked you to set the MySQL root password earlier (not to be confused with the pterodactyl database user password)"
+    echo "* MySQL will now ask you to enter the password before each command."
+
+    echo "* Create MySQL user."
+    mysql -u root -p -e "CREATE USER '${MYSQL_USER}'@'127.0.0.1' IDENTIFIED BY '${MYSQL_PASSWORD}';"
+
+    echo "* Create database."
+    mysql -u root -p -e "CREATE DATABASE ${MYSQL_DB};"
+
+    echo "* Grant privileges."
+    mysql -u root -p -e "GRANT ALL PRIVILEGES ON ${MYSQL_DB}.* TO '${MYSQL_USER}'@'127.0.0.1' WITH GRANT OPTION;"
+
+    echo "* Flush privileges."
+    mysql -u root -p -e "FLUSH PRIVILEGES;"
+  else
+    echo "* Performing MySQL queries.."
+
+    echo "* Creating MySQL user.."
+    mysql -u root -e "CREATE USER '${MYSQL_USER}'@'127.0.0.1' IDENTIFIED BY '${MYSQL_PASSWORD}';"
+
+    echo "* Creating database.."
+    mysql -u root -e "CREATE DATABASE ${MYSQL_DB};"
+
+    echo "* Granting privileges.."
+    mysql -u root -e "GRANT ALL PRIVILEGES ON ${MYSQL_DB}.* TO '${MYSQL_USER}'@'127.0.0.1' WITH GRANT OPTION;"
+
+    echo "* Flushing privileges.."
+    mysql -u root -e "FLUSH PRIVILEGES;"
+
+    echo "* MySQL database created & configured!"
   fi
-
-  echo "* Creating MySQL database & user.."
-  echo "* The script should have asked you to set the MySQL root password earlier (not to be confused with the pterodactyl database user password)"
-  echo "* MySQL will now ask you to enter the password before each command."
-
-  echo "* Performing MySQL queries.."
-
-  echo "* Create MySQL user."
-  mysql -u root -e "CREATE USER '${MYSQL_USER}'@'127.0.0.1' IDENTIFIED BY '${MYSQL_PASSWORD}';"
-
-  echo "* Create database."
-  mysql -u root -e "CREATE DATABASE ${MYSQL_DB};"
-
-  echo "* Grant privileges."
-  mysql -u root -e "GRANT ALL PRIVILEGES ON ${MYSQL_DB}.* TO '${MYSQL_USER}'@'127.0.0.1' WITH GRANT OPTION;"
-
-  echo "* Flush privileges."
-  mysql -u root -e "FLUSH PRIVILEGES;"
-
-  echo "* MySQL database created & configured!"
 }
 
 ##################################
