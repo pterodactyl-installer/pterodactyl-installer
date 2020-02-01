@@ -192,6 +192,8 @@ function configure {
   echo "* Please follow the steps below. The installer will ask you for configuration details."
   print_brake 88
   echo ""
+  systemctl start mysqld
+  systemctl enable mysqld
   php artisan p:environment:setup
 
   print_brake 67
