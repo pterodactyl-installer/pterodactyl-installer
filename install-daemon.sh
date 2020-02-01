@@ -4,7 +4,7 @@
 #                                                                      #
 # Project 'pterodactyl-installer' for daemon                           #
 #                                                                      #
-# Copyright (C) 2018 - 2019, Vilhelm Prytz, <vilhelm@prytznet.se>      #
+# Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>      #
 #                                                                      #
 # This script is not associated with the official Pterodactyl Project. #
 # Please use at your own risk.                                         #
