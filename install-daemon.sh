@@ -22,7 +22,7 @@ fi
 CURLPATH="$(command -v curl)"
 if [ -z "$CURLPATH" ]; then
     echo "* curl is required in order for this script to work."
-    echo "* install using apt on Debian/Ubuntu or yum on CentOS"
+    echo "* install using apt on Debian/Ubuntu/Zorin or yum on CentOS"
     exit 1
 fi
 
@@ -108,6 +108,12 @@ function check_os_comp {
     else
       SUPPORTED=false
     fi
+  elif [ "$OS" == "zorin" ]; then
+    if [ "$OS_VER_MAJOR" == "15" ]; then
+      SUPPORTED=true
+    else
+      SUPPORTED=false
+    fi
   elif [ "$OS" == "debian" ]; then
     if [ "$OS_VER_MAJOR" == "9" ]; then
       SUPPORTED=true
@@ -147,7 +153,7 @@ function apt_update {
 }
 
 function install_dep {
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
+  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
     apt_update
 
     # install dependencies
@@ -203,7 +209,7 @@ function install_docker {
     systemctl start docker
     systemctl enable docker
 
-  elif [ "$OS" == "ubuntu" ]; then
+  elif [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
     # install dependencies for Docker
     apt-get update
     apt-get -y install \
@@ -267,7 +273,7 @@ function install_nodejs {
   if [ "$OS" == "debian" ]; then
     curl -sL https://deb.nodesource.com/setup_10.x | bash -
     apt-get install -y nodejs
-  elif [ "$OS" == "ubuntu" ]; then
+  elif [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
     curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
     apt -y install nodejs
   elif [ "$OS" == "centos" ]; then
