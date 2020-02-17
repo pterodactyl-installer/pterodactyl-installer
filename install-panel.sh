@@ -124,6 +124,13 @@ function check_os_comp {
     else
       SUPPORTED=false
     fi
+  elif [ "$OS" == "zorin" ]; then
+    if [ "$OS_VER_MAJOR" == "15" ]; then
+      SUPPORTED=true
+      PHP_SOCKET="/run/php/php7.2-fpm.sock"
+    else
+      SUPPORTED=false
+    fi
   elif [ "$OS" == "debian" ]; then
     if [ "$OS_VER_MAJOR" == "8" ]; then
       SUPPORTED=true
@@ -219,7 +226,7 @@ function configure {
 # set the correct folder permissions depending on OS and webserver
 function set_folder_permissions {
   # if os is ubuntu or debian, we do this
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
+  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
     chown -R www-data:www-data ./*
   elif [ "$OS" == "centos" ] && [ "$WEBSERVER" == "nginx" ]; then
     chown -R nginx:nginx ./*
@@ -557,6 +564,21 @@ function perform_install {
       ubuntu16_dep
     else
       print_error "Unsupported version of Ubuntu."
+      exit 1
+    fi
+    install_composer
+    ptdl_dl
+    create_database
+    configure
+    insert_cronjob
+    install_pteroq
+  elif [ "$OS" == "zorin" ]; then
+    ubuntu_universedep
+    apt_update
+    if [ "$OS_VER_MAJOR" == "15" ]; then
+      ubuntu18_dep
+    else
+      print_error "Unsupported version of Zorin."
       exit 1
     fi
     install_composer
