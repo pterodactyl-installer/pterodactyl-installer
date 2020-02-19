@@ -1,5 +1,6 @@
 # :bird: pterodactyl-installer
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/602a6ae000974d17a16d26b50377cf86)](https://app.codacy.com/manual/VilhelmPrytz_2/pterodactyl-installer?utm_source=github.com&utm_medium=referral&utm_content=VilhelmPrytz/pterodactyl-installer&utm_campaign=Badge_Grade_Settings)
 [![Build Status](https://travis-ci.com/VilhelmPrytz/pterodactyl-installer.svg?branch=master)](https://travis-ci.com/VilhelmPrytz/pterodactyl-installer)
 [![License: GPL v3](https://img.shields.io/github/license/VilhelmPrytz/pterodactyl-installer)](LICENSE)
 
