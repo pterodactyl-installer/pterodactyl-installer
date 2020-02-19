@@ -22,7 +22,7 @@ fi
 CURLPATH="$(command -v curl)"
 if [ -z "$CURLPATH" ]; then
     echo "* curl is required in order for this script to work."
-    echo "* install using apt on Debian/Ubuntu/Zorin or yum on CentOS"
+    echo "* install using apt (Debian and derivatives) or yum/dnf (CentOS)"
     exit 1
 fi
 
