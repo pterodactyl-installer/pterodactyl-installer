@@ -693,7 +693,7 @@ function main {
     [[ -z $char ]] && { printf '\n'; break; } # ENTER pressed; output \n and break.
     if [[ $char == $'\x7f' ]]; then # backspace was pressed
         # Only if variable is not empty
-        if [ ! -z "$MYSQL_PASSWORD" ]; then
+        if [ -n "$MYSQL_PASSWORD" ]; then
           # Remove last char from output variable.
           [[ -n $MYSQL_PASSWORD ]] && MYSQL_PASSWORD=${MYSQL_PASSWORD%?}
           # Erase '*' to the left.
