@@ -293,7 +293,7 @@ function ptdl_dl {
   cd /srv/daemon || exit
 
   curl -L "$DL_URL" | tar --strip-components=1 -xzv
-  npm install --only=production
+  npm install --only=production --unsafe-perm
 
   echo "* Done."
 }
