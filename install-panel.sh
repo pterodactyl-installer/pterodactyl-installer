@@ -45,7 +45,7 @@ FQDN="pterodactyl.panel"
 # default MySQL credentials
 MYSQL_DB="pterodactyl"
 MYSQL_USER="pterodactyl"
-MYSQL_PASSWORD="password"
+MYSQL_PASSWORD=""
 
 # assume SSL, will fetch different config if true
 ASSUME_SSL=false
@@ -687,7 +687,25 @@ function main {
   fi
 
   echo -n "* Password (use something strong): "
-  read -r MYSQL_PASSWORD
+
+  # modified from https://stackoverflow.com/a/22940001
+  while IFS= read -r -s -n1 char; do
+    [[ -z $char ]] && { printf '\n'; break; } # ENTER pressed; output \n and break.
+    if [[ $char == $'\x7f' ]]; then # backspace was pressed
+        # Only if variable is not empty
+        if [ -n "$MYSQL_PASSWORD" ]; then
+          # Remove last char from output variable.
+          [[ -n $MYSQL_PASSWORD ]] && MYSQL_PASSWORD=${MYSQL_PASSWORD%?}
+          # Erase '*' to the left.
+          printf '\b \b' 
+        fi
+    else
+      # Add typed char to output variable.
+      MYSQL_PASSWORD+=$char
+      # Print '*' in its stead.
+      printf '*'
+    fi
+  done
 
   if [ -z "$MYSQL_PASSWORD" ]; then
     print_error "MySQL password cannot be empty"
