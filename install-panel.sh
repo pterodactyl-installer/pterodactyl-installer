@@ -479,8 +479,8 @@ function centos8_dep {
 #################################
 
 function ubuntu_universedep {
-  #Probably should change this, this is more of a bandaid fix for this 
-  #This function running before software-properties-common is installed
+  # Probably should change this, this is more of a bandaid fix for this 
+  # This function is ran before software-properties-common is installed
   apt update -y
   apt install software-properties-common -y
 
