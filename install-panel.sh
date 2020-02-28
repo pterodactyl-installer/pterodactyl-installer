@@ -21,21 +21,20 @@ fi
 # check for curl
 CURLPATH="$(command -v curl)"
 if [ -z "$CURLPATH" ]; then
-    echo "* curl is required in order for this script to work."
-    echo "* install using apt on Debian/Ubuntu or yum on CentOS"
-    exit 1
+  echo "* curl is required in order for this script to work."
+  echo "* install using apt on Debian/Ubuntu or yum on CentOS"
+  exit 1
 fi
 
 # define version using information from GitHub
 get_latest_release() {
   curl --silent "https://api.github.com/repos/$1/releases/latest" | # Get latest release from GitHub api
-    grep '"tag_name":' |                                            # Get tag line
-    sed -E 's/.*"([^"]+)".*/\1/'                                    # Pluck JSON value
+  grep '"tag_name":' |                                              # Get tag line
+  sed -E 's/.*"([^"]+)".*/\1/'                                      # Pluck JSON value
 }
 
 echo "* Retrieving release information.."
 VERSION="$(get_latest_release "pterodactyl/panel")"
-
 echo "* Latest version is $VERSION"
 
 # variables
@@ -61,7 +60,6 @@ SOURCES_PATH="/etc/apt/sources.list"
 function print_error {
   COLOR_RED='\033[0;31m'
   COLOR_NC='\033[0m'
-
   echo ""
   echo -e "* ${COLOR_RED}ERROR${COLOR_NC}: $1"
   echo ""
@@ -182,14 +180,11 @@ function ptdl_dl {
   echo "* Downloading pterodactyl panel files .. "
   mkdir -p /var/www/pterodactyl
   cd /var/www/pterodactyl || exit
-
   curl -Lo panel.tar.gz "$PANEL_URL"
   tar --strip-components=1 -xzvf panel.tar.gz
   chmod -R 755 storage/* bootstrap/cache/
-
   cp .env.example .env
   composer install --no-dev --optimize-autoloader
-
   php artisan key:generate --force
   echo "* Downloaded pterodactyl panel files & installed composer dependencies!"
 }
@@ -200,13 +195,11 @@ function configure {
   print_brake 88
   echo ""
   php artisan p:environment:setup
-
   print_brake 67
   echo "* The installer will now ask you for MySQL database credentials."
   print_brake 67
   echo ""
   php artisan p:environment:database
-
   print_brake 70
   echo "* The installer will now ask you for mail setup / mail credentials."
   print_brake 70
@@ -215,7 +208,6 @@ function configure {
 
   # configures database
   php artisan migrate --seed
-
   echo "* The installer will now ask you to create the inital admin user account."
   php artisan p:user:make
 
@@ -241,19 +233,15 @@ function set_folder_permissions {
 # insert cronjob
 function insert_cronjob {
   echo "* Installing cronjob.. "
-
   crontab -l | { cat; echo "* * * * * php /var/www/pterodactyl/artisan schedule:run >> /dev/null 2>&1"; } | crontab -
-
   echo "* Cronjob installed!"
 }
 
 function install_pteroq {
   echo "* Installing pteroq service.."
-
   curl -o /etc/systemd/system/pteroq.service $CONFIGS_URL/pteroq.service
   systemctl enable pteroq.service
   systemctl start pteroq
-
   echo "* Installed pteroq!"
 }
 
@@ -267,38 +255,27 @@ function create_database {
     echo "* Remove test database and access to it? [Y/n] Y"
     echo "* Reload privilege tables now? [Y/n] Y"
     echo "*"
-
     mysql_secure_installation
-
     echo "* The script should have asked you to set the MySQL root password earlier (not to be confused with the pterodactyl database user password)"
     echo "* MySQL will now ask you to enter the password before each command."
-
     echo "* Create MySQL user."
     mysql -u root -p -e "CREATE USER '${MYSQL_USER}'@'127.0.0.1' IDENTIFIED BY '${MYSQL_PASSWORD}';"
-
     echo "* Create database."
     mysql -u root -p -e "CREATE DATABASE ${MYSQL_DB};"
-
     echo "* Grant privileges."
     mysql -u root -p -e "GRANT ALL PRIVILEGES ON ${MYSQL_DB}.* TO '${MYSQL_USER}'@'127.0.0.1' WITH GRANT OPTION;"
-
     echo "* Flush privileges."
     mysql -u root -p -e "FLUSH PRIVILEGES;"
   else
     echo "* Performing MySQL queries.."
-
     echo "* Creating MySQL user.."
     mysql -u root -e "CREATE USER '${MYSQL_USER}'@'127.0.0.1' IDENTIFIED BY '${MYSQL_PASSWORD}';"
-
     echo "* Creating database.."
     mysql -u root -e "CREATE DATABASE ${MYSQL_DB};"
-
     echo "* Granting privileges.."
     mysql -u root -e "GRANT ALL PRIVILEGES ON ${MYSQL_DB}.* TO '${MYSQL_USER}'@'127.0.0.1' WITH GRANT OPTION;"
-
     echo "* Flushing privileges.."
     mysql -u root -e "FLUSH PRIVILEGES;"
-
     echo "* MySQL database created & configured!"
   fi
 }
@@ -316,7 +293,7 @@ function ubuntu18_dep {
 
   # Add "add-apt-repository" command
   apt -y install software-properties-common
-
+  
   # Add additional repositories for PHP, Redis, and MariaDB
   add-apt-repository -y ppa:chris-lea/redis-server
   curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
@@ -329,7 +306,6 @@ function ubuntu18_dep {
 
   systemctl start mariadb
   systemctl enable mariadb
-
   echo "* Dependencies for Ubuntu installed!"
 }
 
@@ -352,7 +328,6 @@ function ubuntu16_dep {
 
   systemctl start mariadb
   systemctl enable mariadb
-
   echo "* Dependencies for Ubuntu installed!"
 }
 
@@ -381,7 +356,6 @@ function debian_jessie_dep {
 
   systemctl start mariadb
   systemctl enable mariadb
-
   echo "* Dependencies for Debian 8/9 installed!"
 }
 
@@ -402,7 +376,6 @@ function debian_dep {
 
   systemctl start mariadb
   systemctl enable mariadb
-
   echo "* Dependencies for Debian 10 installed!"
 }
 
@@ -479,8 +452,8 @@ function centos8_dep {
 #################################
 
 function ubuntu_universedep {
-  # Probably should change this, this is more of a bandaid fix for this 
-  # This function is ran before software-properties-common is installed
+  ## Probably should change this, this is more of a bandaid fix for this 
+  ## function running before the package is installed
   apt update -y
   apt install software-properties-common -y
 
@@ -507,13 +480,11 @@ function centos_php {
 
 function configure_nginx {
   echo "* Configuring nginx .."
-
   if [ "$ASSUME_SSL" == true ]; then
     DL_FILE="nginx_ssl.conf"
   else
     DL_FILE="nginx.conf"
   fi
-
   if [ "$OS" == "centos" ]; then
       # remove default config
       rm -rf /etc/nginx/conf.d/default
@@ -577,6 +548,7 @@ function perform_install {
     configure
     insert_cronjob
     install_pteroq
+    ufw-Ubuntu
   elif [ "$OS" == "zorin" ]; then
     ubuntu_universedep
     apt_update
@@ -633,7 +605,14 @@ function perform_install {
     print_error "Invalid webserver."
     exit 1
   fi
-
+  if [ "$OS_VER_MAJOR" == "18" ]; then
+    read -p "Do you want to setup your HTTPS certificate automatically with LetsEncrypt? (y/N): " CONFIRMSSL
+    if [ "$CONFIRMSSL" == "y" ]; then
+      autoCertUbuntu18
+    elif [ "$CONFIRMSSL" == "Y" ]; then
+      autoCertUbuntu18
+    fi    
+  fi
 }
 
 function main {
@@ -650,12 +629,9 @@ function main {
 
   echo "* [1] - nginx"
   echo -e "\e[9m* [2] - apache\e[0m - \e[1mApache not supported yet\e[0m"
-
   echo ""
-
   echo -n "* Select webserver to install pterodactyl panel with: "
   read -r WEBSERVER_INPUT
-
   if [ "$WEBSERVER_INPUT" == "1" ]; then
     WEBSERVER="nginx"
   else
@@ -672,25 +648,20 @@ function main {
   echo "* database and the panel. You do not need to create the database"
   echo "* before running this script, the script will do that for you."
   echo ""
-
   echo -n "* Database name (panel): "
   read -r MYSQL_DB_INPUT
-
   if [ -z "$MYSQL_DB_INPUT" ]; then
     MYSQL_DB="panel"
   else
     MYSQL_DB=$MYSQL_DB_INPUT
   fi
-
   echo -n "* Username (pterodactyl): "
   read -r MYSQL_USER_INPUT
-
   if [ -z "$MYSQL_USER_INPUT" ]; then
     MYSQL_USER="pterodactyl"
   else
     MYSQL_USER=$MYSQL_USER_INPUT
   fi
-
   echo -n "* Password (use something strong): "
 
   # modified from https://stackoverflow.com/a/22940001
@@ -711,49 +682,131 @@ function main {
       printf '*'
     fi
   done
-
   if [ -z "$MYSQL_PASSWORD" ]; then
     print_error "MySQL password cannot be empty"
     exit 1
   fi
-
   print_brake 72
 
   # set FQDN
-
-  echo -n "* Set the FQDN of this panel (panel hostname): "
+  echo -n "* Set the FQDN of this panel (panel.example.com): "
   read -r FQDN
-
+  
   echo ""
-
-  echo "* This installer does not configure Let's Encrypt, but depending on if you're"
-  echo "* going to use SSL or not, we need to know which webserver configuration to use."
-  echo "* If you're unsure, use (no). "
-  echo -n "* Assume SSL or not? (yes/no): "
+  echo "* We need to know which webserver configuration to use."
+  echo "* If you're unsure, press Enter. "
+  echo -n "* Assume SSL or not? (y/N): "
   read -r ASSUME_SSL_INPUT
-
-  if [ "$ASSUME_SSL_INPUT" == "yes" ]; then
+  if [ "$ASSUME_SSL_INPUT" == "y" ]; then
     ASSUME_SSL=true
-  elif [ "$ASSUME_SSL_INPUT" == "no" ]; then
+  elif [ "$ASSUME_SSL_INPUT" == "Y" ]; then
+    ASSUME_SSL=false
+  elif [ "$ASSUME_SSL_INPUT" == "n" ]; then
+    ASSUME_SSL=false
+  elif [ "$ASSUME_SSL_INPUT" == "N" ]; then
     ASSUME_SSL=false
   else
-    print_error "Invalid answer. Value set to no."
+    print_error "Default answer. Value set to no."
     ASSUME_SSL=false
   fi
 
   # confirm installation
-  echo -e -n "\n* Initial configuration completed. Continue with installation? (y/n): "
+  echo -e -n "\n* Initial configuration completed. Continue with installation? (y/N): "
   read -r CONFIRM
   if [ "$CONFIRM" == "y" ]; then
     perform_install
+  elif [ "$CONFIRM" == "Y" ]; then
+    exit 0
   elif [ "$CONFIRM" == "n" ]; then
+    exit 0
+  elif [ "$CONFIRM" == "N" ]; then
     exit 0
   else
     # run welcome script again
-    print_error "Invalid confirm. Will exit."
+    print_error "Invalid confirm. Will repeat."
     exit 1
   fi
+}
 
+function ufw-Ubuntu {
+  #This function is to use UFW on Ubuntu to Open ports based on whether the user is going
+  #to be hosting the daemon on their machine or just the panel.
+  #When you want to call the total UFW function, you call this function
+
+  read -p "Are you going to be installing the Daemon on this machine (y/N): " DaemonAsk
+
+  #If you are going to be installing the daemon and you want a firewall, by default the 
+  #ports 80, 22, 2022 and 8080 Are allowed through the firewall
+  if [[ "$DaemonAsk" =~ [Yy] ]]; then
+    read -p "Do you want to enable a firewall? (y/N): " ConfirmFirewall
+    if [[ "$ConfirmFirewall" =~ [Yy] ]]; then
+      apt install ufw -y
+      echo -e "\nEnabling Uncomplicated Firewall (UFW)"
+      echo " This is to do the inital setup of UFW, opening the following ports."
+      echo " If you're running SSL you need to add the port 443"
+      echo -e "  80\n  22\n  2022\n  8080"
+      read -p "Would you like to add additional ports besides the ones listed? (y/N): " ConfirmAdditional
+
+      #This is where it asks the user if they want to add any additional ports
+      if [[ "$ConfirmAdditional" =~ [Yy] ]]; then
+        ufwAdditional-Ubuntu
+        ufw allow 80 | grep 'zzz'
+        ufw allow 22 | grep 'zzz'
+        ufw allow 2022 | grep 'zzz'
+        ufw allow 8080 | grep 'zzz'
+        ufw enable
+        ufw status numbered | sed '/v6/d'
+        sleep 3
+      fi
+    fi
+  else
+
+    #If you aren't going to be installing the daemon and you want a firewall, only the
+    #ports 22 and 80 are opened through ufw.
+    read -p "Do you want to enable a firewall? (y/N): " ConfirmFirewall
+    if [[ "$ConfirmFirewall" =~ [Yy] ]]; then
+      apt install ufw -y
+      echo -e "\nEnabling Uncomplicated Firewall (UFW)"
+      echo " This is to do the inital setup of UFW, opening the following ports."
+      echo " If you're running SSL you need to add the port 443"
+      echo -e "  80\n  22"
+      read -p "Would you like to add additional ports besides the ones listed? (y/N): " ConfirmAdditional
+
+      #This is where it asks the user if they want to add any additional ports
+      if [[ "$ConfirmAdditional" =~ [Yy] ]]; then
+        ufwAdditional-Ubuntu
+        ufw allow 80 | grep 'zzz'
+        ufw allow 22 | grep 'zzz'
+        ufw enable
+        ufw status numbered | sed '/v6/d'
+        sleep 3
+      fi  
+    fi
+  fi
+}
+
+function ufwAdditional-Ubuntu {
+  #This loops, asking the user what ports they want within the firewall, then adds the ports.
+  #User can then type 'done' to exit.
+  while true
+    do
+      read -p " Enter the port you want to open (type 'done' to exit) 0-65535: " Port
+      if [[ ! "$Port" =~ [Dd][Oo][Nn][Ee] ]]; then
+        ufw allow $Port | grep 'zzz'
+      else
+        break
+      fi
+    done
+}
+
+function autoCertUbuntu18 {
+  #Set up the certificate with LetsEncrypt to use HTTPS
+  echo -e "\nMake sure you choose Option 1, and create a Standalone Web Server during the certificate"
+  read -p "* Enter your FQDN panel.example.com: " fqdn
+  apt install certbot -y
+  certbot certonly -d $fqdn
+  sleep 3
+  systemctl restart nginx
 }
 
 function goodbye {
@@ -762,10 +815,21 @@ function goodbye {
   echo "* "
   echo "* Installation is using $WEBSERVER on $OS"
   echo "* Thank you for using this script."
-  echo -e "* ${COLOR_RED}Note${COLOR_NC}: This script does not configure any firewalls for you. 80/443 (HTTP/HTTPS) is required to be open."
+  echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you haven't configured the firewall. 80/443 (HTTP/HTTPS) is required to be open."
   print_brake 62
-
-  exit 0
+  echo ""
+  read -p " Install the Daemon on this machine (y/N): " CONFIRM
+  if [ "$CONFIRM" == "y" ]; then
+    bash <(curl -s https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/install-daemon.sh)
+  elif [ "$CONFIRM" == "Y" ]; then
+    bash <(curl -s https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/install-daemon.sh)
+  elif [ "$CONFIRM" == "n" ]; then
+    exit 1
+  elif [ "$CONFIRM" == "N" ]; then
+    exit 1
+  else
+    exit 1
+  fi
 }
 
 # run script
