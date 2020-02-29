@@ -577,6 +577,7 @@ function perform_install {
     configure
     insert_cronjob
     install_pteroq
+    ufw-Ubuntu
   elif [ "$OS" == "zorin" ]; then
     ubuntu_universedep
     apt_update
@@ -756,13 +757,84 @@ function main {
 
 }
 
+function ufw-Ubuntu {
+  #This function is to use UFW on Ubuntu to Open ports based on whether the user is going
+  #to be hosting the daemon on their machine or just the panel.
+  #When you want to call the total UFW function, you call this function
+
+  read -rp "Are you going to be installing the Daemon on this machine (y/N): " DaemonAsk
+
+  #If you are going to be installing the daemon and you want a firewall, by default the 
+  #ports 80, 22, 2022 and 8080 Are allowed through the firewall
+  if [[ "$DaemonAsk" =~ [Yy] ]]; then
+    read -rp "Would you like to enable a firewall with UFW? (y/N): " ConfirmFirewall
+    if [[ "$ConfirmFirewall" =~ [Yy] ]]; then
+      apt install ufw -y
+      echo -e "\nEnabling Uncomplicated Firewall (UFW)"
+      echo " This is to do the inital setup of UFW, opening the following ports."
+      echo " If you're running SSL you need to add the port 443"
+      echo -e "  80\n  22\n  2022\n  8080"
+      read -rp "Would you like to add additional ports besides the ones listed? (y/N): " ConfirmAdditional
+
+      #This is where it asks the user if they want to add any additional ports
+      if [[ "$ConfirmAdditional" =~ [Yy] ]]; then
+        ufwAdditional-Ubuntu
+        ufw allow 80 | grep 'zzz'
+        ufw allow 22 | grep 'zzz'
+        ufw allow 2022 | grep 'zzz'
+        ufw allow 8080 | grep 'zzz'
+        ufw enable
+        ufw status numbered | sed '/v6/d'
+        sleep 3
+      fi
+    fi
+  else
+
+    #If you aren't going to be installing the daemon and you want a firewall, only the
+    #ports 22 and 80 are opened through ufw.
+    read -rp "Do you want to enable a firewall? (y/N): " ConfirmFirewall
+    if [[ "$ConfirmFirewall" =~ [Yy] ]]; then
+      apt install ufw -y
+      echo -e "\nEnabling Uncomplicated Firewall (UFW)"
+      echo " This is to do the inital setup of UFW, opening the following ports."
+      echo " If you're running SSL you need to add the port 443"
+      echo -e "  80\n  22"
+      read -rp "Would you like to add additional ports besides the ones listed? (y/N): " ConfirmAdditional
+
+      #This is where it asks the user if they want to add any additional ports
+      if [[ "$ConfirmAdditional" =~ [Yy] ]]; then
+        ufwAdditional-Ubuntu
+        ufw allow 80 | grep 'zzz'
+        ufw allow 22 | grep 'zzz'
+        ufw enable
+        ufw status numbered | sed '/v6/d'
+        sleep 3
+      fi  
+    fi
+  fi
+}
+
+function ufwAdditional-Ubuntu {
+  #This loops, asking the user what ports they want within the firewall, then adds the ports.
+  #User can then type 'done' to exit.
+  while true
+    do
+      read -rp " Enter the port you want to open (type 'done' to exit) 0-65535: " Port
+      if [[ ! "$Port" =~ [Dd][Oo][Nn][Ee] ]]; then
+        ufw allow "$Port" | grep 'zzz'
+      else
+        break
+      fi
+    done
+}
+
 function goodbye {
   print_brake 62
   echo "* Pterodactyl Panel successfully installed @ $FQDN"
   echo "* "
   echo "* Installation is using $WEBSERVER on $OS"
   echo "* Thank you for using this script."
-  echo -e "* ${COLOR_RED}Note${COLOR_NC}: This script does not configure any firewalls for you. 80/443 (HTTP/HTTPS) is required to be open."
+  echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you haven't configured the firewall. 80/443 (HTTP/HTTPS) is required to be open."
   print_brake 62
 
   exit 0
