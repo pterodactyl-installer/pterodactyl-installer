@@ -56,10 +56,14 @@ CONFIGS_URL="https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installe
 # apt sources path
 SOURCES_PATH="/etc/apt/sources.list"
 
+# ufw firewall
+CONFIUGRE_UFW=false
+
 # visual functions
 function print_error {
   COLOR_RED='\033[0;31m'
   COLOR_NC='\033[0m'
+
   echo ""
   echo -e "* ${COLOR_RED}ERROR${COLOR_NC}: $1"
   echo ""
@@ -180,11 +184,14 @@ function ptdl_dl {
   echo "* Downloading pterodactyl panel files .. "
   mkdir -p /var/www/pterodactyl
   cd /var/www/pterodactyl || exit
+
   curl -Lo panel.tar.gz "$PANEL_URL"
   tar --strip-components=1 -xzvf panel.tar.gz
   chmod -R 755 storage/* bootstrap/cache/
+
   cp .env.example .env
   composer install --no-dev --optimize-autoloader
+
   php artisan key:generate --force
   echo "* Downloaded pterodactyl panel files & installed composer dependencies!"
 }
@@ -195,11 +202,13 @@ function configure {
   print_brake 88
   echo ""
   php artisan p:environment:setup
+
   print_brake 67
   echo "* The installer will now ask you for MySQL database credentials."
   print_brake 67
   echo ""
   php artisan p:environment:database
+
   print_brake 70
   echo "* The installer will now ask you for mail setup / mail credentials."
   print_brake 70
@@ -208,6 +217,7 @@ function configure {
 
   # configures database
   php artisan migrate --seed
+
   echo "* The installer will now ask you to create the inital admin user account."
   php artisan p:user:make
 
@@ -233,15 +243,19 @@ function set_folder_permissions {
 # insert cronjob
 function insert_cronjob {
   echo "* Installing cronjob.. "
+
   crontab -l | { cat; echo "* * * * * php /var/www/pterodactyl/artisan schedule:run >> /dev/null 2>&1"; } | crontab -
+
   echo "* Cronjob installed!"
 }
 
 function install_pteroq {
   echo "* Installing pteroq service.."
+
   curl -o /etc/systemd/system/pteroq.service $CONFIGS_URL/pteroq.service
   systemctl enable pteroq.service
   systemctl start pteroq
+
   echo "* Installed pteroq!"
 }
 
@@ -255,27 +269,38 @@ function create_database {
     echo "* Remove test database and access to it? [Y/n] Y"
     echo "* Reload privilege tables now? [Y/n] Y"
     echo "*"
+
     mysql_secure_installation
+
     echo "* The script should have asked you to set the MySQL root password earlier (not to be confused with the pterodactyl database user password)"
     echo "* MySQL will now ask you to enter the password before each command."
+
     echo "* Create MySQL user."
     mysql -u root -p -e "CREATE USER '${MYSQL_USER}'@'127.0.0.1' IDENTIFIED BY '${MYSQL_PASSWORD}';"
+
     echo "* Create database."
     mysql -u root -p -e "CREATE DATABASE ${MYSQL_DB};"
+
     echo "* Grant privileges."
     mysql -u root -p -e "GRANT ALL PRIVILEGES ON ${MYSQL_DB}.* TO '${MYSQL_USER}'@'127.0.0.1' WITH GRANT OPTION;"
+
     echo "* Flush privileges."
     mysql -u root -p -e "FLUSH PRIVILEGES;"
   else
     echo "* Performing MySQL queries.."
+
     echo "* Creating MySQL user.."
     mysql -u root -e "CREATE USER '${MYSQL_USER}'@'127.0.0.1' IDENTIFIED BY '${MYSQL_PASSWORD}';"
+
     echo "* Creating database.."
     mysql -u root -e "CREATE DATABASE ${MYSQL_DB};"
+
     echo "* Granting privileges.."
     mysql -u root -e "GRANT ALL PRIVILEGES ON ${MYSQL_DB}.* TO '${MYSQL_USER}'@'127.0.0.1' WITH GRANT OPTION;"
+
     echo "* Flushing privileges.."
     mysql -u root -e "FLUSH PRIVILEGES;"
+
     echo "* MySQL database created & configured!"
   fi
 }
@@ -293,7 +318,7 @@ function ubuntu18_dep {
 
   # Add "add-apt-repository" command
   apt -y install software-properties-common
-  
+
   # Add additional repositories for PHP, Redis, and MariaDB
   add-apt-repository -y ppa:chris-lea/redis-server
   curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
@@ -306,6 +331,7 @@ function ubuntu18_dep {
 
   systemctl start mariadb
   systemctl enable mariadb
+
   echo "* Dependencies for Ubuntu installed!"
 }
 
@@ -328,6 +354,7 @@ function ubuntu16_dep {
 
   systemctl start mariadb
   systemctl enable mariadb
+
   echo "* Dependencies for Ubuntu installed!"
 }
 
@@ -356,6 +383,7 @@ function debian_jessie_dep {
 
   systemctl start mariadb
   systemctl enable mariadb
+
   echo "* Dependencies for Debian 8/9 installed!"
 }
 
@@ -376,6 +404,7 @@ function debian_dep {
 
   systemctl start mariadb
   systemctl enable mariadb
+
   echo "* Dependencies for Debian 10 installed!"
 }
 
@@ -452,8 +481,8 @@ function centos8_dep {
 #################################
 
 function ubuntu_universedep {
-  ## Probably should change this, this is more of a bandaid fix for this 
-  ## function running before the package is installed
+  # Probably should change this, this is more of a bandaid fix for this
+  # This function is ran before software-properties-common is installed
   apt update -y
   apt install software-properties-common -y
 
@@ -548,7 +577,12 @@ function perform_install {
     configure
     insert_cronjob
     install_pteroq
-    ufw-Ubuntu
+
+    if [ "$OS_VER_MAJOR" == "18" ]; then
+      if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
+        ubuntu18_letsencrypt
+      fi
+    fi
   elif [ "$OS" == "zorin" ]; then
     ubuntu_universedep
     apt_update
@@ -605,13 +639,9 @@ function perform_install {
     print_error "Invalid webserver."
     exit 1
   fi
-  if [ "$OS_VER_MAJOR" == "18" ]; then
-    read -p "Do you want to setup your HTTPS certificate automatically with LetsEncrypt? (y/N): " CONFIRMSSL
-    if [ "$CONFIRMSSL" == "y" ]; then
-      autoCertUbuntu18
-    elif [ "$CONFIRMSSL" == "Y" ]; then
-      autoCertUbuntu18
-    fi    
+
+  if [ "$CONFIGURE_UFW" == true ]; then
+    firewall_ufw
   fi
 }
 
@@ -629,9 +659,12 @@ function main {
 
   echo "* [1] - nginx"
   echo -e "\e[9m* [2] - apache\e[0m - \e[1mApache not supported yet\e[0m"
+
   echo ""
+
   echo -n "* Select webserver to install pterodactyl panel with: "
   read -r WEBSERVER_INPUT
+
   if [ "$WEBSERVER_INPUT" == "1" ]; then
     WEBSERVER="nginx"
   else
@@ -648,20 +681,25 @@ function main {
   echo "* database and the panel. You do not need to create the database"
   echo "* before running this script, the script will do that for you."
   echo ""
+
   echo -n "* Database name (panel): "
   read -r MYSQL_DB_INPUT
+
   if [ -z "$MYSQL_DB_INPUT" ]; then
     MYSQL_DB="panel"
   else
     MYSQL_DB=$MYSQL_DB_INPUT
   fi
+
   echo -n "* Username (pterodactyl): "
   read -r MYSQL_USER_INPUT
+
   if [ -z "$MYSQL_USER_INPUT" ]; then
     MYSQL_USER="pterodactyl"
   else
     MYSQL_USER=$MYSQL_USER_INPUT
   fi
+
   echo -n "* Password (use something strong): "
 
   # modified from https://stackoverflow.com/a/22940001
@@ -682,10 +720,12 @@ function main {
       printf '*'
     fi
   done
+
   if [ -z "$MYSQL_PASSWORD" ]; then
     print_error "MySQL password cannot be empty"
     exit 1
   fi
+
   print_brake 72
 
   # set FQDN
@@ -710,6 +750,20 @@ function main {
     ASSUME_SSL=false
   fi
 
+  echo -e -n "Do you want to automatically configure HTTPS using Let's Encrypt? (y/N): "
+  read -r CONFIRM_SSL
+
+  if [[ "$CONFIRM_SSL" =~ [Yy] ]]; then
+    CONFIGURE_LETSENCRYPT=true
+  fi
+
+  echo -e -n "Do you want to automatically configure UFW?"
+  read -r CONFIRM_UFW
+
+  if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
+    CONFIGURE_UFW=true
+  fi
+
   # confirm installation
   echo -e -n "\n* Initial configuration completed. Continue with installation? (y/N): "
   read -r CONFIRM
@@ -728,7 +782,7 @@ function main {
   fi
 }
 
-function ufw-Ubuntu {
+function firewall_ufw {
   #This function is to use UFW on Ubuntu to Open ports based on whether the user is going
   #to be hosting the daemon on their machine or just the panel.
   #When you want to call the total UFW function, you call this function
@@ -745,22 +799,16 @@ function ufw-Ubuntu {
       echo " This is to do the inital setup of UFW, opening the following ports."
       echo " If you're running SSL you need to add the port 443"
       echo -e "  80\n  22\n  2022\n  8080"
-      read -p "Would you like to add additional ports besides the ones listed? (y/N): " ConfirmAdditional
 
-      #This is where it asks the user if they want to add any additional ports
-      if [[ "$ConfirmAdditional" =~ [Yy] ]]; then
-        ufwAdditional-Ubuntu
-        ufw allow 80 | grep 'zzz'
-        ufw allow 22 | grep 'zzz'
-        ufw allow 2022 | grep 'zzz'
-        ufw allow 8080 | grep 'zzz'
-        ufw enable
-        ufw status numbered | sed '/v6/d'
-        sleep 3
-      fi
+      ufw allow 80 | grep 'zzz'
+      ufw allow 22 | grep 'zzz'
+      ufw allow 2022 | grep 'zzz'
+      ufw allow 8080 | grep 'zzz'
+      ufw enable
+      ufw status numbered | sed '/v6/d'
+      sleep 3
     fi
   else
-
     #If you aren't going to be installing the daemon and you want a firewall, only the
     #ports 22 and 80 are opened through ufw.
     read -p "Do you want to enable a firewall? (y/N): " ConfirmFirewall
@@ -770,36 +818,16 @@ function ufw-Ubuntu {
       echo " This is to do the inital setup of UFW, opening the following ports."
       echo " If you're running SSL you need to add the port 443"
       echo -e "  80\n  22"
-      read -p "Would you like to add additional ports besides the ones listed? (y/N): " ConfirmAdditional
-
-      #This is where it asks the user if they want to add any additional ports
-      if [[ "$ConfirmAdditional" =~ [Yy] ]]; then
-        ufwAdditional-Ubuntu
-        ufw allow 80 | grep 'zzz'
-        ufw allow 22 | grep 'zzz'
-        ufw enable
-        ufw status numbered | sed '/v6/d'
-        sleep 3
-      fi  
+      ufw allow 80 | grep 'zzz'
+      ufw allow 22 | grep 'zzz'
+      ufw enable
+      ufw status numbered | sed '/v6/d'
+      sleep 3
     fi
   fi
 }
 
-function ufwAdditional-Ubuntu {
-  #This loops, asking the user what ports they want within the firewall, then adds the ports.
-  #User can then type 'done' to exit.
-  while true
-    do
-      read -p " Enter the port you want to open (type 'done' to exit) 0-65535: " Port
-      if [[ ! "$Port" =~ [Dd][Oo][Nn][Ee] ]]; then
-        ufw allow $Port | grep 'zzz'
-      else
-        break
-      fi
-    done
-}
-
-function autoCertUbuntu18 {
+function ubuntu18_letsencrypt {
   #Set up the certificate with LetsEncrypt to use HTTPS
   echo -e "\nMake sure you choose Option 1, and create a Standalone Web Server during the certificate"
   read -p "* Enter your FQDN panel.example.com: " fqdn
