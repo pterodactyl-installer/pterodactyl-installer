@@ -48,6 +48,7 @@ MYSQL_PASSWORD=""
 
 # assume SSL, will fetch different config if true
 ASSUME_SSL=false
+CONFIGURE_LETSENCRYPT=false
 
 # download URLs
 PANEL_URL="https://github.com/pterodactyl/panel/releases/download/$VERSION/panel.tar.gz"
@@ -57,7 +58,7 @@ CONFIGS_URL="https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installe
 SOURCES_PATH="/etc/apt/sources.list"
 
 # ufw firewall
-CONFIUGRE_UFW=false
+CONFIGURE_UFW=false
 
 # visual functions
 function print_error {
@@ -734,36 +735,37 @@ function main {
   echo -n "* Set the FQDN of this panel (panel.example.com): "
   read -r FQDN
   
-  echo ""
-  echo "* We need to know which webserver configuration to use."
-  echo "* If you're unsure, press Enter. "
-  echo -n "* Assume SSL or not? (y/N): "
-  read -r ASSUME_SSL_INPUT
-  if [ "$ASSUME_SSL_INPUT" == "y" ]; then
-    ASSUME_SSL=true
-  elif [ "$ASSUME_SSL_INPUT" == "Y" ]; then
-    ASSUME_SSL=false
-  elif [ "$ASSUME_SSL_INPUT" == "n" ]; then
-    ASSUME_SSL=false
-  elif [ "$ASSUME_SSL_INPUT" == "N" ]; then
-    ASSUME_SSL=false
-  else
-    print_error "Default answer. Value set to no."
-    ASSUME_SSL=false
+  # UFW is available for Ubuntu/Debian
+  # Let's Encrypt, in this setup, is only available on Ubuntu/Debian
+  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
+    echo -e -n "Do you want to automatically configure HTTPS using Let's Encrypt? (y/N): "
+    read -r CONFIRM_SSL
+
+    if [[ "$CONFIRM_SSL" =~ [Yy] ]]; then
+      CONFIGURE_LETSENCRYPT=true
+      ASSUME_SSL=true
+    fi
+
+    echo -e -n "Do you want to automatically configure UFW? (y/N): "
+    read -r CONFIRM_UFW
+
+    if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
+      CONFIGURE_UFW=true
+    fi
   fi
 
-  echo -e -n "Do you want to automatically configure HTTPS using Let's Encrypt? (y/N): "
-  read -r CONFIRM_SSL
+  # If it's already true, this should be a no-brainer
+  if [ "$CONFIGURE_LETSENCRYPT" == false ]; then
+    echo "* Let's Encrypt is not going to be automatically configured by this script (either unsupported yet or user opted out)."
+    echo "* You can 'assume' Let's Encrypt, which means the script will download a nginx configuration that is configured to use a Let's Encrypt certificate but the script won't obtain the certificate for you."
+    echo "* If you assume SSL and do not obtain the certificate, your installation will not work."
 
-  if [[ "$CONFIRM_SSL" =~ [Yy] ]]; then
-    CONFIGURE_LETSENCRYPT=true
-  fi
-
-  echo -e -n "Do you want to automatically configure UFW?"
-  read -r CONFIRM_UFW
-
-  if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
-    CONFIGURE_UFW=true
+    echo -n "* Assume SSL or not? (y/N): "
+    read -r ASSUME_SSL_INPUT
+    
+    if [[ "$ASSUME_SSL_INPUT" =~ [Yy] ]]; then
+      ASSUME_SSL=true
+    fi
   fi
 
   # confirm installation
@@ -785,58 +787,34 @@ function main {
 }
 
 function firewall_ufw {
-  #This function is to use UFW on Ubuntu to Open ports based on whether the user is going
-  #to be hosting the daemon on their machine or just the panel.
-  #When you want to call the total UFW function, you call this function
+  apt install ufw -y
 
-  read -p "Are you going to be installing the Daemon on this machine (y/N): " DaemonAsk
-
-  #If you are going to be installing the daemon and you want a firewall, by default the 
-  #ports 80, 22, 2022 and 8080 Are allowed through the firewall
-  if [[ "$DaemonAsk" =~ [Yy] ]]; then
-    read -p "Do you want to enable a firewall? (y/N): " ConfirmFirewall
-    if [[ "$ConfirmFirewall" =~ [Yy] ]]; then
-      apt install ufw -y
-      echo -e "\nEnabling Uncomplicated Firewall (UFW)"
-      echo " This is to do the inital setup of UFW, opening the following ports."
-      echo " If you're running SSL you need to add the port 443"
-      echo -e "  80\n  22\n  2022\n  8080"
-
-      ufw allow 80 | grep 'zzz'
-      ufw allow 22 | grep 'zzz'
-      ufw allow 2022 | grep 'zzz'
-      ufw allow 8080 | grep 'zzz'
-      ufw enable
-      ufw status numbered | sed '/v6/d'
-      sleep 3
-    fi
-  else
-    #If you aren't going to be installing the daemon and you want a firewall, only the
-    #ports 22 and 80 are opened through ufw.
-    read -p "Do you want to enable a firewall? (y/N): " ConfirmFirewall
-    if [[ "$ConfirmFirewall" =~ [Yy] ]]; then
-      apt install ufw -y
-      echo -e "\nEnabling Uncomplicated Firewall (UFW)"
-      echo " This is to do the inital setup of UFW, opening the following ports."
-      echo " If you're running SSL you need to add the port 443"
-      echo -e "  80\n  22"
-      ufw allow 80 | grep 'zzz'
-      ufw allow 22 | grep 'zzz'
-      ufw enable
-      ufw status numbered | sed '/v6/d'
-      sleep 3
-    fi
-  fi
+  echo -e "\n * Enabling Uncomplicated Firewall (UFW)"
+  echo "* Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
+  
+  ufw allow 22 | grep 'zzz'
+  ufw allow 80 | grep 'zzz'
+  ufw allow 443 | grep 'zzz'
+  
+  ufw enable
+  ufw status numbered | sed '/v6/d'
 }
 
 function ubuntu18_letsencrypt {
   #Set up the certificate with LetsEncrypt to use HTTPS
   echo -e "\nMake sure you choose Option 1, and create a Standalone Web Server during the certificate"
-  read -p "* Enter your FQDN panel.example.com: " fqdn
   apt install certbot -y
-  certbot certonly -d $fqdn
-  sleep 3
+  certbot certonly -d "$FQDN"
   systemctl restart nginx
+}
+
+function install_daemon {
+  echo -n "* Would you like to also install the Pterodactyl daemon on this machine? (y/N): "
+  read -r INSTALL_DAEMON
+
+  if [[ "$INSTALL_DAEMON" =~ [Yy] ]]; then
+    bash <(curl -s https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/install-daemon.sh)
+  fi
 }
 
 function goodbye {
@@ -845,21 +823,9 @@ function goodbye {
   echo "* "
   echo "* Installation is using $WEBSERVER on $OS"
   echo "* Thank you for using this script."
-  echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you haven't configured the firewall. 80/443 (HTTP/HTTPS) is required to be open."
+  echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you haven't configured the firewall: 80/443 (HTTP/HTTPS) is required to be open!"
   print_brake 62
-  echo ""
-  read -p " Install the Daemon on this machine (y/N): " CONFIRM
-  if [ "$CONFIRM" == "y" ]; then
-    bash <(curl -s https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/install-daemon.sh)
-  elif [ "$CONFIRM" == "Y" ]; then
-    bash <(curl -s https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/install-daemon.sh)
-  elif [ "$CONFIRM" == "n" ]; then
-    exit 1
-  elif [ "$CONFIRM" == "N" ]; then
-    exit 1
-  else
-    exit 1
-  fi
+  install_daemon
 }
 
 # run script
