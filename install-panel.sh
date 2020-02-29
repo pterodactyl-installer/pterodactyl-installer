@@ -21,21 +21,20 @@ fi
 # check for curl
 CURLPATH="$(command -v curl)"
 if [ -z "$CURLPATH" ]; then
-    echo "* curl is required in order for this script to work."
-    echo "* install using apt on Debian/Ubuntu or yum on CentOS"
-    exit 1
+  echo "* curl is required in order for this script to work."
+  echo "* install using apt on Debian/Ubuntu or yum on CentOS"
+  exit 1
 fi
 
 # define version using information from GitHub
 get_latest_release() {
   curl --silent "https://api.github.com/repos/$1/releases/latest" | # Get latest release from GitHub api
-    grep '"tag_name":' |                                            # Get tag line
-    sed -E 's/.*"([^"]+)".*/\1/'                                    # Pluck JSON value
+  grep '"tag_name":' |                                              # Get tag line
+  sed -E 's/.*"([^"]+)".*/\1/'                                      # Pluck JSON value
 }
 
 echo "* Retrieving release information.."
 VERSION="$(get_latest_release "pterodactyl/panel")"
-
 echo "* Latest version is $VERSION"
 
 # variables
@@ -56,6 +55,9 @@ CONFIGS_URL="https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installe
 
 # apt sources path
 SOURCES_PATH="/etc/apt/sources.list"
+
+# ufw firewall
+CONFIUGRE_UFW=false
 
 # visual functions
 function print_error {
@@ -479,7 +481,7 @@ function centos8_dep {
 #################################
 
 function ubuntu_universedep {
-  # Probably should change this, this is more of a bandaid fix for this 
+  # Probably should change this, this is more of a bandaid fix for this
   # This function is ran before software-properties-common is installed
   apt update -y
   apt install software-properties-common -y
@@ -577,6 +579,12 @@ function perform_install {
     configure
     insert_cronjob
     install_pteroq
+
+    if [ "$OS_VER_MAJOR" == "18" ]; then
+      if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
+        ubuntu18_letsencrypt
+      fi
+    fi
   elif [ "$OS" == "zorin" ]; then
     ubuntu_universedep
     apt_update
@@ -634,6 +642,9 @@ function perform_install {
     exit 1
   fi
 
+  if [ "$CONFIGURE_UFW" == true ]; then
+    firewall_ufw
+  fi
 }
 
 function main {
@@ -720,40 +731,112 @@ function main {
   print_brake 72
 
   # set FQDN
-
-  echo -n "* Set the FQDN of this panel (panel hostname): "
+  echo -n "* Set the FQDN of this panel (panel.example.com): "
   read -r FQDN
-
+  
   echo ""
-
-  echo "* This installer does not configure Let's Encrypt, but depending on if you're"
-  echo "* going to use SSL or not, we need to know which webserver configuration to use."
-  echo "* If you're unsure, use (no). "
-  echo -n "* Assume SSL or not? (yes/no): "
+  echo "* We need to know which webserver configuration to use."
+  echo "* If you're unsure, press Enter. "
+  echo -n "* Assume SSL or not? (y/N): "
   read -r ASSUME_SSL_INPUT
-
-  if [ "$ASSUME_SSL_INPUT" == "yes" ]; then
+  if [ "$ASSUME_SSL_INPUT" == "y" ]; then
     ASSUME_SSL=true
-  elif [ "$ASSUME_SSL_INPUT" == "no" ]; then
+  elif [ "$ASSUME_SSL_INPUT" == "Y" ]; then
+    ASSUME_SSL=false
+  elif [ "$ASSUME_SSL_INPUT" == "n" ]; then
+    ASSUME_SSL=false
+  elif [ "$ASSUME_SSL_INPUT" == "N" ]; then
     ASSUME_SSL=false
   else
-    print_error "Invalid answer. Value set to no."
+    print_error "Default answer. Value set to no."
     ASSUME_SSL=false
+  fi
+
+  echo -e -n "Do you want to automatically configure HTTPS using Let's Encrypt? (y/N): "
+  read -r CONFIRM_SSL
+
+  if [[ "$CONFIRM_SSL" =~ [Yy] ]]; then
+    CONFIGURE_LETSENCRYPT=true
+  fi
+
+  echo -e -n "Do you want to automatically configure UFW?"
+  read -r CONFIRM_UFW
+
+  if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
+    CONFIGURE_UFW=true
   fi
 
   # confirm installation
-  echo -e -n "\n* Initial configuration completed. Continue with installation? (y/n): "
+  echo -e -n "\n* Initial configuration completed. Continue with installation? (y/N): "
   read -r CONFIRM
   if [ "$CONFIRM" == "y" ]; then
     perform_install
+  elif [ "$CONFIRM" == "Y" ]; then
+    exit 0
   elif [ "$CONFIRM" == "n" ]; then
+    exit 0
+  elif [ "$CONFIRM" == "N" ]; then
     exit 0
   else
     # run welcome script again
-    print_error "Invalid confirm. Will exit."
+    print_error "Invalid confirm. Will repeat."
     exit 1
   fi
+}
 
+function firewall_ufw {
+  #This function is to use UFW on Ubuntu to Open ports based on whether the user is going
+  #to be hosting the daemon on their machine or just the panel.
+  #When you want to call the total UFW function, you call this function
+
+  read -p "Are you going to be installing the Daemon on this machine (y/N): " DaemonAsk
+
+  #If you are going to be installing the daemon and you want a firewall, by default the 
+  #ports 80, 22, 2022 and 8080 Are allowed through the firewall
+  if [[ "$DaemonAsk" =~ [Yy] ]]; then
+    read -p "Do you want to enable a firewall? (y/N): " ConfirmFirewall
+    if [[ "$ConfirmFirewall" =~ [Yy] ]]; then
+      apt install ufw -y
+      echo -e "\nEnabling Uncomplicated Firewall (UFW)"
+      echo " This is to do the inital setup of UFW, opening the following ports."
+      echo " If you're running SSL you need to add the port 443"
+      echo -e "  80\n  22\n  2022\n  8080"
+
+      ufw allow 80 | grep 'zzz'
+      ufw allow 22 | grep 'zzz'
+      ufw allow 2022 | grep 'zzz'
+      ufw allow 8080 | grep 'zzz'
+      ufw enable
+      ufw status numbered | sed '/v6/d'
+      sleep 3
+    fi
+  else
+    #If you aren't going to be installing the daemon and you want a firewall, only the
+    #ports 22 and 80 are opened through ufw.
+    read -p "Do you want to enable a firewall? (y/N): " ConfirmFirewall
+    if [[ "$ConfirmFirewall" =~ [Yy] ]]; then
+      apt install ufw -y
+      echo -e "\nEnabling Uncomplicated Firewall (UFW)"
+      echo " This is to do the inital setup of UFW, opening the following ports."
+      echo " If you're running SSL you need to add the port 443"
+      echo -e "  80\n  22"
+      ufw allow 80 | grep 'zzz'
+      ufw allow 22 | grep 'zzz'
+      ufw enable
+      ufw status numbered | sed '/v6/d'
+      sleep 3
+    fi
+  fi
+}
+
+function ubuntu18_letsencrypt {
+  #Set up the certificate with LetsEncrypt to use HTTPS
+  echo -e "\nMake sure you choose Option 1, and create a Standalone Web Server during the certificate"
+  read -p "* Enter your FQDN panel.example.com: " fqdn
+  apt install certbot -y
+  certbot certonly -d $fqdn
+  sleep 3
+  systemctl restart nginx
 }
 
 function goodbye {
@@ -762,10 +845,21 @@ function goodbye {
   echo "* "
   echo "* Installation is using $WEBSERVER on $OS"
   echo "* Thank you for using this script."
-  echo -e "* ${COLOR_RED}Note${COLOR_NC}: This script does not configure any firewalls for you. 80/443 (HTTP/HTTPS) is required to be open."
+  echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you haven't configured the firewall. 80/443 (HTTP/HTTPS) is required to be open."
   print_brake 62
-
-  exit 0
+  echo ""
+  read -p " Install the Daemon on this machine (y/N): " CONFIRM
+  if [ "$CONFIRM" == "y" ]; then
+    bash <(curl -s https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/install-daemon.sh)
+  elif [ "$CONFIRM" == "Y" ]; then
+    bash <(curl -s https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/install-daemon.sh)
+  elif [ "$CONFIRM" == "n" ]; then
+    exit 1
+  elif [ "$CONFIRM" == "N" ]; then
+    exit 1
+  else
+    exit 1
+  fi
 }
 
 # run script
