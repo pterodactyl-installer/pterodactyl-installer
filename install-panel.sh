@@ -509,11 +509,13 @@ function centos_php {
 
 function configure_nginx {
   echo "* Configuring nginx .."
+
   if [ "$ASSUME_SSL" == true ]; then
     DL_FILE="nginx_ssl.conf"
   else
     DL_FILE="nginx.conf"
   fi
+
   if [ "$OS" == "centos" ]; then
       # remove default config
       rm -rf /etc/nginx/conf.d/default
