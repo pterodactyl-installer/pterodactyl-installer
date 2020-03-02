@@ -583,7 +583,7 @@ function perform_install {
 
     if [ "$OS_VER_MAJOR" == "18" ]; then
       if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
-        ubuntu18_letsencrypt
+        debian_based_letsencrypt
       fi
     fi
   elif [ "$OS" == "zorin" ]; then
@@ -746,7 +746,7 @@ function main {
       ASSUME_SSL=true
     fi
 
-    echo -e -n "Do you want to automatically configure UFW? (y/N): "
+    echo -e -n "Do you want to automatically configure UFW (firewall)? (y/N): "
     read -r CONFIRM_UFW
 
     if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
@@ -771,17 +771,11 @@ function main {
   # confirm installation
   echo -e -n "\n* Initial configuration completed. Continue with installation? (y/N): "
   read -r CONFIRM
-  if [ "$CONFIRM" == "y" ]; then
+  if [[ "$CONFIRM" =~ [Yy] ]]; then
     perform_install
-  elif [ "$CONFIRM" == "Y" ]; then
-    exit 0
-  elif [ "$CONFIRM" == "n" ]; then
-    exit 0
-  elif [ "$CONFIRM" == "N" ]; then
-    exit 0
   else
     # run welcome script again
-    print_error "Invalid confirm. Will repeat."
+    print_error "Installation aborted."
     exit 1
   fi
 }
@@ -800,15 +794,18 @@ function firewall_ufw {
   ufw status numbered | sed '/v6/d'
 }
 
-function ubuntu18_letsencrypt {
-  #Set up the certificate with LetsEncrypt to use HTTPS
+function debian_based_letsencrypt {
+  # Install certbot and setup the certificate using the FQDN
   echo -e "\nMake sure you choose Option 1, and create a Standalone Web Server during the certificate"
   apt install certbot -y
+
   certbot certonly -d "$FQDN"
+
   systemctl restart nginx
 }
 
 function install_daemon {
+  echo "* It is recommended to have the panel and daemon on two separate nodes."
   echo -n "* Would you like to also install the Pterodactyl daemon on this machine? (y/N): "
   read -r INSTALL_DAEMON
 
