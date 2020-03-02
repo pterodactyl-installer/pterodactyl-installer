@@ -4,7 +4,7 @@
 #                                                                           #
 # Project 'pterodactyl-installer' for panel                                 #
 #                                                                           #
-# Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>           #
+# Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al.   #
 #                                                                           #
 # This script is licensed under the terms of the GNU GPL v3.0 license       #
 # https://github.com/VilhelmPrytz/pterodactyl-installer/blob/master/LICENSE #
