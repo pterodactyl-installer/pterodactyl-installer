@@ -1,16 +1,18 @@
 #!/bin/bash
 
-########################################################################
-#                                                                      #
-# Project 'pterodactyl-installer' for daemon                           #
-#                                                                      #
-# Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>      #
-#                                                                      #
-# This script is not associated with the official Pterodactyl Project. #
-# Please use at your own risk.                                         #
-# https://github.com/VilhelmPrytz/pterodactyl-installer                #
-#                                                                      #
-########################################################################
+#############################################################################
+#                                                                           #
+# Project 'pterodactyl-installer' for daemon                                #
+#                                                                           #
+# Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>           #
+#                                                                           #
+# This script is licensed under the terms of the GNU GPL v3.0 license       #
+# https://github.com/VilhelmPrytz/pterodactyl-installer/blob/master/LICENSE #
+#                                                                           #
+# This script is not associated with the official Pterodactyl Project.      #
+# https://github.com/VilhelmPrytz/pterodactyl-installer                     #
+#                                                                           #
+#############################################################################
 
 # exit with error status code if user is not root
 if [[ $EUID -ne 0 ]]; then

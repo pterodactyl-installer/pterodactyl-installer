@@ -1,16 +1,18 @@
 #!/bin/bash
 
-########################################################################
-#                                                                      #
-# Project 'pterodactyl-installer' for panel                            #
-#                                                                      #
-# Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>      #
-#                                                                      #
-# This script is not associated with the official Pterodactyl Project. #
-# Please use at your own risk.                                         #
-# https://github.com/VilhelmPrytz/pterodactyl-installer                #
-#                                                                      #
-########################################################################
+#############################################################################
+#                                                                           #
+# Project 'pterodactyl-installer' for panel                                 #
+#                                                                           #
+# Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>           #
+#                                                                           #
+# This script is licensed under the terms of the GNU GPL v3.0 license       #
+# https://github.com/VilhelmPrytz/pterodactyl-installer/blob/master/LICENSE #
+#                                                                           #
+# This script is not associated with the official Pterodactyl Project.      #
+# https://github.com/VilhelmPrytz/pterodactyl-installer                     #
+#                                                                           #
+#############################################################################
 
 # exit with error status code if user is not root
 if [[ $EUID -ne 0 ]]; then
@@ -219,7 +221,7 @@ function configure {
   # configures database
   php artisan migrate --seed
 
-  echo "* The installer will now ask you to create the inital admin user account."
+  echo "* The installer will now ask you to create the initial admin user account."
   php artisan p:user:make
 
   # set folder permissions now
@@ -738,7 +740,7 @@ function main {
   # UFW is available for Ubuntu/Debian
   # Let's Encrypt, in this setup, is only available on Ubuntu/Debian
   if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
-    echo -e -n "Do you want to automatically configure HTTPS using Let's Encrypt? (y/N): "
+    echo -e -n "* Do you want to automatically configure HTTPS using Let's Encrypt? (y/N): "
     read -r CONFIRM_SSL
 
     if [[ "$CONFIRM_SSL" =~ [Yy] ]]; then
@@ -746,7 +748,7 @@ function main {
       ASSUME_SSL=true
     fi
 
-    echo -e -n "Do you want to automatically configure UFW (firewall)? (y/N): "
+    echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
     read -r CONFIRM_UFW
 
     if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
@@ -783,7 +785,7 @@ function main {
 function firewall_ufw {
   apt install ufw -y
 
-  echo -e "\n * Enabling Uncomplicated Firewall (UFW)"
+  echo -e "\n* Enabling Uncomplicated Firewall (UFW)"
   echo "* Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
   
   ufw allow 22 | grep 'zzz'
