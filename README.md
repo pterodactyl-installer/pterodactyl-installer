@@ -81,12 +81,7 @@ apt install -y ufw
 
 #### Panel
 
-Allow HTTP/HTTPS connections for panel installation.
-
-```bash
-ufw allow http
-ufw allow https
-```
+The script can automatically open the ports for SSH (22), HTTP (80) and HTTPS (443). The installer script should ask whether you'd like it to configure UFW automatically or not.
 
 #### Daemon
 

@@ -788,9 +788,10 @@ function firewall_ufw {
   echo -e "\n* Enabling Uncomplicated Firewall (UFW)"
   echo "* Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
   
-  ufw allow 22 | grep 'zzz'
-  ufw allow 80 | grep 'zzz'
-  ufw allow 443 | grep 'zzz'
+  # pointing to /dev/null silences the command output
+  ufw allow ssh > /dev/null
+  ufw allow http > /dev/null
+  ufw allow https > /dev/null
   
   ufw enable
   ufw status numbered | sed '/v6/d'
