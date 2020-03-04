@@ -41,7 +41,7 @@ echo "* Latest version is $VERSION"
 
 # variables
 WEBSERVER="nginx"
-FQDN="pterodactyl.panel"
+FQDN=""
 
 # default MySQL credentials
 MYSQL_DB="pterodactyl"
@@ -672,21 +672,22 @@ function main {
   # checks if the system is compatible with this installation script
   check_os_comp
 
-  echo "* [1] - nginx"
-  echo -e "\e[9m* [2] - apache\e[0m - \e[1mApache not supported yet\e[0m"
+  while [ "$WEBSERVER_INPUT" != "1" ]; do
+    echo "* [1] - nginx"
+    echo -e "\e[9m* [2] - apache\e[0m - \e[1mApache not supported yet\e[0m"
 
-  echo ""
+    echo ""
 
-  echo -n "* Select webserver to install pterodactyl panel with: "
-  read -r WEBSERVER_INPUT
+    echo -n "* Select webserver to install pterodactyl panel with: "
+    read -r WEBSERVER_INPUT
 
-  if [ "$WEBSERVER_INPUT" == "1" ]; then
-    WEBSERVER="nginx"
-  else
-    # exit
-    print_error "Invalid webserver."
-    main
-  fi
+    if [ "$WEBSERVER_INPUT" == "1" ]; then
+      WEBSERVER="nginx"
+    else
+      # exit
+      print_error "Invalid webserver."
+    fi
+  done
 
   # set database credentials
   print_brake 72
@@ -715,37 +716,45 @@ function main {
     MYSQL_USER=$MYSQL_USER_INPUT
   fi
 
-  echo -n "* Password (use something strong): "
+  # MySQL password input
+  while [ -z "$MYSQL_PASSWORD" ]; do
+    echo -n "* Password (use something strong): "
 
-  # modified from https://stackoverflow.com/a/22940001
-  while IFS= read -r -s -n1 char; do
-    [[ -z $char ]] && { printf '\n'; break; } # ENTER pressed; output \n and break.
-    if [[ $char == $'\x7f' ]]; then # backspace was pressed
-        # Only if variable is not empty
-        if [ -n "$MYSQL_PASSWORD" ]; then
-          # Remove last char from output variable.
-          [[ -n $MYSQL_PASSWORD ]] && MYSQL_PASSWORD=${MYSQL_PASSWORD%?}
-          # Erase '*' to the left.
-          printf '\b \b' 
-        fi
-    else
-      # Add typed char to output variable.
-      MYSQL_PASSWORD+=$char
-      # Print '*' in its stead.
-      printf '*'
+    # modified from https://stackoverflow.com/a/22940001
+    while IFS= read -r -s -n1 char; do
+      [[ -z $char ]] && { printf '\n'; break; } # ENTER pressed; output \n and break.
+      if [[ $char == $'\x7f' ]]; then # backspace was pressed
+          # Only if variable is not empty
+          if [ -n "$MYSQL_PASSWORD" ]; then
+            # Remove last char from output variable.
+            [[ -n $MYSQL_PASSWORD ]] && MYSQL_PASSWORD=${MYSQL_PASSWORD%?}
+            # Erase '*' to the left.
+            printf '\b \b' 
+          fi
+      else
+        # Add typed char to output variable.
+        MYSQL_PASSWORD+=$char
+        # Print '*' in its stead.
+        printf '*'
+      fi
+    done
+
+    if [ -z "$MYSQL_PASSWORD" ]; then
+      print_error "MySQL password cannot be empty"
     fi
   done
-
-  if [ -z "$MYSQL_PASSWORD" ]; then
-    print_error "MySQL password cannot be empty"
-    exit 1
-  fi
 
   print_brake 72
 
   # set FQDN
-  echo -n "* Set the FQDN of this panel (panel.example.com): "
-  read -r FQDN
+  while [ -z "$FQDN" ]; do
+      echo -n "* Set the FQDN of this panel (panel.example.com): "
+      read -r FQDN
+
+      if [ -z "$FQDN" ]; then
+        print_error "FQDN cannot be empty"
+      fi
+  done
   
   # UFW is available for Ubuntu/Debian
   # Let's Encrypt, in this setup, is only available on Ubuntu/Debian
