@@ -650,6 +650,16 @@ function perform_install {
   fi
 }
 
+function ask_letsencrypt {
+  echo -e -n "* Do you want to automatically configure HTTPS using Let's Encrypt? (y/N): "
+  read -r CONFIRM_SSL
+
+  if [[ "$CONFIRM_SSL" =~ [Yy] ]]; then
+    CONFIGURE_LETSENCRYPT=true
+    ASSUME_SSL=true
+  fi
+}
+
 function main {
   # detect distro
   detect_distro
@@ -740,12 +750,16 @@ function main {
   # UFW is available for Ubuntu/Debian
   # Let's Encrypt, in this setup, is only available on Ubuntu/Debian
   if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
-    echo -e -n "* Do you want to automatically configure HTTPS using Let's Encrypt? (y/N): "
-    read -r CONFIRM_SSL
+    # Available for Debian 9/10
+    if [ "$OS" == "debian" ]; then
+      if [ "$OS_VER_MAJOR" == "9" ] || [ "$OS_VER_MAJOR" == "10" ]; then
+        ask_letsencrypt
+      fi
+    fi
 
-    if [[ "$CONFIRM_SSL" =~ [Yy] ]]; then
-      CONFIGURE_LETSENCRYPT=true
-      ASSUME_SSL=true
+    # Available for Ubuntu 18
+    if [ "$OS" == "ubuntu" ] && [ "$OS_VER_MAJOR" == "18" ]; then
+      ask_letsencrypt
     fi
 
     echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
