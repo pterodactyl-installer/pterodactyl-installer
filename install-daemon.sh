@@ -324,10 +324,16 @@ function main {
   # detect distro
   detect_distro
 
-  print_brake 42
-  echo "* Pterodactyl daemon installation script "
+  print_brake 70
+  echo "* Pterodactyl daemon installation script"
+  echo "*"
+  echo "* Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al."
+  echo "* https://github.com/VilhelmPrytz/pterodactyl-installer"
+  echo "*"
+  echo "* This script is not associated with the official Pterodactyl Project."
+  echo "*"
   echo "* Running $OS version $OS_VER."
-  print_brake 42
+  print_brake 70
 
   # checks if the system is compatible with this installation script
   check_os_comp
