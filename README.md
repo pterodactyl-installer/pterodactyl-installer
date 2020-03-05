@@ -11,6 +11,13 @@ Read more about [Pterodactyl](https://pterodactyl.io/) here. This script is not 
 
 This project is available at [GitHub](https://github.com/VilhelmPrytz/pterodactyl-installer) with read-only forks available at [GitLab](https://gitlab.com/vilhelm/pterodactyl-installer) and [Bitbucket](https://bitbucket.org/prytz/pterodactyl-installer/src/master/).
 
+## Features
+
+- Automatic installation of the Pterodactyl panel (dependencies,  database, cronjob, nginx).
+- Automatic installation of the Pterodactyl daemon (Docker, NodeJS, systemd).
+- Panel: (optional) automatic configuration of Let's Encrypt.
+- Panel: (optional) automatic configuration of UFW (firewall for Ubuntu/Debian).
+
 ## Help and support
 
 For help and support regarding the script itself and **not the official Pterodactyl project itself**, you can join the [Discord Chat](https://discord.gg/2zMdudJ).
