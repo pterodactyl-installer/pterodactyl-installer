@@ -505,6 +505,30 @@ function centos_php {
   systemctl start php-fpm
 }
 
+function firewall_ufw {
+  apt install ufw -y
+
+  echo -e "\n* Enabling Uncomplicated Firewall (UFW)"
+  echo "* Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
+  
+  # pointing to /dev/null silences the command output
+  ufw allow ssh > /dev/null
+  ufw allow http > /dev/null
+  ufw allow https > /dev/null
+  
+  ufw enable
+  ufw status numbered | sed '/v6/d'
+}
+
+function debian_based_letsencrypt {
+  # Install certbot and setup the certificate using the FQDN
+  echo -e "\nMake sure you choose Option 1, and create a Standalone Web Server during the certificate"
+  apt install certbot -y
+
+  certbot certonly -d "$FQDN"
+
+  systemctl restart nginx
+}
 
 #######################################
 ## WEBSERVER CONFIGURATION FUNCTIONS ##
@@ -555,6 +579,20 @@ function configure_nginx {
 
 function configure_apache {
   echo "soon .."
+}
+
+###########
+## OTHER ##
+###########
+
+function install_daemon {
+  echo "* It is recommended to have the panel and daemon on two separate nodes."
+  echo -n "* Would you like to also install the Pterodactyl daemon on this machine? (y/N): "
+  read -r INSTALL_DAEMON
+
+  if [[ "$INSTALL_DAEMON" =~ [Yy] ]]; then
+    bash <(curl -s https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/install-daemon.sh)
+  fi
 }
 
 ####################
@@ -802,41 +840,6 @@ function main {
     # run welcome script again
     print_error "Installation aborted."
     exit 1
-  fi
-}
-
-function firewall_ufw {
-  apt install ufw -y
-
-  echo -e "\n* Enabling Uncomplicated Firewall (UFW)"
-  echo "* Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
-  
-  # pointing to /dev/null silences the command output
-  ufw allow ssh > /dev/null
-  ufw allow http > /dev/null
-  ufw allow https > /dev/null
-  
-  ufw enable
-  ufw status numbered | sed '/v6/d'
-}
-
-function debian_based_letsencrypt {
-  # Install certbot and setup the certificate using the FQDN
-  echo -e "\nMake sure you choose Option 1, and create a Standalone Web Server during the certificate"
-  apt install certbot -y
-
-  certbot certonly -d "$FQDN"
-
-  systemctl restart nginx
-}
-
-function install_daemon {
-  echo "* It is recommended to have the panel and daemon on two separate nodes."
-  echo -n "* Would you like to also install the Pterodactyl daemon on this machine? (y/N): "
-  read -r INSTALL_DAEMON
-
-  if [[ "$INSTALL_DAEMON" =~ [Yy] ]]; then
-    bash <(curl -s https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/install-daemon.sh)
   fi
 }
 
