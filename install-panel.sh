@@ -370,13 +370,13 @@ function debian_jessie_dep {
   # install PHP 7.3 using sury's repo instead of PPA
   # this guide shows how: https://vilhelmprytz.se/2018/08/22/install-php72-on-Debian-8-and-9.html 
   apt install ca-certificates apt-transport-https lsb-release -y
-  sudo wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
-  echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/php.list
+  wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
+  echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/php.list
 
   # redis-server is not installed using the PPA, as it's already available in the Debian repo
 
   # Install MariaDb
-  curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
+  curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
 
   # Update repositories list
   apt update
@@ -397,7 +397,7 @@ function debian_dep {
   apt -y install dirmngr
 
   # Install MariaDb
-  curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
+  curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
 
   # Update repositories list
   apt update
@@ -569,7 +569,7 @@ function configure_nginx {
       sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" /etc/nginx/sites-available/pterodactyl.conf
 
       # enable pterodactyl
-      sudo ln -s /etc/nginx/sites-available/pterodactyl.conf /etc/nginx/sites-enabled/pterodactyl.conf
+      ln -s /etc/nginx/sites-available/pterodactyl.conf /etc/nginx/sites-enabled/pterodactyl.conf
   fi
 
   # restart nginx
