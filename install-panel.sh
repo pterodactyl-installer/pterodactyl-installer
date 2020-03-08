@@ -654,6 +654,12 @@ function perform_install {
     configure
     insert_cronjob
     install_pteroq
+
+    if [ "$OS_VER_MAJOR" == "9" ] || [ "$OS_VER_MAJOR" == "10" ]; then
+      if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
+        debian_based_letsencrypt
+      fi
+    fi
   elif [ "$OS" == "centos" ]; then
     if [ "$OS_VER_MAJOR" == "7" ]; then
       centos7_dep
