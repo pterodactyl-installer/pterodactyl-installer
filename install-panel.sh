@@ -522,9 +522,11 @@ function firewall_ufw {
 
 function debian_based_letsencrypt {
   # Install certbot and setup the certificate using the FQDN
-  echo -e "\nMake sure you choose Option 1, and create a Standalone Web Server during the certificate"
   apt install certbot -y
 
+  systemctl stop nginx
+
+  echo -e "\nMake sure you choose Option 1, and create a Standalone Web Server during the certificate"
   certbot certonly -d "$FQDN"
 
   systemctl restart nginx
