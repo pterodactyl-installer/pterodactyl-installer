@@ -53,7 +53,7 @@ ASSUME_SSL=false
 CONFIGURE_LETSENCRYPT=false
 
 # download URLs
-PANEL_URL="https://github.com/pterodactyl/panel/releases/download/$VERSION/panel.tar.gz"
+PANEL_DL_URL="https://github.com/pterodactyl/panel/releases/latest/download/panel.tar.gz"
 CONFIGS_URL="https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/configs"
 
 # apt sources path
@@ -188,7 +188,7 @@ function ptdl_dl {
   mkdir -p /var/www/pterodactyl
   cd /var/www/pterodactyl || exit
 
-  curl -Lo panel.tar.gz "$PANEL_URL"
+  curl -Lo panel.tar.gz "$PANEL_DL_URL"
   tar --strip-components=1 -xzvf panel.tar.gz
   chmod -R 755 storage/* bootstrap/cache/
 
