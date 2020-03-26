@@ -145,24 +145,3 @@ firewall-cmd --reload
 ## Contributors ✨
 
 Created and maintained by [Vilhelm Prytz](https://github.com/VilhelmPrytz).
-
-Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
-
-<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-<!-- prettier-ignore-start -->
-<!-- markdownlint-disable -->
-<table>
-  <tr>
-    <td align="center"><a href="https://vilhelmprytz.se"><img src="https://avatars2.githubusercontent.com/u/15460993?v=4" width="100px;" alt=""/><br /><sub><b>Vilhelm Prytz</b></sub></a><br /><a href="https://github.com/VilhelmPrytz/pterodactyl-installer/commits?author=VilhelmPrytz" title="Code">💻</a> <a href="https://github.com/VilhelmPrytz/pterodactyl-installer/issues?q=author%3AVilhelmPrytz" title="Bug reports">🐛</a> <a href="https://github.com/VilhelmPrytz/pterodactyl-installer/commits?author=VilhelmPrytz" title="Documentation">📖</a> <a href="#projectManagement-VilhelmPrytz" title="Project Management">📆</a> <a href="#question-VilhelmPrytz" title="Answering Questions">💬</a></td>
-    <td align="center"><a href="https://github.com/MrFlacko"><img src="https://avatars0.githubusercontent.com/u/35322515?v=4" width="100px;" alt=""/><br /><sub><b>MrFlacko</b></sub></a><br /><a href="https://github.com/VilhelmPrytz/pterodactyl-installer/commits?author=MrFlacko" title="Code">💻</a></td>
-    <td align="center"><a href="https://github.com/Iomega0318"><img src="https://avatars2.githubusercontent.com/u/5641516?v=4" width="100px;" alt=""/><br /><sub><b>Iomega0318</b></sub></a><br /><a href="https://github.com/VilhelmPrytz/pterodactyl-installer/commits?author=Iomega0318" title="Code">💻</a></td>
-    <td align="center"><a href="https://creepercreep.fr"><img src="https://avatars3.githubusercontent.com/u/39345534?v=4" width="100px;" alt=""/><br /><sub><b>Tristan</b></sub></a><br /><a href="https://github.com/VilhelmPrytz/pterodactyl-installer/commits?author=MichelBaie" title="Code">💻</a> <a href="https://github.com/VilhelmPrytz/pterodactyl-installer/issues?q=author%3AMichelBaie" title="Bug reports">🐛</a></td>
-    <td align="center"><a href="https://hoerli.net"><img src="https://avatars3.githubusercontent.com/u/13108516?v=4" width="100px;" alt=""/><br /><sub><b>Hoerli</b></sub></a><br /><a href="https://github.com/VilhelmPrytz/pterodactyl-installer/issues?q=author%3AHoerli1337" title="Bug reports">🐛</a></td>
-  </tr>
-</table>
-
-<!-- markdownlint-enable -->
-<!-- prettier-ignore-end -->
-<!-- ALL-CONTRIBUTORS-LIST:END -->
-
-This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
