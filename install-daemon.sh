@@ -41,7 +41,7 @@ VERSION="$(get_latest_release "pterodactyl/daemon")"
 echo "* Latest version is $VERSION"
 
 # download URLs
-DL_URL="https://github.com/pterodactyl/daemon/releases/download/$VERSION/daemon.tar.gz"
+DL_URL="https://github.com/pterodactyl/daemon/releases/latest/download/daemon.tar.gz"
 CONFIGS_URL="https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/configs"
 
 COLOR_RED='\033[0;31m'
