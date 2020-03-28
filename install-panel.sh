@@ -506,6 +506,7 @@ function centos_php {
 }
 
 function firewall_ufw {
+  apt update
   apt install ufw -y
 
   echo -e "\n* Enabling Uncomplicated Firewall (UFW)"
@@ -603,6 +604,11 @@ function install_daemon {
 
 function perform_install {
   echo "* Starting installation.. this might take a while!"
+
+  if [ "$CONFIGURE_UFW" == true ]; then
+    firewall_ufw
+  fi
+
   # do different things depending on OS
   if [ "$OS" == "ubuntu" ]; then
     ubuntu_universedep
@@ -690,13 +696,13 @@ function perform_install {
     print_error "Invalid webserver."
     exit 1
   fi
-
-  if [ "$CONFIGURE_UFW" == true ]; then
-    firewall_ufw
-  fi
 }
 
 function ask_letsencrypt {
+  if [ "$CONFIGURE_UFW" == false ]; then
+    echo -e "* ${COLOR_RED}Note${COLOR_NC}: Let's Encrypt requires port 80/443 to be opened! You have opted out of the automatic UFW configuration; use this at your own risk (if port 80/443 is closed, the script will fail)!"
+  fi
+
   echo -e -n "* Do you want to automatically configure HTTPS using Let's Encrypt? (y/N): "
   read -r CONFIRM_SSL
 
@@ -811,6 +817,13 @@ function main {
   # UFW is available for Ubuntu/Debian
   # Let's Encrypt, in this setup, is only available on Ubuntu/Debian
   if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
+    echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
+    read -r CONFIRM_UFW
+
+    if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
+      CONFIGURE_UFW=true
+    fi
+
     # Available for Debian 9/10
     if [ "$OS" == "debian" ]; then
       if [ "$OS_VER_MAJOR" == "9" ] || [ "$OS_VER_MAJOR" == "10" ]; then
@@ -821,13 +834,6 @@ function main {
     # Available for Ubuntu 18
     if [ "$OS" == "ubuntu" ] && [ "$OS_VER_MAJOR" == "18" ]; then
       ask_letsencrypt
-    fi
-
-    echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
-    read -r CONFIRM_UFW
-
-    if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
-      CONFIGURE_UFW=true
     fi
   fi
 
