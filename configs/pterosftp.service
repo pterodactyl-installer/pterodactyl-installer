@@ -1,0 +1,15 @@
+[Unit]
+Description=Pterodactyl Standalone SFTP Server
+After=wings.service
+
+[Service]
+User=root
+WorkingDirectory=/srv/daemon
+LimitNOFILE=4096
+PIDFile=/var/run/wings/sftp.pid
+ExecStart=/srv/daemon/sftp-server
+Restart=on-failure
+StartLimitInterval=600
+
+[Install]
+WantedBy=multi-user.target
