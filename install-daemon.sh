@@ -47,6 +47,8 @@ CONFIGS_URL="https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installe
 COLOR_RED='\033[0;31m'
 COLOR_NC='\033[0m'
 
+INSTALL_STANDALONE_SFTP_SERVER=false
+
 # visual functions
 function print_error {
   echo ""
@@ -308,16 +310,32 @@ function systemd_file {
   echo "* Installed systemd service!"
 }
 
+function install_standalone_sftp_server {
+  echo "* Installing standalone SFTP server.."
+
+  INSTALL_PATH="/srv/daemon/sftp-server"
+
+  curl -Lo $INSTALL_PATH https://github.com/pterodactyl/sftp-server/releases/download/v1.0.4/sftp-server
+  chmod +x $INSTALL_PATH
+
+  curl -o /etc/systemd/system/pterosftp.service $CONFIGS_URL/pterosftp.service
+
+  systemctl daemon-reload
+  systemctl enable pterosftp
+}
+
 ####################
 ## MAIN FUNCTIONS ##
 ####################
 function perform_install {
   echo "* Installing pterodactyl daemon.."
+
   install_dep
   install_docker
   install_nodejs
   ptdl_dl
   systemd_file
+  [ "$INSTALL_STANDALONE_SFTP_SERVER" == true ] && install_standalone_sftp_server
 }
 
 function main {
@@ -348,7 +366,13 @@ function main {
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: this script will not start the daemon automatically (will install systemd service, not start it)."
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: this script will not enable swap (for docker)."
   print_brake 42
-  echo -n "* Proceed with installation? (y/n): "
+
+  echo -n "* Would you like to install the standalone SFTP server after daemon has installed? (y/N): "
+  read -r CONFIRM_STANDALONE_SFTP_SERVER
+
+  [[ "$CONFIRM_STANDALONE_SFTP_SERVER" =~ [Yy] ]] && INSTALL_STANDALONE_SFTP_SERVER=true    
+
+  echo -n "* Proceed with installation? (y/N): "
 
   read -r CONFIRM
 
