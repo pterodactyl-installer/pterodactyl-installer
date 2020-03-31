@@ -318,7 +318,7 @@ function install_standalone_sftp_server {
   curl -Lo $INSTALL_PATH https://github.com/pterodactyl/sftp-server/releases/download/v1.0.4/sftp-server
   chmod +x $INSTALL_PATH
 
-  curl -o /etc/systemd/pterosftp.service $CONFIGS_URL/pterosftp.service
+  curl -o /etc/systemd/system/pterosftp.service $CONFIGS_URL/pterosftp.service
 
   systemctl daemon-reload
   systemctl enable pterosftp
