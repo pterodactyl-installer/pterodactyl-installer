@@ -319,7 +319,9 @@ function install_standalone_sftp_server {
   chmod +x $INSTALL_PATH
 
   curl -o /etc/systemd/pterosftp.service $CONFIGS_URL/pterosftp.service
+
   systemctl daemon-reload
+  systemctl enable pterosftp
 }
 
 ####################
