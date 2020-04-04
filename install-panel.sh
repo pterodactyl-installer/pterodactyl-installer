@@ -36,8 +36,8 @@ get_latest_release() {
 }
 
 echo "* Retrieving release information.."
-VERSION="$(get_latest_release "pterodactyl/panel")"
-echo "* Latest version is $VERSION"
+PTERODACTYL_VERSION="$(get_latest_release "pterodactyl/panel")"
+echo "* Latest version is $PTERODACTYL_VERSION"
 
 # variables
 WEBSERVER="nginx"
@@ -605,9 +605,7 @@ function install_daemon {
 function perform_install {
   echo "* Starting installation.. this might take a while!"
 
-  if [ "$CONFIGURE_UFW" == true ]; then
-    firewall_ufw
-  fi
+  [ "$CONFIGURE_UFW" == true ] && firewall_ufw
 
   # do different things depending on OS
   if [ "$OS" == "ubuntu" ]; then
@@ -759,20 +757,12 @@ function main {
   echo -n "* Database name (panel): "
   read -r MYSQL_DB_INPUT
 
-  if [ -z "$MYSQL_DB_INPUT" ]; then
-    MYSQL_DB="panel"
-  else
-    MYSQL_DB=$MYSQL_DB_INPUT
-  fi
+  [ -z "$MYSQL_DB_INPUT" ] && MYSQL_DB="panel" || MYSQL_DB=$MYSQL_DB_INPUT
 
   echo -n "* Username (pterodactyl): "
   read -r MYSQL_USER_INPUT
 
-  if [ -z "$MYSQL_USER_INPUT" ]; then
-    MYSQL_USER="pterodactyl"
-  else
-    MYSQL_USER=$MYSQL_USER_INPUT
-  fi
+  [ -z "$MYSQL_USER_INPUT" ] && MYSQL_USER="pterodactyl" || MYSQL_USER=$MYSQL_USER_INPUT
 
   # MySQL password input
   while [ -z "$MYSQL_PASSWORD" ]; do
@@ -797,9 +787,7 @@ function main {
       fi
     done
 
-    if [ -z "$MYSQL_PASSWORD" ]; then
-      print_error "MySQL password cannot be empty"
-    fi
+    [ -z "$MYSQL_PASSWORD" ] && print_error "MySQL password cannot be empty"
   done
 
   print_brake 72
@@ -809,11 +797,9 @@ function main {
       echo -n "* Set the FQDN of this panel (panel.example.com): "
       read -r FQDN
 
-      if [ -z "$FQDN" ]; then
-        print_error "FQDN cannot be empty"
-      fi
+      [ -z "$FQDN" ] && print_error "FQDN cannot be empty"
   done
-  
+
   # UFW is available for Ubuntu/Debian
   # Let's Encrypt, in this setup, is only available on Ubuntu/Debian
   if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
@@ -851,6 +837,9 @@ function main {
     fi
   fi
 
+  # summary
+  summary
+
   # confirm installation
   echo -e -n "\n* Initial configuration completed. Continue with installation? (y/N): "
   read -r CONFIRM
@@ -861,6 +850,19 @@ function main {
     print_error "Installation aborted."
     exit 1
   fi
+}
+
+function summary {
+  print_brake 62
+  echo "* Pterodactyl panel $PTERODACTYL_VERSION with $WEBSERVER webserver on $OS"
+  echo "* Database name: $MYSQL_DB"
+  echo "* Database user: $MYSQL_USER"
+  echo "* Database password: (censored)"
+  echo "* Hostname/FQDN: $FQDN"
+  echo "* Configure UFW? $CONFIGURE_UFW"
+  echo "* Configure Let's Encrypt? $CONFIGURE_LETSENCRYPT"
+  echo "* Assume SSL? $ASSUME_SSL"
+  print_brake 62
 }
 
 function goodbye {
