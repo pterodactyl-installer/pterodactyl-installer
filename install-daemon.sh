@@ -375,15 +375,10 @@ function main {
   echo -n "* Proceed with installation? (y/N): "
 
   read -r CONFIRM
+  [[ "$CONFIRM" =~ [Yy] ]] && perform_install && return
 
-  if [ "$CONFIRM" == "y" ]; then
-    perform_install
-  elif [ "$CONFIRM" == "n" ]; then
-    exit 0
-  else
-    print_error "Invalid input"
-    exit 1
-  fi
+  print_error "Installation aborted"
+  exit 0
 }
 
 function goodbye {
