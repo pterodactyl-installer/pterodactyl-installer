@@ -350,6 +350,7 @@ function perform_install {
   ptdl_dl
   systemd_file
   [ "$INSTALL_STANDALONE_SFTP_SERVER" == true ] && install_standalone_sftp_server
+  [ "$INSTALL_MARIADB" == true ] && install_mariadb
 
   # return true if script has made it this far
   return 0
