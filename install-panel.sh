@@ -72,6 +72,14 @@ function print_error {
   echo ""
 }
 
+function print_warning {
+  COLOR_YELLOW='\033[1;33m'
+  COLOR_NC='\033[0m'
+  echo ""
+  echo -e "* ${COLOR_YELLOW}WARNING${COLOR_NC}: $1"
+  echo ""
+}
+
 function print_brake {
   for ((n=0;n<$1;n++));
     do
@@ -219,6 +227,7 @@ function configure {
   php artisan p:environment:mail
 
   # configures database
+  print_warning "You must type 'yes' or else the installer will fail! The default response 'no' will not properly initialize the database!"
   php artisan migrate --seed
 
   echo "* The installer will now ask you to create the initial admin user account."
