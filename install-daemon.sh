@@ -336,6 +336,8 @@ function install_mariadb {
   else
     print_error "Unsupported OS for MariaDB installations!"
   fi
+  systemctl enable mariadb
+  systemctl start mariadb
 }
 
 ####################
