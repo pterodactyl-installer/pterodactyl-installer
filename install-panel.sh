@@ -121,7 +121,7 @@ function detect_distro {
     OS=$(uname -s)
     OS_VER=$(uname -r)
   fi
-  
+
   OS=$(echo "$OS" | awk '{print tolower($0)}')
   OS_VER_MAJOR=$(echo "$OS_VER" | cut -d. -f1)
 }
@@ -377,7 +377,7 @@ function debian_jessie_dep {
   apt -y install dirmngr
 
   # install PHP 7.3 using sury's repo instead of PPA
-  # this guide shows how: https://vilhelmprytz.se/2018/08/22/install-php72-on-Debian-8-and-9.html 
+  # this guide shows how: https://vilhelmprytz.se/2018/08/22/install-php72-on-Debian-8-and-9.html
   apt install ca-certificates apt-transport-https lsb-release -y
   wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
   echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/php.list
@@ -520,12 +520,12 @@ function firewall_ufw {
 
   echo -e "\n* Enabling Uncomplicated Firewall (UFW)"
   echo "* Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
-  
+
   # pointing to /dev/null silences the command output
   ufw allow ssh > /dev/null
   ufw allow http > /dev/null
   ufw allow https > /dev/null
-  
+
   ufw enable
   ufw status numbered | sed '/v6/d'
 }
@@ -720,6 +720,17 @@ function ask_letsencrypt {
 }
 
 function main {
+  # check if we can detect an already existing installation
+  if [ -d "/var/www/pterodactyl" ]; then
+    print_warning "The script has detected that you already have Pterodactyl panel on your system! You cannot run the script multiple times, it will fail!"
+    echo -e -n "* Are you sure you want to proceed? (y/N): "
+    read -r CONFIRM_PROCEED
+    if [[ ! "$CONFIRM_PROCEED" =~ [Yy] ]]; then
+      print_error "Installation aborted!"
+      exit 1
+    fi
+  fi
+
   # detect distro
   detect_distro
 
@@ -840,7 +851,7 @@ function main {
 
     echo -n "* Assume SSL or not? (y/N): "
     read -r ASSUME_SSL_INPUT
-    
+
     if [[ "$ASSUME_SSL_INPUT" =~ [Yy] ]]; then
       ASSUME_SSL=true
     fi

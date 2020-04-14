@@ -57,6 +57,14 @@ function print_error {
   echo ""
 }
 
+function print_warning {
+  COLOR_YELLOW='\033[1;33m'
+  COLOR_NC='\033[0m'
+  echo ""
+  echo -e "* ${COLOR_YELLOW}WARNING${COLOR_NC}: $1"
+  echo ""
+}
+
 function print_brake {
   for ((n=0;n<$1;n++));
     do
@@ -359,6 +367,17 @@ function perform_install {
 }
 
 function main {
+  # check if we can detect an already existing installation
+  if [ -d "/srv/daemon" ]; then
+    print_warning "The script has detected that you already have Pterodactyl daemon on your system! You cannot run the script multiple times, it will fail!"
+    echo -e -n "* Are you sure you want to proceed? (y/N): "
+    read -r CONFIRM_PROCEED
+    if [[ ! "$CONFIRM_PROCEED" =~ [Yy] ]]; then
+      print_error "Installation aborted!"
+      exit 1
+    fi
+  fi
+
   # detect distro
   detect_distro
 
@@ -388,15 +407,15 @@ function main {
   print_brake 42
 
   echo -n "* Would you like to install the standalone SFTP server after daemon has installed? (y/N): "
-  
+
   read -r CONFIRM_STANDALONE_SFTP_SERVER
-  [[ "$CONFIRM_STANDALONE_SFTP_SERVER" =~ [Yy] ]] && INSTALL_STANDALONE_SFTP_SERVER=true    
+  [[ "$CONFIRM_STANDALONE_SFTP_SERVER" =~ [Yy] ]] && INSTALL_STANDALONE_SFTP_SERVER=true
 
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you installed the Pterodactyl panel on the same machine, do not use this option or the script will fail!"
   echo -n "* Would you like to install MariaDB (MySQL) server on the daemon as well? (y/N): "
 
   read -r CONFIRM_INSTALL_MARIADB
-  [[ "$CONFIRM_INSTALL_MARIADB" =~ [Yy] ]] && INSTALL_MARIADB=true    
+  [[ "$CONFIRM_INSTALL_MARIADB" =~ [Yy] ]] && INSTALL_MARIADB=true
 
   echo -n "* Proceed with installation? (y/N): "
 
