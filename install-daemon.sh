@@ -48,6 +48,7 @@ COLOR_RED='\033[0;31m'
 COLOR_NC='\033[0m'
 
 INSTALL_STANDALONE_SFTP_SERVER=false
+INSTALL_MARIADB=false
 
 # visual functions
 function print_error {
@@ -324,6 +325,21 @@ function install_standalone_sftp_server {
   systemctl enable pterosftp
 }
 
+function install_mariadb {
+  if [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ] || [ "$OS" == "debian" ]; then
+    curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
+    apt update && apt install mariadb-server -y
+  elif [ "$OS" == "centos" ]; then
+    [ "$OS_VER_MAJOR" == "7" ] && curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
+    [ "$OS_VER_MAJOR" == "7" ] && yum -y install mariadb-server
+    [ "$OS_VER_MAJOR" == "8" ] && dnf install -y mariadb mariadb-server
+  else
+    print_error "Unsupported OS for MariaDB installations!"
+  fi
+  systemctl enable mariadb
+  systemctl start mariadb
+}
+
 ####################
 ## MAIN FUNCTIONS ##
 ####################
@@ -336,6 +352,7 @@ function perform_install {
   ptdl_dl
   systemd_file
   [ "$INSTALL_STANDALONE_SFTP_SERVER" == true ] && install_standalone_sftp_server
+  [ "$INSTALL_MARIADB" == true ] && install_mariadb
 
   # return true if script has made it this far
   return 0
@@ -371,9 +388,15 @@ function main {
   print_brake 42
 
   echo -n "* Would you like to install the standalone SFTP server after daemon has installed? (y/N): "
+  
   read -r CONFIRM_STANDALONE_SFTP_SERVER
-
   [[ "$CONFIRM_STANDALONE_SFTP_SERVER" =~ [Yy] ]] && INSTALL_STANDALONE_SFTP_SERVER=true    
+
+  echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you installed the Pterodactyl panel on the same machine, do not use this option or the script will fail!"
+  echo -n "* Would you like to install MariaDB (MySQL) server on the daemon as well? (y/N): "
+
+  read -r CONFIRM_INSTALL_MARIADB
+  [[ "$CONFIRM_INSTALL_MARIADB" =~ [Yy] ]] && INSTALL_MARIADB=true    
 
   echo -n "* Proceed with installation? (y/N): "
 
