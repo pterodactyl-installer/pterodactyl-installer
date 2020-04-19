@@ -620,7 +620,7 @@ function install_daemon {
   read -r INSTALL_DAEMON
 
   if [[ "$INSTALL_DAEMON" =~ [Yy] ]]; then
-    bash <(curl -s https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/install-daemon.sh)
+    bash <(curl -s https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/install-wings.sh)
   fi
 }
 
