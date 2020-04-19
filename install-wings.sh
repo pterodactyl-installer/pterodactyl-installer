@@ -2,7 +2,7 @@
 
 #############################################################################
 #                                                                           #
-# Project 'pterodactyl-installer' for daemon                                #
+# Project 'pterodactyl-installer' for wings                                 #
 #                                                                           #
 # Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al.   #
 #                                                                           #
@@ -36,12 +36,12 @@ get_latest_release() {
 }
 
 echo "* Retrieving release information.."
-VERSION="$(get_latest_release "pterodactyl/daemon")"
+VERSION="$(get_latest_release "pterodactyl/wings")"
 
 echo "* Latest version is $VERSION"
 
 # download URLs
-DL_URL="https://github.com/pterodactyl/daemon/releases/latest/download/daemon.tar.gz"
+DL_URL="https://github.com/pterodactyl/wings/releases/latest/download/wings"
 CONFIGS_URL="https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/configs"
 
 COLOR_RED='\033[0;31m'
@@ -170,20 +170,18 @@ function install_dep {
     apt_update
 
     # install dependencies
-    apt -y install tar unzip make gcc g++ python
+    apt -y install curl
   elif [ "$OS" == "centos" ]; then
     if [ "$OS_VER_MAJOR" == "7" ]; then
       yum -y update
 
       # install dependencies
-      yum -y install tar unzip make gcc gcc-c++ python
+      yum -y install curl
     elif [ "$OS_VER_MAJOR" == "8" ]; then
       dnf -y update
 
       # install dependencies
-      dnf install -y tar unzip make gcc gcc-c++ python2
-
-      alternatives --set python /usr/bin/python2
+      dnf install -y curl
     fi
   else
     print_error "Invalid OS."
@@ -282,31 +280,14 @@ function install_docker {
   echo "* Docker has now been installed."
 }
 
-function install_nodejs {
-  if [ "$OS" == "debian" ]; then
-    curl -sL https://deb.nodesource.com/setup_10.x | bash -
-    apt-get install -y nodejs
-  elif [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
-    curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
-    apt -y install nodejs
-  elif [ "$OS" == "centos" ]; then
-    curl --silent --location https://rpm.nodesource.com/setup_10.x | sudo bash -
-
-    if [ "$OS_VER_MAJOR" == "7" ]; then
-      yum -y install nodejs
-    elif [ "$OS_VER_MAJOR" == "8" ]; then
-      dnf -y install nodejs
-    fi
-  fi
-}
-
 function ptdl_dl {
-  echo "* Installing pterodactyl daemon .. "
-  mkdir -p /srv/daemon /srv/daemon-data
-  cd /srv/daemon || exit
+  echo "* Installing Pterodactyl Wings .. "
 
-  curl -L "$DL_URL" | tar --strip-components=1 -xzv
-  npm install --only=production --unsafe-perm
+  mkdir -p /srv/wings/data/servers /srv/daemon-data
+  cd /srv/wings || exit
+  curl -L -o wings "$DL_URL"
+
+  chmod u+x wings
 
   echo "* Done."
 }
@@ -322,7 +303,7 @@ function systemd_file {
 function install_standalone_sftp_server {
   echo "* Installing standalone SFTP server.."
 
-  INSTALL_PATH="/srv/daemon/sftp-server"
+  INSTALL_PATH="/srv/wings/sftp-server"
 
   curl -Lo $INSTALL_PATH https://github.com/pterodactyl/sftp-server/releases/download/v1.0.4/sftp-server
   chmod +x $INSTALL_PATH
@@ -352,14 +333,12 @@ function install_mariadb {
 ## MAIN FUNCTIONS ##
 ####################
 function perform_install {
-  echo "* Installing pterodactyl daemon.."
+  echo "* Installing pterodactyl wings.."
 
   install_dep
   install_docker
-  install_nodejs
   ptdl_dl
   systemd_file
-  [ "$INSTALL_STANDALONE_SFTP_SERVER" == true ] && install_standalone_sftp_server
   [ "$INSTALL_MARIADB" == true ] && install_mariadb
 
   # return true if script has made it this far
@@ -368,8 +347,8 @@ function perform_install {
 
 function main {
   # check if we can detect an already existing installation
-  if [ -d "/srv/daemon" ]; then
-    print_warning "The script has detected that you already have Pterodactyl daemon on your system! You cannot run the script multiple times, it will fail!"
+  if [ -d "/srv/wings" ]; then
+    print_warning "The script has detected that you already have Pterodactyl wings on your system! You cannot run the script multiple times, it will fail!"
     echo -e -n "* Are you sure you want to proceed? (y/N): "
     read -r CONFIRM_PROCEED
     if [[ ! "$CONFIRM_PROCEED" =~ [Yy] ]]; then
@@ -382,7 +361,7 @@ function main {
   detect_distro
 
   print_brake 70
-  echo "* Pterodactyl daemon installation script"
+  echo "* Pterodactyl Wings installation script"
   echo "*"
   echo "* Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al."
   echo "* https://github.com/VilhelmPrytz/pterodactyl-installer"
@@ -396,20 +375,15 @@ function main {
   check_os_comp
 
   echo "* "
-  echo "* The installer will install Docker, required dependencies for the daemon"
-  echo "* as well as the daemon itself. But it's still required to create the node"
+  echo "* The installer will install Docker, required dependencies for Wings"
+  echo "* as well as Wings itself. But it's still required to create the node"
   echo "* on the panel and then place the configuration file on the node manually after"
   echo "* the installation has finished. Read more about this process on the"
   echo "* official documentation: https://pterodactyl.io/daemon/installing.html#configure-daemon"
   echo "* "
-  echo -e "* ${COLOR_RED}Note${COLOR_NC}: this script will not start the daemon automatically (will install systemd service, not start it)."
+  echo -e "* ${COLOR_RED}Note${COLOR_NC}: this script will not start Wings automatically (will install systemd service, not start it)."
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: this script will not enable swap (for docker)."
   print_brake 42
-
-  echo -n "* Would you like to install the standalone SFTP server after daemon has installed? (y/N): "
-
-  read -r CONFIRM_STANDALONE_SFTP_SERVER
-  [[ "$CONFIRM_STANDALONE_SFTP_SERVER" =~ [Yy] ]] && INSTALL_STANDALONE_SFTP_SERVER=true
 
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you installed the Pterodactyl panel on the same machine, do not use this option or the script will fail!"
   echo -n "* Would you like to install MariaDB (MySQL) server on the daemon as well? (y/N): "
