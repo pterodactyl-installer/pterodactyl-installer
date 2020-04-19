@@ -329,9 +329,10 @@ function ubuntu18_dep {
   echo "* Installing dependencies for Ubuntu 18.."
 
   # Add "add-apt-repository" command
-  apt -y install software-properties-common
+  apt -y install software-properties-common curl apt-transport-https ca-certificates gnupg
 
   # Add additional repositories for PHP, Redis, and MariaDB
+  LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php  # PPA because Ubuntu 18 only has 7.2 in the official repo
   add-apt-repository -y ppa:chris-lea/redis-server
   curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
 
@@ -339,7 +340,7 @@ function ubuntu18_dep {
   apt update
 
   # Install Dependencies
-  apt -y install php7.2 php7.2-cli php7.2-gd php7.2-mysql php7.2-pdo php7.2-mbstring php7.2-tokenizer php7.2-bcmath php7.2-xml php7.2-fpm php7.2-curl php7.2-zip mariadb-server nginx curl tar unzip git redis-server
+  apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server
 
   # enable services
   systemctl start mariadb
@@ -354,7 +355,7 @@ function ubuntu16_dep {
   echo "* Installing dependencies for Ubuntu 16.."
 
   # Add "add-apt-repository" command
-  apt -y install software-properties-common
+  apt -y install software-properties-common curl apt-transport-https ca-certificates gnupg
 
   # Add additional repositories for PHP, Redis, and MariaDB
   LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php
@@ -365,7 +366,7 @@ function ubuntu16_dep {
   apt update
 
   # Install Dependencies
-  apt -y install php7.2 php7.2-cli php7.2-gd php7.2-mysql php7.2-pdo php7.2-mbstring php7.2-tokenizer php7.2-bcmath php7.2-xml php7.2-fpm php7.2-curl php7.2-zip mariadb-server nginx curl tar unzip git redis-server
+  apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server
 
   # enable services
   systemctl start mariadb
@@ -382,13 +383,11 @@ function debian_jessie_dep {
   # MariaDB need dirmngr
   apt -y install dirmngr
 
-  # install PHP 7.3 using sury's repo instead of PPA
+  # install PHP 7.4 using sury's repo instead of PPA
   # this guide shows how: https://vilhelmprytz.se/2018/08/22/install-php72-on-Debian-8-and-9.html
   apt install ca-certificates apt-transport-https lsb-release -y
   wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
   echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/php.list
-
-  # redis-server is not installed using the PPA, as it's already available in the Debian repo
 
   # Install MariaDb
   curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
@@ -397,7 +396,7 @@ function debian_jessie_dep {
   apt update
 
   # Install Dependencies
-  apt -y install php7.3 php7.3-cli php7.3-gd php7.3-mysql php7.3-pdo php7.3-mbstring php7.3-tokenizer php7.3-bcmath php7.3-xml php7.3-fpm php7.3-curl php7.3-zip mariadb-server nginx curl tar unzip git redis-server
+  apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server
 
   # enable services
   systemctl start mariadb
@@ -414,6 +413,12 @@ function debian_dep {
   # MariaDB need dirmngr
   apt -y install dirmngr
 
+  # install PHP 7.4 using sury's repo instead of default 7.2 package (in buster repo)
+  # this guide shows how: https://vilhelmprytz.se/2018/08/22/install-php72-on-Debian-8-and-9.html
+  apt install ca-certificates apt-transport-https lsb-release -y
+  wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
+  echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/php.list
+
   # Install MariaDb
   curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
 
@@ -421,7 +426,7 @@ function debian_dep {
   apt update
 
   # install dependencies
-  apt -y install php7.3 php7.3-cli php7.3-common php7.3-gd php7.3-mysql php7.3-mbstring php7.3-bcmath php7.3-xml php7.3-fpm php7.3-curl php7.3-zip mariadb-server nginx curl tar unzip git redis-server
+  apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server
 
   # enable services
   systemctl start mariadb
@@ -441,18 +446,18 @@ function centos7_dep {
   # SELinux tools
   yum install -y policycoreutils policycoreutils-python selinux-policy selinux-policy-targeted libselinux-utils setroubleshoot-server setools setools-console mcstrans
 
-  # install php7.3
+  # install php7.4
   yum install -y epel-release http://rpms.remirepo.net/enterprise/remi-release-7.rpm
   yum install -y yum-utils
   yum-config-manager --disable remi-php54
-  yum-config-manager --enable remi-php73
+  yum-config-manager --enable remi-php74
   yum update -y
 
   # Install MariaDB
   curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
 
   # install dependencies
-  yum -y install php php-common php-fpm php-cli php-json php-mysqlnd php-mcrypt php-gd php-mbstring php-pdo php-zip php-bcmath php-dom php-opcache mariadb-server nginx curl tar zip unzip git redis
+  yum -y install php php-common php-tokenizer php-curl php-fpm php-cli php-json php-mysqlnd php-mcrypt php-gd php-mbstring php-pdo php-zip php-bcmath php-dom php-opcache mariadb-server nginx curl tar zip unzip git redis
 
   # enable services
   systemctl enable mariadb
