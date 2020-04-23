@@ -33,12 +33,15 @@ List of supported installation setups for panel and daemon (installations suppor
 | Ubuntu            | 14.04   | :red_circle:         | :red_circle:   |             |
 |                   | 16.04   | :white_check_mark:   | :red_circle:   | 7.2         |
 |                   | 18.04   | :white_check_mark:   | :red_circle:   | 7.2         |
+|                   | 20.04   | :red_circle:         | :red_circle:   |             |
 | Debian            | 8       | :white_check_mark:   | :red_circle:   | 7.3         |
 |                   | 9       | :white_check_mark:   | :red_circle:   | 7.3         |
 |                   | 10      | :white_check_mark:   | :red_circle:   | 7.3         |
 | CentOS            | 6       | :red_circle:         | :red_circle:   |             |
 |                   | 7       | :white_check_mark:   | :red_circle:   | 7.3         |
 |                   | 8       | :white_check_mark:   | :red_circle:   | 7.2         |
+
+*Ubuntu 20.04 was recently released and is yet to be supported but will hopefully be supported soon.*
 
 ### Supported daemon operating systems
 
@@ -47,12 +50,15 @@ List of supported installation setups for panel and daemon (installations suppor
 | Ubuntu            | 14.04   | :red_circle:         |
 |                   | 16.04   | :white_check_mark:   |
 |                   | 18.04   | :white_check_mark:   |
+|                   | 20.04   | :red_circle:         |
 | Debian            | 8       | :red_circle:         |
 |                   | 9       | :white_check_mark:   |
 |                   | 10      | :white_check_mark:   |
 | CentOS            | 6       | :red_circle:         |
 |                   | 7       | :white_check_mark:   |
 |                   | 8       | :white_check_mark:   |
+
+*Ubuntu 20.04 was recently released and is yet to be supported but will hopefully be supported soon.*
 
 ## Using the installation scripts
 
