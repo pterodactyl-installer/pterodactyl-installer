@@ -200,6 +200,7 @@ function install_docker {
      ca-certificates \
      curl \
      gnupg2 \
+     sudo \
      software-properties-common
 
     # get their GPG key
