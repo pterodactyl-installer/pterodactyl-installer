@@ -130,30 +130,23 @@ function check_os_comp {
   if [ "$OS" == "ubuntu" ]; then
     if [ "$OS_VER_MAJOR" == "16" ]; then
       SUPPORTED=true
-      PHP_SOCKET="/run/php/php7.2-fpm.sock"
+      PHP_SOCKET="/run/php/php7.4-fpm.sock"
     elif [ "$OS_VER_MAJOR" == "18" ]; then
       SUPPORTED=true
-      PHP_SOCKET="/run/php/php7.2-fpm.sock"
-    else
-      SUPPORTED=false
-    fi
-  elif [ "$OS" == "zorin" ]; then
-    if [ "$OS_VER_MAJOR" == "15" ]; then
-      SUPPORTED=true
-      PHP_SOCKET="/run/php/php7.2-fpm.sock"
+      PHP_SOCKET="/run/php/php7.4-fpm.sock"
     else
       SUPPORTED=false
     fi
   elif [ "$OS" == "debian" ]; then
     if [ "$OS_VER_MAJOR" == "8" ]; then
       SUPPORTED=true
-      PHP_SOCKET="/run/php/php7.3-fpm.sock"
+      PHP_SOCKET="/run/php/php7.4-fpm.sock"
     elif [ "$OS_VER_MAJOR" == "9" ]; then
       SUPPORTED=true
-      PHP_SOCKET="/run/php/php7.3-fpm.sock"
+      PHP_SOCKET="/run/php/php7.4-fpm.sock"
     elif [ "$OS_VER_MAJOR" == "10" ]; then
       SUPPORTED=true
-      PHP_SOCKET="/run/php/php7.3-fpm.sock"
+      PHP_SOCKET="/run/php/php7.4-fpm.sock"
     else
       SUPPORTED=false
     fi
