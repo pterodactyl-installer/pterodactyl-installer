@@ -203,13 +203,13 @@ function install_docker {
      software-properties-common
 
     # get their GPG key
-    curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add -
+    curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
 
     # show fingerprint to user
     apt-key fingerprint 0EBFCD88
 
     # add APT repo
-    sudo add-apt-repository \
+    add-apt-repository \
       "deb [arch=amd64] https://download.docker.com/linux/debian \
       $(lsb_release -cs) \
       stable"
