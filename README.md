@@ -50,15 +50,13 @@ CentOS 8 is temporarily broken for Pterodactyl 1.0.
 | Ubuntu            | 14.04   | :red_circle:         |
 |                   | 16.04   | :white_check_mark:   |
 |                   | 18.04   | :white_check_mark:   |
-|                   | 20.04   | :red_circle:         |
+|                   | 20.04   | :white_check_mark:   |
 | Debian            | 8       | :red_circle:         |
 |                   | 9       | :white_check_mark:   |
 |                   | 10      | :white_check_mark:   |
 | CentOS            | 6       | :red_circle:         |
 |                   | 7       | :white_check_mark:   |
 |                   | 8       | :white_check_mark:   |
-
-*Ubuntu 20.04 was recently released and is yet to be supported but will hopefully be supported soon.*
 
 ## Using the installation scripts
 

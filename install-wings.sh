@@ -117,6 +117,8 @@ function check_os_comp {
       SUPPORTED=true
     elif [ "$OS_VER_MAJOR" == "18" ]; then
       SUPPORTED=true
+    elif [ "$OS_VER_MAJOR" == "20" ]; then
+      SUPPORTED=true
     else
       SUPPORTED=false
     fi
@@ -187,6 +189,7 @@ function install_dep {
     exit 1
   fi
 }
+
 function install_docker {
   echo "* Installing docker .."
   if [ "$OS" == "debian" ]; then
@@ -213,7 +216,7 @@ function install_docker {
 
     # install docker
     apt-get update
-    apt-get -y install docker-ce
+    apt-get -y install docker-ce docker-ce-cli containerd.io
 
     # make sure it's enabled & running
     systemctl start docker
@@ -242,7 +245,7 @@ function install_docker {
 
     # install docker
     apt-get update
-    apt-get -y install docker-ce
+    apt-get -y install docker-ce docker-ce-cli containerd.io
 
     # make sure it's enabled & running
     systemctl start docker
@@ -259,7 +262,7 @@ function install_docker {
         https://download.docker.com/linux/centos/docker-ce.repo
 
       # install Docker
-      yum install -y docker-ce
+      yum install -y docker-ce docker-ce-cli containerd.io
     elif [ "$OS_VER_MAJOR" == "8" ]; then
       # install dependencies for Docker
       dnf install -y dnf-utils device-mapper-persistent-data lvm2
@@ -268,7 +271,7 @@ function install_docker {
       dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
 
       # install Docker
-      dnf install -y docker-ce --nobest
+      dnf install -y docker-ce docker-ce-cli containerd.io --nobest
     fi
 
     # make sure it's enabled & running
