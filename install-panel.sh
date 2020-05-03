@@ -53,7 +53,8 @@ ASSUME_SSL=false
 CONFIGURE_LETSENCRYPT=false
 
 # download URLs
-PANEL_DL_URL="https://github.com/pterodactyl/panel/releases/latest/download/panel.tar.gz"
+# PANEL_DL_URL="https://github.com/pterodactyl/panel/releases/latest/download/panel.tar.gz"
+PANEL_DL_URL="https://github.com/pterodactyl/panel/releases/download/v1.0.0-beta.2/panel.tar.gz" # REVERT THIS BEFORE MERGING!
 CONFIGS_URL="https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/configs"
 
 # apt sources path
