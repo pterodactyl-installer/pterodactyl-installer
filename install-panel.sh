@@ -329,8 +329,7 @@ function ubuntu20_dep {
   # Add "add-apt-repository" command
   apt -y install software-properties-common curl apt-transport-https ca-certificates gnupg
 
-  # Add additional repositories for Redis, and MariaDB
-  add-apt-repository -y ppa:chris-lea/redis-server
+  # Add additional repositories for MariaDB
   curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
 
   # Update repositories list
