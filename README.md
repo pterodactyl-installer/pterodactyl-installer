@@ -33,15 +33,13 @@ List of supported installation setups for panel and Wings (installations support
 | Ubuntu            | 14.04   | :red_circle:         | :red_circle:   |             |
 |                   | 16.04   | :white_check_mark:   | :red_circle:   | 7.4         |
 |                   | 18.04   | :white_check_mark:   | :red_circle:   | 7.4         |
-|                   | 20.04   | :red_circle:         | :red_circle:   |             |
+|                   | 20.04   | :white_check_mark:   | :red_circle:   | 7.4         |
 | Debian            | 8       | :white_check_mark:   | :red_circle:   | 7.4         |
 |                   | 9       | :white_check_mark:   | :red_circle:   | 7.4         |
 |                   | 10      | :white_check_mark:   | :red_circle:   | 7.4         |
 | CentOS            | 6       | :red_circle:         | :red_circle:   |             |
 |                   | 7       | :white_check_mark:   | :red_circle:   | 7.4         |
 |                   | 8       | :red_circle:         | :red_circle:   | 7.2         |
-
-*Ubuntu 20.04 was recently released and is yet to be supported but will hopefully be supported soon.*
 
 CentOS 8 is temporarily broken for Pterodactyl 1.0.
 
