@@ -333,7 +333,6 @@ function ubuntu18_dep {
 
   # Add additional repositories for PHP, Redis, and MariaDB
   add-apt-repository -y ppa:chris-lea/redis-server
-  curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
 
   # Update repositories list
   apt update
@@ -359,7 +358,6 @@ function ubuntu16_dep {
   # Add additional repositories for PHP, Redis, and MariaDB
   LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php
   add-apt-repository -y ppa:chris-lea/redis-server
-  curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
 
   # Update repositories list
   apt update
@@ -390,9 +388,6 @@ function debian_jessie_dep {
 
   # redis-server is not installed using the PPA, as it's already available in the Debian repo
 
-  # Install MariaDb
-  curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
-
   # Update repositories list
   apt update
 
@@ -413,9 +408,6 @@ function debian_dep {
 
   # MariaDB need dirmngr
   apt -y install dirmngr
-
-  # Install MariaDb
-  curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
 
   # Update repositories list
   apt update
