@@ -357,7 +357,6 @@ function ubuntu18_dep {
   # Add additional repositories for PHP, Redis, and MariaDB
   LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php  # PPA because Ubuntu 18 only has 7.2 in the official repo
   add-apt-repository -y ppa:chris-lea/redis-server
-  curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
 
   # Update repositories list
   apt update
@@ -383,7 +382,6 @@ function ubuntu16_dep {
   # Add additional repositories for PHP, Redis, and MariaDB
   LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php
   add-apt-repository -y ppa:chris-lea/redis-server
-  curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
 
   # Update repositories list
   apt update
@@ -412,8 +410,7 @@ function debian_jessie_dep {
   wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
   echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/php.list
 
-  # Install MariaDb
-  curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
+  # redis-server is not installed using the PPA, as it's already available in the Debian repo
 
   # Update repositories list
   apt update
@@ -441,9 +438,6 @@ function debian_dep {
   apt install ca-certificates apt-transport-https lsb-release -y
   wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
   echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/php.list
-
-  # Install MariaDb
-  curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
 
   # Update repositories list
   apt update
