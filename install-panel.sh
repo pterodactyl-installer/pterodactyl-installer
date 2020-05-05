@@ -7,10 +7,10 @@
 # Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al.   #
 #                                                                           #
 # This script is licensed under the terms of the GNU GPL v3.0 license       #
-# https://github.com/VilhelmPrytz/pterodactyl-installer/blob/master/LICENSE #
+# https://github.com/vilhelmprytz/pterodactyl-installer/blob/master/LICENSE #
 #                                                                           #
 # This script is not associated with the official Pterodactyl Project.      #
-# https://github.com/VilhelmPrytz/pterodactyl-installer                     #
+# https://github.com/vilhelmprytz/pterodactyl-installer                     #
 #                                                                           #
 #############################################################################
 
@@ -55,7 +55,7 @@ CONFIGURE_LETSENCRYPT=false
 # download URLs
 # PANEL_DL_URL="https://github.com/pterodactyl/panel/releases/latest/download/panel.tar.gz"
 PANEL_DL_URL="https://github.com/pterodactyl/panel/releases/download/v1.0.0-beta.3/panel.tar.gz" # REVERT THIS BEFORE MERGING!
-CONFIGS_URL="https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/configs"
+CONFIGS_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/configs"
 
 # apt sources path
 SOURCES_PATH="/etc/apt/sources.list"
@@ -632,7 +632,7 @@ function install_daemon {
   read -r INSTALL_DAEMON
 
   if [[ "$INSTALL_DAEMON" =~ [Yy] ]]; then
-    bash <(curl -s https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/install-wings.sh)
+    bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install-wings.sh)
   fi
 }
 
@@ -769,7 +769,7 @@ function main {
   echo "* Pterodactyl panel installation script"
   echo "*"
   echo "* Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al."
-  echo "* https://github.com/VilhelmPrytz/pterodactyl-installer"
+  echo "* https://github.com/vilhelmprytz/pterodactyl-installer"
   echo "*"
   echo "* This script is not associated with the official Pterodactyl Project."
   echo "*"

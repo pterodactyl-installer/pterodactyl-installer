@@ -7,10 +7,10 @@
 # Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al.   #
 #                                                                           #
 # This script is licensed under the terms of the GNU GPL v3.0 license       #
-# https://github.com/VilhelmPrytz/pterodactyl-installer/blob/master/LICENSE #
+# https://github.com/vilhelmprytz/pterodactyl-installer/blob/master/LICENSE #
 #                                                                           #
 # This script is not associated with the official Pterodactyl Project.      #
-# https://github.com/VilhelmPrytz/pterodactyl-installer                     #
+# https://github.com/vilhelmprytz/pterodactyl-installer                     #
 #                                                                           #
 #############################################################################
 
@@ -43,7 +43,7 @@ echo "* Latest version is $VERSION"
 # download URLs
 # DL_URL="https://github.com/pterodactyl/wings/releases/latest/download/wings"
 DL_URL="https://github.com/pterodactyl/wings/releases/download/v1.0.0-beta.2/wings" # REVERT THIS BEFORE MERGING!
-CONFIGS_URL="https://raw.githubusercontent.com/VilhelmPrytz/pterodactyl-installer/master/configs"
+CONFIGS_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/configs"
 
 COLOR_RED='\033[0;31m'
 COLOR_NC='\033[0m'
@@ -367,7 +367,7 @@ function main {
   echo "* Pterodactyl Wings installation script"
   echo "*"
   echo "* Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al."
-  echo "* https://github.com/VilhelmPrytz/pterodactyl-installer"
+  echo "* https://github.com/vilhelmprytz/pterodactyl-installer"
   echo "*"
   echo "* This script is not associated with the official Pterodactyl Project."
   echo "*"
