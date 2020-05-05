@@ -330,9 +330,6 @@ function ubuntu20_dep {
   # Add "add-apt-repository" command
   apt -y install software-properties-common curl apt-transport-https ca-certificates gnupg
 
-  # Add additional repositories for MariaDB
-  curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
-
   # Update repositories list
   apt update
 
@@ -356,7 +353,6 @@ function ubuntu18_dep {
 
   # Add additional repositories for PHP, Redis, and MariaDB
   LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php  # PPA because Ubuntu 18 only has 7.2 in the official repo
-  add-apt-repository -y ppa:chris-lea/redis-server
 
   # Update repositories list
   apt update
@@ -381,7 +377,6 @@ function ubuntu16_dep {
 
   # Add additional repositories for PHP, Redis, and MariaDB
   LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php
-  add-apt-repository -y ppa:chris-lea/redis-server
 
   # Update repositories list
   apt update
