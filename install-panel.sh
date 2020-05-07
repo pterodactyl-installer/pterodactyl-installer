@@ -458,7 +458,7 @@ function centos7_dep {
   # SELinux tools
   yum install -y policycoreutils policycoreutils-python selinux-policy selinux-policy-targeted libselinux-utils setroubleshoot-server setools setools-console mcstrans
 
-  # install php7.4
+  # add remi repo (php7.4)
   yum install -y epel-release http://rpms.remirepo.net/enterprise/remi-release-7.rpm
   yum install -y yum-utils
   yum-config-manager --disable remi-php54
@@ -494,7 +494,11 @@ function centos8_dep {
   # SELinux tools
   dnf install -y policycoreutils selinux-policy selinux-policy-targeted setroubleshoot-server setools setools-console mcstrans
 
-  # Install php 7.2
+  # add remi repo (php7.4)
+  dnf install -y epel-release http://rpms.remirepo.net/enterprise/remi-release-8.rpm
+  dnf module enable php:remi-7.4
+  dnf update -y
+
   dnf install -y php php-common php-fpm php-cli php-json php-mysqlnd php-gd php-mbstring php-pdo php-zip php-bcmath php-dom php-opcache
 
   # MariaDB (use from official repo)

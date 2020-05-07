@@ -39,9 +39,7 @@ List of supported installation setups for panel and Wings (installations support
 |                   | 10      | :white_check_mark:   | :red_circle:   | 7.4         |
 | CentOS            | 6       | :red_circle:         | :red_circle:   |             |
 |                   | 7       | :white_check_mark:   | :red_circle:   | 7.4         |
-|                   | 8       | :red_circle:         | :red_circle:   | 7.2         |
-
-CentOS 8 is temporarily broken for Pterodactyl 1.0.
+|                   | 8       | :white_check_mark:   | :red_circle:   | 7.4         |
 
 ### Supported Wings operating systems
 
