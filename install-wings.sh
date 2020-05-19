@@ -42,7 +42,7 @@ echo "* Latest version is $VERSION"
 
 # download URLs
 # DL_URL="https://github.com/pterodactyl/wings/releases/latest/download/wings"
-DL_URL="https://github.com/pterodactyl/wings/releases/download/v1.0.0-beta.4/wings" # REVERT THIS BEFORE MERGING!
+DL_URL="https://github.com/pterodactyl/wings/releases/download/v1.0.0-beta.5/wings_linux_amd64" # REVERT THIS BEFORE MERGING!
 CONFIGS_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/configs"
 
 COLOR_RED='\033[0;31m'
@@ -286,11 +286,10 @@ function install_docker {
 function ptdl_dl {
   echo "* Installing Pterodactyl Wings .. "
 
-  mkdir -p /srv/wings/data/servers /srv/daemon-data
-  cd /srv/wings || exit
-  curl -L -o wings "$DL_URL"
+  mkdir -p /etc/pterodactyl
+  curl -L -o /etc/pterodactyl/wings "$DL_URL"
 
-  chmod u+x wings
+  chmod u+x /etc/pterodactyl/wings
 
   echo "* Done."
 }
@@ -301,20 +300,6 @@ function systemd_file {
   systemctl daemon-reload
   systemctl enable wings
   echo "* Installed systemd service!"
-}
-
-function install_standalone_sftp_server {
-  echo "* Installing standalone SFTP server.."
-
-  INSTALL_PATH="/srv/wings/sftp-server"
-
-  curl -Lo $INSTALL_PATH https://github.com/pterodactyl/sftp-server/releases/download/v1.0.4/sftp-server
-  chmod +x $INSTALL_PATH
-
-  curl -o /etc/systemd/system/pterosftp.service $CONFIGS_URL/pterosftp.service
-
-  systemctl daemon-reload
-  systemctl enable pterosftp
 }
 
 function install_mariadb {
@@ -350,7 +335,7 @@ function perform_install {
 
 function main {
   # check if we can detect an already existing installation
-  if [ -d "/srv/wings" ]; then
+  if [ -d "/etc/pterodactyl" ]; then
     print_warning "The script has detected that you already have Pterodactyl wings on your system! You cannot run the script multiple times, it will fail!"
     echo -e -n "* Are you sure you want to proceed? (y/N): "
     read -r CONFIRM_PROCEED
