@@ -31,10 +31,10 @@ List of supported installation setups for panel and Wings (installations support
 | Operating System  | Version | nginx support        | Apache support | PHP Version |
 | ----------------- | ------- | -------------------- | -------------- | ----------- |
 | Ubuntu            | 14.04   | :red_circle:         | :red_circle:   |             |
-|                   | 16.04   | :white_check_mark:   | :red_circle:   | 7.4         |
+|                   | 16.04   | :red_circle: *       | :red_circle:   |             |
 |                   | 18.04   | :white_check_mark:   | :red_circle:   | 7.4         |
 |                   | 20.04   | :white_check_mark:   | :red_circle:   | 7.4         |
-| Debian            | 8       | :white_check_mark:   | :red_circle:   | 7.4         |
+| Debian            | 8       | :red_circle: *       | :red_circle:   |             |
 |                   | 9       | :white_check_mark:   | :red_circle:   | 7.4         |
 |                   | 10      | :white_check_mark:   | :red_circle:   | 7.4         |
 | CentOS            | 6       | :red_circle:         | :red_circle:   |             |
@@ -46,7 +46,7 @@ List of supported installation setups for panel and Wings (installations support
 | Operating System  | Version | Supported            |
 | ----------------- | ------- | -------------------- |
 | Ubuntu            | 14.04   | :red_circle:         |
-|                   | 16.04   | :white_check_mark:   |
+|                   | 16.04   | :red_circle: *       |
 |                   | 18.04   | :white_check_mark:   |
 |                   | 20.04   | :white_check_mark:   |
 | Debian            | 8       | :red_circle:         |
@@ -55,6 +55,8 @@ List of supported installation setups for panel and Wings (installations support
 | CentOS            | 6       | :red_circle:         |
 |                   | 7       | :white_check_mark:   |
 |                   | 8       | :white_check_mark:   |
+
+_* Ubuntu 16 and Debian 8 no longer supported since Pterodactyl does not actively support it._
 
 ## Using the installation scripts
 

@@ -114,9 +114,7 @@ function detect_distro {
 
 function check_os_comp {
   if [ "$OS" == "ubuntu" ]; then
-    if [ "$OS_VER_MAJOR" == "16" ]; then
-      SUPPORTED=true
-    elif [ "$OS_VER_MAJOR" == "18" ]; then
+    if [ "$OS_VER_MAJOR" == "18" ]; then
       SUPPORTED=true
     elif [ "$OS_VER_MAJOR" == "20" ]; then
       SUPPORTED=true

@@ -130,9 +130,7 @@ function detect_distro {
 function check_os_comp {
   if [ "$OS" == "ubuntu" ]; then
     PHP_SOCKET="/run/php/php7.4-fpm.sock"
-    if [ "$OS_VER_MAJOR" == "16" ]; then
-      SUPPORTED=true
-    elif [ "$OS_VER_MAJOR" == "18" ]; then
+    if [ "$OS_VER_MAJOR" == "18" ]; then
       SUPPORTED=true
     elif [ "$OS_VER_MAJOR" == "20" ]; then
       SUPPORTED=true
@@ -148,9 +146,7 @@ function check_os_comp {
     fi
   elif [ "$OS" == "debian" ]; then
     PHP_SOCKET="/run/php/php7.4-fpm.sock"
-    if [ "$OS_VER_MAJOR" == "8" ]; then
-      SUPPORTED=true
-    elif [ "$OS_VER_MAJOR" == "9" ]; then
+    if [ "$OS_VER_MAJOR" == "9" ]; then
       SUPPORTED=true
     elif [ "$OS_VER_MAJOR" == "10" ]; then
       SUPPORTED=true
@@ -369,31 +365,7 @@ function ubuntu18_dep {
   echo "* Dependencies for Ubuntu installed!"
 }
 
-function ubuntu16_dep {
-  echo "* Installing dependencies for Ubuntu 16.."
-
-  # Add "add-apt-repository" command
-  apt -y install software-properties-common curl apt-transport-https ca-certificates gnupg
-
-  # Add additional repositories for PHP, Redis, and MariaDB
-  LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php
-
-  # Update repositories list
-  apt update
-
-  # Install Dependencies
-  apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server
-
-  # enable services
-  systemctl start mariadb
-  systemctl enable mariadb
-  systemctl start redis-server
-  systemctl enable redis-server
-
-  echo "* Dependencies for Ubuntu installed!"
-}
-
-function debian_jessie_dep {
+function debian_stretch_dep {
   echo "* Installing dependencies for Debian 8/9.."
 
   # MariaDB need dirmngr
@@ -658,8 +630,6 @@ function perform_install {
       ubuntu20_dep
     elif [ "$OS_VER_MAJOR" == "18" ]; then
       ubuntu18_dep
-    elif [ "$OS_VER_MAJOR" == "16" ]; then
-      ubuntu16_dep
     else
       print_error "Unsupported version of Ubuntu."
       exit 1
@@ -693,8 +663,8 @@ function perform_install {
     install_pteroq
   elif [ "$OS" == "debian" ]; then
     apt_update
-    if [ "$OS_VER_MAJOR" == "8" ] || [ "$OS_VER_MAJOR" == "9" ]; then
-      debian_jessie_dep
+    if [ "$OS_VER_MAJOR" == "9" ]; then
+      debian_stretch_dep
     elif [ "$OS_VER_MAJOR" == "10" ]; then
       debian_dep
     fi
