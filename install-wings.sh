@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 #############################################################################
 #                                                                           #
 # Project 'pterodactyl-installer' for wings                                 #
