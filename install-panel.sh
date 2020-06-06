@@ -752,23 +752,6 @@ function main {
   # checks if the system is compatible with this installation script
   check_os_comp
 
-  while [ "$WEBSERVER_INPUT" != "1" ]; do
-    echo "* [1] - nginx"
-    echo -e "\e[9m* [2] - apache\e[0m - \e[1mApache not supported yet\e[0m"
-
-    echo ""
-
-    echo -n "* Select webserver to install pterodactyl panel with: "
-    read -r WEBSERVER_INPUT
-
-    if [ "$WEBSERVER_INPUT" == "1" ]; then
-      WEBSERVER="nginx"
-    else
-      # exit
-      print_error "Invalid webserver."
-    fi
-  done
-
   # set database credentials
   print_brake 72
   echo "* Database configuration."
@@ -880,7 +863,7 @@ function main {
 
 function summary {
   print_brake 62
-  echo "* Pterodactyl panel $PTERODACTYL_VERSION with $WEBSERVER webserver on $OS"
+  echo "* Pterodactyl panel $PTERODACTYL_VERSION with $WEBSERVER on $OS"
   echo "* Database name: $MYSQL_DB"
   echo "* Database user: $MYSQL_USER"
   echo "* Database password: (censored)"

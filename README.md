@@ -28,18 +28,18 @@ List of supported installation setups for panel and Wings (installations support
 
 ### Supported panel operating systems and webservers
 
-| Operating System  | Version | nginx support        | Apache support | PHP Version |
-| ----------------- | ------- | -------------------- | -------------- | ----------- |
-| Ubuntu            | 14.04   | :red_circle:         | :red_circle:   |             |
-|                   | 16.04   | :red_circle: *       | :red_circle:   |             |
-|                   | 18.04   | :white_check_mark:   | :red_circle:   | 7.4         |
-|                   | 20.04   | :white_check_mark:   | :red_circle:   | 7.4         |
-| Debian            | 8       | :red_circle: *       | :red_circle:   |             |
-|                   | 9       | :white_check_mark:   | :red_circle:   | 7.4         |
-|                   | 10      | :white_check_mark:   | :red_circle:   | 7.4         |
-| CentOS            | 6       | :red_circle:         | :red_circle:   |             |
-|                   | 7       | :white_check_mark:   | :red_circle:   | 7.4         |
-|                   | 8       | :white_check_mark:   | :red_circle:   | 7.4         |
+| Operating System  | Version | nginx support        | PHP Version |
+| ----------------- | ------- | -------------------- | ----------- |
+| Ubuntu            | 14.04   | :red_circle:         |             |
+|                   | 16.04   | :red_circle: *       |             |
+|                   | 18.04   | :white_check_mark:   | 7.4         |
+|                   | 20.04   | :white_check_mark:   | 7.4         |
+| Debian            | 8       | :red_circle: *       |             |
+|                   | 9       | :white_check_mark:   | 7.4         |
+|                   | 10      | :white_check_mark:   | 7.4         |
+| CentOS            | 6       | :red_circle:         |             |
+|                   | 7       | :white_check_mark:   | 7.4         |
+|                   | 8       | :white_check_mark:   | 7.4         |
 
 ### Supported Wings operating systems
 
