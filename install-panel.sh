@@ -348,8 +348,11 @@ function ubuntu18_dep {
   # Add "add-apt-repository" command
   apt -y install software-properties-common curl apt-transport-https ca-certificates gnupg
 
-  # Add additional repositories for PHP, Redis, and MariaDB
-  LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php  # PPA because Ubuntu 18 only has 7.2 in the official repo
+  # Add PPA for PHP (we need 7.3+ and bionic only has 7.2)
+  LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php
+
+  # Add the MariaDB repo (bionic has mariadb version 10.1 and we need newer than that)
+  curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
 
   # Update repositories list
   apt update
@@ -377,8 +380,9 @@ function debian_stretch_dep {
   apt install ca-certificates apt-transport-https lsb-release -y
   wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
   echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/php.list
-
-  # redis-server is not installed using the PPA, as it's already available in the Debian repo
+ 
+  # Add the MariaDB repo (oldstable has mariadb version 10.1 and we need newer than that)
+  curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
 
   # Update repositories list
   apt update
