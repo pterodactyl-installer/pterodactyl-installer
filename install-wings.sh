@@ -287,9 +287,9 @@ function ptdl_dl {
   echo "* Installing Pterodactyl Wings .. "
 
   mkdir -p /etc/pterodactyl
-  curl -L -o /etc/pterodactyl/wings "$DL_URL"
+  curl -L -o /usr/local/bin/wings "$DL_URL"
 
-  chmod u+x /etc/pterodactyl/wings
+  chmod u+x /usr/local/bin/wings
 
   echo "* Done."
 }

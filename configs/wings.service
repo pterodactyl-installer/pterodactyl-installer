@@ -7,7 +7,7 @@ User=root
 WorkingDirectory=/etc/pterodactyl
 LimitNOFILE=4096
 PIDFile=/var/run/wings/daemon.pid
-ExecStart=/etc/pterodactyl/wings
+ExecStart=/usr/local/bin/wings
 Restart=on-failure
 StartLimitInterval=600
 
