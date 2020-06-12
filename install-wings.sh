@@ -23,11 +23,10 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 # check for curl
-CURLPATH="$(command -v curl)"
-if [ -z "$CURLPATH" ]; then
-    echo "* curl is required in order for this script to work."
-    echo "* install using apt (Debian and derivatives) or yum/dnf (CentOS)"
-    exit 1
+if ! [ -x "$(command -v curl)" ]; then
+  echo "* curl is required in order for this script to work."
+  echo "* install using apt (Debian and derivatives) or yum/dnf (CentOS)"
+  exit 1
 fi
 
 # define version using information from GitHub
