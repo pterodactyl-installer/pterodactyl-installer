@@ -44,7 +44,7 @@ echo "* Latest version is $VERSION"
 # download URLs
 # DL_URL="https://github.com/pterodactyl/wings/releases/latest/download/wings"
 DL_URL="https://github.com/pterodactyl/wings/releases/download/v1.0.0-beta.5/wings_linux_amd64" # REVERT THIS BEFORE MERGING!
-CONFIGS_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/configs"
+CONFIGS_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/pterodactyl-1.0" # REVERT THIS BEFORE MERGING!
 
 COLOR_RED='\033[0;31m'
 COLOR_NC='\033[0m'
