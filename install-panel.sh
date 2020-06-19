@@ -380,7 +380,7 @@ function debian_stretch_dep {
   echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/php.list
  
   # Add the MariaDB repo (oldstable has mariadb version 10.1 and we need newer than that)
-  curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
+  curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
 
   # Update repositories list
   apt update
