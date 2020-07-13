@@ -151,3 +151,5 @@ firewall-cmd --reload
 ## Contributors ✨
 
 Created and maintained by [Vilhelm Prytz](https://github.com/vilhelmprytz).
+
+Special thanks to [sam1370](https://github.com/sam1370) and [Linux1231233](https://github.com/Linux1231233) for helping on the Discord server!
