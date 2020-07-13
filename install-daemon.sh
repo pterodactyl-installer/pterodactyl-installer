@@ -200,7 +200,6 @@ function check_os_comp {
       print_warning "Unsupported type of virtualization detected. Please consult with your hosting provider whether your server can run Docker or not. Proceed at your own risk."
       print_error "Installation aborted!"
       exit 1
-      fi
   fi
   if echo $(uname -r) | grep -q xxxx; then
       print_error "Unsupported kernel detected."
