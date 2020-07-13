@@ -170,7 +170,7 @@ function check_os_comp {
    elif [ "$OS" == "centos" ]; then
 	
     if [ "$OS_VER_MAJOR" == "7" ]; then
-      yum install -y update
+      yum -y update
 
       # install virt-what
       yum -y install virt-what
