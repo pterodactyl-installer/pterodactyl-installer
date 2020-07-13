@@ -115,9 +115,14 @@ function detect_distro {
 function check_os_comp {
   MACHINE_TYPE=$(uname -m)
   if [ "${MACHINE_TYPE}" != "x86_64" ]; then # check the architecture
-      print_error "Detected unsupported architecture $MACHINE_TYPE"
-      print_error "Use 64 bit architecture(x86_64)"
-      exit 1
+      print_warning "Detected architecture $MACHINE_TYPE"
+	   print_warning "Using any other architecture then 64 bit(x86_64) may (and will) cause problems."
+      echo -e -n  "* Are you sure you want to proceed? (y/N):"
+	   read -r choise
+      if [[ ! "$choise" =~ [Yy] ]]; then
+	    print_error "Installation aborted!"
+	    exit 1
+	  fi
   fi
   if [ "$OS" == "ubuntu" ]; then
     if [ "$OS_VER_MAJOR" == "16" ]; then
@@ -162,7 +167,7 @@ function check_os_comp {
     exit 1
   fi
   if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
-    apt-get update
+    apt-get -y update
 
     # install virt-what
     apt-get install -y virt-what
@@ -185,12 +190,11 @@ function check_os_comp {
     exit 1
   fi
   echo -e "* ${COLOR_RED}Note${COLOR_NC} Detecting virtualization"
+  
   print_brake 70
   
   virt_serv=$(virt-what)
-  if [ "$virt_serv" = "" ]; then
-      print_warning "No virtualization detected"
-  else
+  if [ "$virt_serv" != "" ]; then
       print_warning "Virtualization: $virt_serv detected."
   fi
   
