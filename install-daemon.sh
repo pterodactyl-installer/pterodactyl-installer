@@ -116,8 +116,8 @@ function check_os_comp {
   MACHINE_TYPE=$(uname -m)
   if [ "${MACHINE_TYPE}" != "x86_64" ]; then # check the architecture
       print_error "Detected unsupported architecture $MACHINE_TYPE"
-	  print_error "Use 64 bit architecture(x86_64)"
-	  exit 1
+      print_error "Use 64 bit architecture(x86_64)"
+      exit 1
   fi
   if [ "$OS" == "ubuntu" ]; then
     if [ "$OS_VER_MAJOR" == "16" ]; then
