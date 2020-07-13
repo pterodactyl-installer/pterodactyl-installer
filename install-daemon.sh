@@ -113,6 +113,12 @@ function detect_distro {
 }
 
 function check_os_comp {
+  MACHINE_TYPE=`uname -m`
+  if [ ${MACHINE_TYPE} != 'x86_64' ]; then # check the architecture
+      print_error "Detected unsupported architecture $MACHINE_TYPE"
+	  print_error "Use 64 bit architecture(x86_64)"
+	  exit 1
+  fi
   if [ "$OS" == "ubuntu" ]; then
     if [ "$OS_VER_MAJOR" == "16" ]; then
       SUPPORTED=true
@@ -154,6 +160,51 @@ function check_os_comp {
     echo "* $OS $OS_VER is not supported"
     print_error "Unsupported OS"
     exit 1
+  fi
+  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
+    apt-get update
+
+    # install virt-what
+    apt-get install -y virt-what
+	
+   elif [ "$OS" == "centos" ]; then
+	
+    if [ "$OS_VER_MAJOR" == "7" ]; then
+      yum install -y update
+
+      # install virt-what
+      yum -y install virt-what
+    elif [ "$OS_VER_MAJOR" == "8" ]; then
+      dnf -y update
+		
+      # install virt-what
+      dnf install -y virt-what
+    fi
+  else
+    print_error "Invalid OS."
+    exit 1
+  fi
+  echo -e "* ${COLOR_RED}Note${COLOR_NC} Detecting virtualization"
+  print_brake 70
+  
+  virt_serv=$(echo $(virt-what))
+  if [ "$virt_serv" = "" ]; then
+      print_warning "No virtualization detected"
+  else
+      print_warning "Virtualization: $virt_serv detected."
+  fi
+  
+  print_brake 70
+  
+  if [ "$virt_serv" == "openvz" ] || [ "$virt_serv" == "lxc" ] ; then # add more virtualization types which are not supported
+      print_warning "Unsupported type of virtualization detected. Please consult with your hosting provider whether your server can run Docker or not. Proceed at your own risk."
+      print_error "Installation aborted!"
+      exit 1
+      fi
+  fi
+  if echo $(uname -r) | grep -q xxxx; then
+      print_error "Unsupported kernel detected."
+      exit 1
   fi
 }
 
