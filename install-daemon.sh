@@ -434,6 +434,8 @@ function main {
 
   # detect distro
   detect_distro
+  # checks if the system is compatible with this installation script
+  check_os_comp
 
   print_brake 70
   echo "* Pterodactyl daemon installation script"
@@ -445,9 +447,6 @@ function main {
   echo "*"
   echo "* Running $OS version $OS_VER."
   print_brake 70
-
-  # checks if the system is compatible with this installation script
-  check_os_comp
 
   echo "* "
   echo "* The installer will install Docker, required dependencies for the daemon"
