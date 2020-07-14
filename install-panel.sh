@@ -551,12 +551,12 @@ function firewall_firewalld {
     yum -y -q update
     yum -y -q install firewalld
 
-    firewall-cmd --add-service=http --permanent # Port 80
-    firewall-cmd --add-service=https --permanent # Port 443
-    firewall-cmd --add-service=ssh --permanent # Port 22
+    firewall-cmd --reload # Enable firewall
+    firewall-cmd --add-service=http --permanent > /dev/null # Port 80
+    firewall-cmd --add-service=https --permanent > /dev/null # Port 443
+    firewall-cmd --add-service=ssh --permanent > /dev/null  # Port 22
 
     systemctl enable --now firewalld # Enable firewall Service (Not sure if needed)
-    firewall-cmd --reload # Enable firewall
 
   elif [ "$OS_VER_MAJOR" == "8" ]; then
     dnf -y -q update
