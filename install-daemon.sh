@@ -167,23 +167,26 @@ function check_os_comp {
     exit 1
   fi
   if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
-    apt-get -y update
+    echo -e -n  "* Installing virt-what"
+    apt-get -y update -qq > /dev/null
 
     # install virt-what
-    apt-get install -y virt-what
+    apt-get install -y virt-what -qq > /dev/null
 	
    elif [ "$OS" == "centos" ]; then
 	
     if [ "$OS_VER_MAJOR" == "7" ]; then
-      yum -y update
+	  echo -e -n  "* Installing virt-what"
+      yum -q -y update
 
       # install virt-what
-      yum -y install virt-what
+      yum -q -y install virt-what
     elif [ "$OS_VER_MAJOR" == "8" ]; then
-      dnf -y update
+	  echo -e -n  "* Installing virt-what"
+      dnf -y -q update
 		
       # install virt-what
-      dnf install -y virt-what
+      dnf install -y -q virt-what
     fi
   else
     print_error "Invalid OS."
