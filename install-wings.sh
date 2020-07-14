@@ -318,17 +318,37 @@ function install_mariadb {
   systemctl start mariadb
 }
 
+#################################
+##### OS SPECIFIC FUNCTIONS #####
+#################################
+
+function firewall_ufw {
+  apt update
+  apt install ufw -y
+
+  echo -e "\n* Enabling Uncomplicated Firewall (UFW)"
+  echo "* Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
+
+  # pointing to /dev/null silences the command output
+  ufw allow ssh > /dev/null
+  ufw allow http > /dev/null
+  ufw allow https > /dev/null
+
+  ufw enable
+  ufw status numbered | sed '/v6/d'
+}
+
 ####################
 ## MAIN FUNCTIONS ##
 ####################
 function perform_install {
   echo "* Installing pterodactyl wings.."
+  [ "$CONFIGURE_UFW" == true ] && firewall_ufw
   install_dep
   install_docker
   ptdl_dl
   systemd_file
   [ "$INSTALL_MARIADB" == true ] && install_mariadb
-  [ "$CONFIGURE_UFW" == true ] && firewall_ufw
 
   # return true if script has made it this far
   return 0
