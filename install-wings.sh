@@ -409,7 +409,6 @@ function main {
     if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
       CONFIGURE_UFW=true
     fi
-  fi
 
   echo -n "* Proceed with installation? (y/N): "
 
