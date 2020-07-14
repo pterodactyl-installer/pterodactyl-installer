@@ -50,6 +50,9 @@ COLOR_NC='\033[0m'
 
 INSTALL_MARIADB=false
 
+# ufw firewall
+CONFIGURE_UFW=false
+
 # visual functions
 function print_error {
   echo ""
@@ -320,12 +323,12 @@ function install_mariadb {
 ####################
 function perform_install {
   echo "* Installing pterodactyl wings.."
-
   install_dep
   install_docker
   ptdl_dl
   systemd_file
   [ "$INSTALL_MARIADB" == true ] && install_mariadb
+  [ "$CONFIGURE_UFW" == true ] && firewall_ufw
 
   # return true if script has made it this far
   return 0
@@ -377,6 +380,16 @@ function main {
   read -r CONFIRM_INSTALL_MARIADB
   [[ "$CONFIRM_INSTALL_MARIADB" =~ [Yy] ]] && INSTALL_MARIADB=true
 
+  # UFW is available for Ubuntu/Debian
+  # Let's Encrypt, in this setup, is only available on Ubuntu/Debian
+  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
+    echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
+    read -r CONFIRM_UFW
+
+    if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
+      CONFIGURE_UFW=true
+    fi
+
   echo -n "* Proceed with installation? (y/N): "
 
   read -r CONFIRM
@@ -396,7 +409,7 @@ function goodbye {
   echo "* systemctl start wings"
   echo "* "
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: It is recommended to enable swap (for Docker, read more about it in official documentation)."
-  echo -e "* ${COLOR_RED}Note${COLOR_NC}: This script does not configure your firewall. Ports 8080 and 2022 needs to be open."
+  echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you haven't configured your firewall, ports 8080 and 2022 needs to be open."
   print_brake 70
   echo ""
 }
