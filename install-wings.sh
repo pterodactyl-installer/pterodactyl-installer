@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> parent of c4ed1fd... UFW function
 #!/bin/bash
 
 set -e
@@ -322,7 +318,6 @@ function install_mariadb {
   systemctl start mariadb
 }
 
-<<<<<<< HEAD
 #################################
 ##### OS SPECIFIC FUNCTIONS #####
 #################################
@@ -343,26 +338,17 @@ function firewall_ufw {
   ufw status numbered | sed '/v6/d'
 }
 
-=======
->>>>>>> parent of c4ed1fd... UFW function
 ####################
 ## MAIN FUNCTIONS ##
 ####################
 function perform_install {
   echo "* Installing pterodactyl wings.."
-<<<<<<< HEAD
   [ "$CONFIGURE_UFW" == true ] && firewall_ufw
-=======
->>>>>>> parent of c4ed1fd... UFW function
   install_dep
   install_docker
   ptdl_dl
   systemd_file
   [ "$INSTALL_MARIADB" == true ] && install_mariadb
-<<<<<<< HEAD
-=======
-  [ "$CONFIGURE_UFW" == true ] && firewall_ufw
->>>>>>> parent of c4ed1fd... UFW function
 
   # return true if script has made it this far
   return 0
@@ -423,10 +409,7 @@ function main {
     if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
       CONFIGURE_UFW=true
     fi
-<<<<<<< HEAD
-=======
   fi
->>>>>>> parent of c4ed1fd... UFW function
 
   echo -n "* Proceed with installation? (y/N): "
 
@@ -455,5 +438,3 @@ function goodbye {
 # run script
 main
 goodbye
-
-fixed
