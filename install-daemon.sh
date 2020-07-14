@@ -117,7 +117,7 @@ function check_os_comp {
   if [ "${MACHINE_TYPE}" != "x86_64" ]; then # check the architecture
       print_warning "Detected architecture $MACHINE_TYPE"
 	   print_warning "Using any other architecture then 64 bit(x86_64) may (and will) cause problems."
-      echo -e -n  "* Are you sure you want to proceed? (y/N):"
+           echo -e -n  "* Are you sure you want to proceed? (y/N):"
 	   read -r choice
       if [[ ! "$choice" =~ [Yy] ]]; then
 	    print_error "Installation aborted!"
