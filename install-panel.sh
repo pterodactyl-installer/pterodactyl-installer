@@ -562,12 +562,12 @@ function firewall_firewalld {
     dnf -y -q update
     dnf -y -q install firewalld
 
+    firewall-cmd --reload # Enable firewall
     firewall-cmd --add-service=http --permanent # Port 80
     firewall-cmd --add-service=https --permanent # Port 443
     firewall-cmd --add-service=ssh --permanent # Port 22
 
     systemctl enable --now firewalld # Enable firewall Service (Not sure if needed)
-    firewall-cmd --reload # Enable firewall
 
   else
     print_error "Unsupported OS"
