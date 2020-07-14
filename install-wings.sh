@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #!/bin/bash
 
 set -e
