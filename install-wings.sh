@@ -418,3 +418,5 @@ function goodbye {
 # run script
 main
 goodbye
+
+fixed
