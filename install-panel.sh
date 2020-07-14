@@ -878,7 +878,7 @@ function main {
 
   # Firewall-cmd is available for CentOS
   if [ "$OS" == "centos" ]; then
-    echo -e -n "* Do you want to automatically configure Firewall-cmd (firewall)? (y/N): "
+    echo -e -n "* Do you want to automatically configure firewall-cmd (firewall)? (y/N): "
     read -r CONFIRM_FIREWALL_CMD
 
     if [[ "$CONFIRM_FIREWALL_CMD" =~ [Yy] ]]; then
