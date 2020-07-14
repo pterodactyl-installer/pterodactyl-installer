@@ -66,6 +66,9 @@ CONFIGURE_UFW=false
 # firewall_cmd
 CONFIGURE_FIREWALL_CMD=false
 
+# firewall status
+CONFIGURE_FIREWALL=false
+
 # visual functions
 function print_error {
   COLOR_RED='\033[0;31m'
@@ -858,6 +861,7 @@ function main {
 
     if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
       CONFIGURE_UFW=true
+      CONFIGURE_FIREWALL=true
     fi
 
     # Available for Debian 9/10
@@ -875,7 +879,6 @@ function main {
     fi
   fi
 
-
   # Firewall-cmd is available for CentOS
   if [ "$OS" == "centos" ]; then
     echo -e -n "* Do you want to automatically configure firewall-cmd (firewall)? (y/N): "
@@ -883,6 +886,7 @@ function main {
 
     if [[ "$CONFIRM_FIREWALL_CMD" =~ [Yy] ]]; then
       CONFIGURE_FIREWALL_CMD=true
+      CONFIGURE_FIREWALL=true
     fi
   fi
 
@@ -922,7 +926,7 @@ function summary {
   echo "* Database user: $MYSQL_USER"
   echo "* Database password: (censored)"
   echo "* Hostname/FQDN: $FQDN"
-  echo "* Configure UFW? $CONFIGURE_UFW"
+  echo "* Configure Firewall? $CONFIGURE_FIREWALL"
   echo "* Configure Let's Encrypt? $CONFIGURE_LETSENCRYPT"
   echo "* Assume SSL? $ASSUME_SSL"
   print_brake 62
