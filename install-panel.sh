@@ -546,31 +546,27 @@ function firewall_ufw {
 
 function firewall_firewalld {
 
-  echo -e "\n* Enabling Firewall_cmd (firewalld)"
+  echo -e "\n* Enabling firewall_cmd (firewalld)"
   echo "* Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
 
   if [ "$OS_VER_MAJOR" == "7" ]; then
 
     yum -y -q update
-    yum -y -q install firewalld
+    yum -y -q install firewalld > /dev/null
 
     firewall-cmd --reload -q # Enable firewall
     firewall-cmd --add-service=http --permanent -q # Port 80
     firewall-cmd --add-service=https --permanent -q # Port 443
     firewall-cmd --add-service=ssh --permanent -q  # Port 22
-
-    systemctl enable --now firewalld # Enable firewall Service (Not sure if needed)
 
   elif [ "$OS_VER_MAJOR" == "8" ]; then
     dnf -y -q update
-    dnf -y -q install firewalld
+    dnf -y -q install firewalld > /dev/null
 
     firewall-cmd --reload -q # Enable firewall
     firewall-cmd --add-service=http --permanent -q # Port 80
     firewall-cmd --add-service=https --permanent -q # Port 443
     firewall-cmd --add-service=ssh --permanent -q  # Port 22
-
-    systemctl enable --now firewalld # Enable firewall Service (Not sure if needed)
 
   else
     print_error "Unsupported OS"
