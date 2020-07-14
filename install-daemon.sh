@@ -171,7 +171,7 @@ function check_os_comp {
   fi
 
   # check virtualization
-  echo -e -n  "* Installing virt-what..."
+  echo -e  "* Installing virt-what..."
   if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
     apt-get -y update -qq > /dev/null
 
