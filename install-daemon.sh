@@ -189,16 +189,11 @@ function check_os_comp {
     print_error "Invalid OS."
     exit 1
   fi
-  echo -e "* ${COLOR_RED}Note${COLOR_NC} Detecting virtualization"
-  
-  print_brake 70
   
   virt_serv=$(virt-what)
   if [ "$virt_serv" != "" ]; then
       print_warning "Virtualization: $virt_serv detected."
   fi
-  
-  print_brake 70
   
   if [ "$virt_serv" == "openvz" ] || [ "$virt_serv" == "lxc" ] ; then # add more virtualization types which are not supported
       print_warning "Unsupported type of virtualization detected. Please consult with your hosting provider whether your server can run Docker or not. Proceed at your own risk."
