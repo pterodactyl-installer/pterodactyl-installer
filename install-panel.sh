@@ -563,9 +563,9 @@ function firewall_firewalld {
     dnf -y -q install firewalld
 
     firewall-cmd --reload # Enable firewall
-    firewall-cmd --add-service=http --permanent # Port 80
-    firewall-cmd --add-service=https --permanent # Port 443
-    firewall-cmd --add-service=ssh --permanent # Port 22
+    firewall-cmd --add-service=http --permanent > /dev/null # Port 80
+    firewall-cmd --add-service=https --permanent > /dev/null # Port 443
+    firewall-cmd --add-service=ssh --permanent > /dev/null  # Port 22
 
     systemctl enable --now firewalld # Enable firewall Service (Not sure if needed)
 
@@ -574,7 +574,6 @@ function firewall_firewalld {
     exit 1
   fi
 }
-
 
 function debian_based_letsencrypt {
   # Install certbot and setup the certificate using the FQDN
