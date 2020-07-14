@@ -63,6 +63,9 @@ SOURCES_PATH="/etc/apt/sources.list"
 # ufw firewall
 CONFIGURE_UFW=false
 
+# firewall_cmd
+CONFIGURE_FIREWALL_CMD=false
+
 # visual functions
 function print_error {
   COLOR_RED='\033[0;31m'
@@ -538,6 +541,41 @@ function firewall_ufw {
   ufw status numbered | sed '/v6/d'
 }
 
+function firewall_firewalld {
+
+  echo -e "\n* Enabling Firewall_cmd (firewalld)"
+  echo "* Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
+
+  if [ "$OS_VER_MAJOR" == "7" ]; then
+
+    yum -y -q update
+    yum -y -q install firewalld
+
+    firewall-cmd --add-service=http --permanent # Port 80
+    firewall-cmd --add-service=https --permanent # Port 443
+    firewall-cmd --add-service=ssh --permanent # Port 22
+
+    systemctl enable --now firewalld # Enable firewall Service (Not sure if needed)
+    firewall-cmd --reload # Enable firewall
+
+  elif [ "$OS_VER_MAJOR" == "8" ]; then
+    dnf -y -q update
+    dnf -y -q install firewalld
+
+    firewall-cmd --add-service=http --permanent # Port 80
+    firewall-cmd --add-service=https --permanent # Port 443
+    firewall-cmd --add-service=ssh --permanent # Port 22
+
+    systemctl enable --now firewalld # Enable firewall Service (Not sure if needed)
+    firewall-cmd --reload # Enable firewall
+
+  else
+    print_error "Unsupported OS"
+    exit 1
+  fi
+}
+
+
 function debian_based_letsencrypt {
   # Install certbot and setup the certificate using the FQDN
   apt install certbot -y
@@ -623,6 +661,8 @@ function perform_install {
   echo "* Starting installation.. this might take a while!"
 
   [ "$CONFIGURE_UFW" == true ] && firewall_ufw
+
+  [ "$CONFIGURE_FIREWALL_CMD" == true ] && firewall_firewalld
 
   # do different things depending on OS
   if [ "$OS" == "ubuntu" ]; then
@@ -810,7 +850,7 @@ function main {
 
       [ -z "$FQDN" ] && print_error "FQDN cannot be empty"
   done
-
+  
   # UFW is available for Ubuntu/Debian
   # Let's Encrypt, in this setup, is only available on Ubuntu/Debian
   if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
@@ -833,6 +873,17 @@ function main {
       if [ "$OS_VER_MAJOR" == "18" ] || [ "$OS_VER_MAJOR" == "20" ]; then
         ask_letsencrypt
       fi
+    fi
+  fi
+
+
+  # Firewall-cmd is available for CentOS
+  if [ "$OS" == "centos" ]; then
+    echo -e -n "* Do you want to automatically configure Firewall-cmd (firewall)? (y/N): "
+    read -r CONFIRM_FIREWALL_CMD
+
+    if [[ "$CONFIRM_FIREWALL_CMD" =~ [Yy] ]]; then
+      CONFIGURE_FIREWALL_CMD=true
     fi
   fi
 
