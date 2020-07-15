@@ -409,37 +409,38 @@ function firewall_ufw {
 }
 
 function firewall_firewalld {
-
   echo -e "\n* Enabling firewall_cmd (firewalld)"
   echo "* Opening port 22 (SSH), 8080 (Daemon Port), 2022 (Daemon SFTP Port)"
 
   if [ "$OS_VER_MAJOR" == "7" ]; then
-
     yum -y -q update
     yum -y -q install firewalld > /dev/null
 
     systemctl --now enable firewalld > /dev/null # Enable and start 
-    firewall-cmd --reload -q # Enable firewall
     firewall-cmd --add-port 8080/tcp --permanent -q # Port 8080
     firewall-cmd --add-port 2022/tcp --permanent -q # Port 2022
-    firewall-cmd --permanent --zone=trusted --change-interface=docker0 -q
-    firewall-cmd --add-service=ssh --permanent -q  # Port 22
+    firewall-cmd --permanent --zone=trusted --change-interface=pterodactyl0 -q
+    firewall-cmd --zone=trusted --add-masquerade --permanent
+    firewall-cmd --ad-service=ssh --permanent -q # Port 22
+    firewall-cmd --reload -q # Enable firewall
 
   elif [ "$OS_VER_MAJOR" == "8" ]; then
     dnf -y -q update
     dnf -y -q install firewalld > /dev/null
 
     systemctl --now enable firewalld > /dev/null # Enable and start 
-    firewall-cmd --reload -q # Enable firewall
     firewall-cmd --add-port 8080/tcp --permanent -q # Port 8080
     firewall-cmd --add-port 2022/tcp --permanent -q # Port 2022
-    firewall-cmd --permanent --zone=trusted --change-interface=docker0 -q
-    firewall-cmd --add-service=ssh --permanent -q  # Port 22
+    firewall-cmd --permanent --zone=trusted --change-interface=pterodactyl0 -q
+    firewall-cmd --zone=trusted --add-masquerade --permanent
+    firewall-cmd --ad-service=ssh --permanent -q # Port 22
+    firewall-cmd --reload -q # Enable firewall
 
   else
     print_error "Unsupported OS"
     exit 1
   fi
+
   echo "* Firewall-cmd installed"
   print_brake 70
 }

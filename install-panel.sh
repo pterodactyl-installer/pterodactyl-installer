@@ -557,40 +557,38 @@ function firewall_ufw {
 }
 
 function firewall_firewalld {
-
   echo -e "\n* Enabling firewall_cmd (firewalld)"
   echo "* Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
 
   if [ "$OS_VER_MAJOR" == "7" ]; then
-
     # pointing to /dev/null silences the command output
     echo "* Installing firewall"
     yum -y -q update > /dev/null
     yum -y -q install firewalld > /dev/null
 
     systemctl --now enable firewalld > /dev/null # Start and enable
-    firewall-cmd --reload -q # Enable firewall
     firewall-cmd --add-service=http --permanent -q # Port 80
     firewall-cmd --add-service=https --permanent -q # Port 443
     firewall-cmd --add-service=ssh --permanent -q  # Port 22
+    firewall-cmd --reload -q # Enable firewall
 
   elif [ "$OS_VER_MAJOR" == "8" ]; then
-
     # pointing to /dev/null silences the command output
     echo "* Installing firewall"
     dnf -y -q update > /dev/null
     dnf -y -q install firewalld > /dev/null
 
     systemctl --now enable firewalld > /dev/null # Start and enable
-    firewall-cmd --reload -q # Enable firewall
     firewall-cmd --add-service=http --permanent -q # Port 80
     firewall-cmd --add-service=https --permanent -q # Port 443
     firewall-cmd --add-service=ssh --permanent -q  # Port 22
+    firewall-cmd --reload -q # Enable firewall
 
   else
     print_error "Unsupported OS"
     exit 1
   fi
+
   echo "* Firewall-cmd installed"
   print_brake 70
 }
@@ -881,7 +879,7 @@ function main {
 
       [ -z "$FQDN" ] && print_error "FQDN cannot be empty"
   done
-  
+
   # UFW is available for Ubuntu/Debian
   # Let's Encrypt, in this setup, is only available on Ubuntu/Debian
   if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
