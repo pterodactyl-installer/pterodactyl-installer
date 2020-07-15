@@ -409,12 +409,10 @@ function firewall_ufw {
 }
 
 function firewall_firewalld {
-
   echo -e "\n* Enabling firewall_cmd (firewalld)"
   echo "* Opening port 22 (SSH), 8080 (Daemon Port), 2022 (Daemon SFTP Port)"
 
   if [ "$OS_VER_MAJOR" == "7" ]; then
-
     yum -y -q update
     yum -y -q install firewalld > /dev/null
 
@@ -440,6 +438,7 @@ function firewall_firewalld {
     print_error "Unsupported OS"
     exit 1
   fi
+
   echo "* Firewall-cmd installed"
   print_brake 70
 }
