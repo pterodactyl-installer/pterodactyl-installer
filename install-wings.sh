@@ -53,6 +53,9 @@ INSTALL_MARIADB=false
 # ufw firewall
 CONFIGURE_UFW=false
 
+# firewall_cmd firewall
+CONFIGURE_FIREWALL_CMD=false
+
 # visual functions
 function print_error {
   echo ""
@@ -338,18 +341,55 @@ function firewall_ufw {
   ufw status numbered | sed '/v6/d'
 }
 
+function firewall_firewalld {
+
+  echo -e "\n* Enabling firewall_cmd (firewalld)"
+  echo "* Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
+
+  if [ "$OS_VER_MAJOR" == "7" ]; then
+
+    # pointing to /dev/null silences the command output
+    echo "* Installing firewall"
+    yum -y -q update > /dev/null
+    yum -y -q install firewalld > /dev/null
+
+    systemctl --now enable firewalld > /dev/null
+    firewall-cmd --reload -q # Enable firewall
+    firewall-cmd --add-service=http --permanent -q # Port 80
+    firewall-cmd --add-service=https --permanent -q # Port 443
+    firewall-cmd --add-service=ssh --permanent -q  # Port 22
+
+  elif [ "$OS_VER_MAJOR" == "8" ]; then
+
+    # pointing to /dev/null silences the command output
+    echo "* Installing firewall"
+    dnf -y -q update > /dev/null
+    dnf -y -q install firewalld > /dev/null
+
+    systemctl --now enable firewalld > /dev/null
+    firewall-cmd --reload -q # Enable firewall
+    firewall-cmd --add-service=http --permanent -q # Port 80
+    firewall-cmd --add-service=https --permanent -q # Port 443
+    firewall-cmd --add-service=ssh --permanent -q  # Port 22
+
+  else
+    print_error "Unsupported OS"
+    exit 1
+  fi
+
 ####################
 ## MAIN FUNCTIONS ##
 ####################
 function perform_install {
   echo "* Installing pterodactyl wings.."
   [ "$CONFIGURE_UFW" == true ] && firewall_ufw
+  [ "$CONFIGURE_FIREWALL_CMD" == true ] && firewall_firewalld
   install_dep
   install_docker
   ptdl_dl
   systemd_file
   [ "$INSTALL_MARIADB" == true ] && install_mariadb
-
+  
   # return true if script has made it this far
   return 0
 }
@@ -401,13 +441,22 @@ function main {
   [[ "$CONFIRM_INSTALL_MARIADB" =~ [Yy] ]] && INSTALL_MARIADB=true
 
   # UFW is available for Ubuntu/Debian
-  # Let's Encrypt, in this setup, is only available on Ubuntu/Debian
   if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
     echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
     read -r CONFIRM_UFW
 
     if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
       CONFIGURE_UFW=true
+    fi
+  fi
+
+  # Firewall-cmd is available for CentOS
+  if [ "$OS" == "centos" ]; then
+    echo -e -n "* Do you want to automatically configure firewall-cmd (firewall)? (y/N): "
+    read -r CONFIRM_FIREWALL_CMD
+
+    if [[ "$CONFIRM_FIREWALL_CMD" =~ [Yy] ]]; then
+      CONFIGURE_FIREWALL_CMD=true
     fi
   fi
 
