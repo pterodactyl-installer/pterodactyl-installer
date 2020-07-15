@@ -376,6 +376,8 @@ function firewall_firewalld {
     print_error "Unsupported OS"
     exit 1
   fi
+  echo "* Firewall-cmd installed"
+  print_brake 70
 }
 
 ####################
