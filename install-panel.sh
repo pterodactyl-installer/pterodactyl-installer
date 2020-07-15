@@ -567,10 +567,10 @@ function firewall_firewalld {
     yum -y -q install firewalld > /dev/null
 
     systemctl --now enable firewalld > /dev/null # Start and enable
-    firewall-cmd --reload -q # Enable firewall
     firewall-cmd --add-service=http --permanent -q # Port 80
     firewall-cmd --add-service=https --permanent -q # Port 443
     firewall-cmd --add-service=ssh --permanent -q  # Port 22
+    firewall-cmd --reload -q # Enable firewall
 
   elif [ "$OS_VER_MAJOR" == "8" ]; then
     # pointing to /dev/null silences the command output
@@ -579,10 +579,10 @@ function firewall_firewalld {
     dnf -y -q install firewalld > /dev/null
 
     systemctl --now enable firewalld > /dev/null # Start and enable
-    firewall-cmd --reload -q # Enable firewall
     firewall-cmd --add-service=http --permanent -q # Port 80
     firewall-cmd --add-service=https --permanent -q # Port 443
     firewall-cmd --add-service=ssh --permanent -q  # Port 22
+    firewall-cmd --reload -q # Enable firewall
 
   else
     print_error "Unsupported OS"
