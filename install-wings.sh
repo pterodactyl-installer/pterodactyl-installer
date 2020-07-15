@@ -419,8 +419,9 @@ function firewall_firewalld {
     systemctl --now enable firewalld > /dev/null # Enable and start 
     firewall-cmd --add-port 8080/tcp --permanent -q # Port 8080
     firewall-cmd --add-port 2022/tcp --permanent -q # Port 2022
-    firewall-cmd --permanent --zone=trusted --change-interface=docker0 -q
-    firewall-cmd --add-service=ssh --permanent -q  # Port 22
+    firewall-cmd --permanent --zone=trusted --change-interface=pterodactyl0 -q
+    firewall-cmd --zone=trusted --add-masquerade --permanent
+    firewall-cmd --ad-service=ssh --permanent -q # Port 22
     firewall-cmd --reload -q # Enable firewall
 
   elif [ "$OS_VER_MAJOR" == "8" ]; then
@@ -430,10 +431,10 @@ function firewall_firewalld {
     systemctl --now enable firewalld > /dev/null # Enable and start 
     firewall-cmd --add-port 8080/tcp --permanent -q # Port 8080
     firewall-cmd --add-port 2022/tcp --permanent -q # Port 2022
-    firewall-cmd --permanent --zone=trusted --change-interface=docker0 -q
-    firewall-cmd --add-service=ssh --permanent -q # Port 22
+    firewall-cmd --permanent --zone=trusted --change-interface=pterodactyl0 -q
     firewall-cmd --zone=trusted --add-masquerade --permanent
-    firewall-cmd --reload # Enable firewall
+    firewall-cmd --ad-service=ssh --permanent -q # Port 22
+    firewall-cmd --reload -q # Enable firewall
 
   else
     print_error "Unsupported OS"
