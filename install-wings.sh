@@ -376,6 +376,7 @@ function firewall_firewalld {
     print_error "Unsupported OS"
     exit 1
   fi
+}
 
 ####################
 ## MAIN FUNCTIONS ##
@@ -389,7 +390,7 @@ function perform_install {
   ptdl_dl
   systemd_file
   [ "$INSTALL_MARIADB" == true ] && install_mariadb
-  
+
   # return true if script has made it this far
   return 0
 }
