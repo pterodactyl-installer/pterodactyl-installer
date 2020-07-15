@@ -8,7 +8,19 @@ set -e
 #                                                                           #
 # Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al.   #
 #                                                                           #
-# This script is licensed under the terms of the GNU GPL v3.0 license       #
+#   This program is free software: you can redistribute it and/or modify    #
+#   it under the terms of the GNU General Public License as published by    #
+#   the Free Software Foundation, either version 3 of the License, or       #
+#   (at your option) any later version.                                     #
+#                                                                           #
+#   This program is distributed in the hope that it will be useful,         #
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of          #
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the           #
+#   GNU General Public License for more details.                            #
+#                                                                           #
+#   You should have received a copy of the GNU General Public License       #
+#   along with this program.  If not, see <https://www.gnu.org/licenses/>.  #
+#                                                                           #
 # https://github.com/vilhelmprytz/pterodactyl-installer/blob/master/LICENSE #
 #                                                                           #
 # This script is not associated with the official Pterodactyl Project.      #
@@ -119,6 +131,20 @@ function detect_distro {
 }
 
 function check_os_comp {
+  MACHINE_TYPE=$(uname -m)
+  if [ "${MACHINE_TYPE}" != "x86_64" ]; then # check the architecture
+    print_warning "Detected architecture $MACHINE_TYPE"
+    print_warning "Using any other architecture then 64 bit(x86_64) may (and will) cause problems."
+
+    echo -e -n  "* Are you sure you want to proceed? (y/N):"
+    read -r choice
+
+    if [[ ! "$choice" =~ [Yy] ]]; then
+      print_error "Installation aborted!"
+      exit 1
+    fi
+  fi
+
   if [ "$OS" == "ubuntu" ]; then
     if [ "$OS_VER_MAJOR" == "18" ]; then
       SUPPORTED=true
@@ -159,6 +185,47 @@ function check_os_comp {
   else
     echo "* $OS $OS_VER is not supported"
     print_error "Unsupported OS"
+    exit 1
+  fi
+
+  # check virtualization
+  echo -e  "* Installing virt-what..."
+  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
+    apt-get -y update -qq > /dev/null
+
+    # install virt-what
+    apt-get install -y virt-what -qq > /dev/null
+
+  elif [ "$OS" == "centos" ]; then
+    if [ "$OS_VER_MAJOR" == "7" ]; then
+      yum -q -y update
+
+      # install virt-what
+      yum -q -y install virt-what
+    elif [ "$OS_VER_MAJOR" == "8" ]; then
+      dnf -y -q update
+
+      # install virt-what
+      dnf install -y -q virt-what
+    fi
+  else
+    print_error "Invalid OS."
+    exit 1
+  fi
+
+  virt_serv=$(virt-what)
+  if [ "$virt_serv" != "" ]; then
+    print_warning "Virtualization: ${virt_serv//$'\n'/ } detected."
+  fi
+
+  if [ "$virt_serv" == "openvz" ] || [ "$virt_serv" == "lxc" ] ; then # add more virtualization types which are not supported
+    print_warning "Unsupported type of virtualization detected. Please consult with your hosting provider whether your server can run Docker or not. Proceed at your own risk."
+    print_error "Installation aborted!"
+    exit 1
+  fi
+
+  if uname -r | grep -q "xxxx"; then
+    print_error "Unsupported kernel detected."
     exit 1
   fi
 }
@@ -409,6 +476,9 @@ function main {
   # detect distro
   detect_distro
 
+  # checks if the system is compatible with this installation script
+  check_os_comp
+
   print_brake 70
   echo "* Pterodactyl Wings installation script"
   echo "*"
@@ -419,9 +489,6 @@ function main {
   echo "*"
   echo "* Running $OS version $OS_VER."
   print_brake 70
-
-  # checks if the system is compatible with this installation script
-  check_os_comp
 
   echo "* "
   echo "* The installer will install Docker, required dependencies for Wings"
