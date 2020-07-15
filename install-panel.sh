@@ -533,12 +533,12 @@ function firewall_ufw {
   apt install ufw -y
 
   echo -e "\n* Enabling Uncomplicated Firewall (UFW)"
-  echo "* Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
+  echo "* Opening port 22 (SSH), 8080 (Daemon Port), 2022 (Daemon SFTP Port)"
 
   # pointing to /dev/null silences the command output
   ufw allow ssh > /dev/null
-  ufw allow http > /dev/null
-  ufw allow https > /dev/null
+  ufw allow 8080 > /dev/null
+  ufw allow 2022 > /dev/null
 
   ufw enable
   ufw status numbered | sed '/v6/d'
@@ -547,25 +547,29 @@ function firewall_ufw {
 function firewall_firewalld {
 
   echo -e "\n* Enabling firewall_cmd (firewalld)"
-  echo "* Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
+  echo "* Opening port 22 (SSH), 8080 (Daemon Port), 2022 (Daemon SFTP Port)"
 
   if [ "$OS_VER_MAJOR" == "7" ]; then
 
     yum -y -q update
     yum -y -q install firewalld > /dev/null
 
+    systemctl --now enable firewalld # Enable and start 
     firewall-cmd --reload -q # Enable firewall
-    firewall-cmd --add-service=http --permanent -q # Port 80
-    firewall-cmd --add-service=https --permanent -q # Port 443
+    firewall-cmd --add-port 8080/tcp --permanent -q # Port 8080
+    firewall-cmd --add-port 2022/tcp --permanent -q # Port 2022
+    firewall-cmd --permanent --zone=trusted --change-interface=docker0 -q
     firewall-cmd --add-service=ssh --permanent -q  # Port 22
 
   elif [ "$OS_VER_MAJOR" == "8" ]; then
     dnf -y -q update
     dnf -y -q install firewalld > /dev/null
 
+    systemctl --now enable firewalld # Enable and start 
     firewall-cmd --reload -q # Enable firewall
-    firewall-cmd --add-service=http --permanent -q # Port 80
-    firewall-cmd --add-service=https --permanent -q # Port 443
+    firewall-cmd --add-port 8080/tcp --permanent -q # Port 8080
+    firewall-cmd --add-port 2022/tcp --permanent -q # Port 2022
+    firewall-cmd --permanent --zone=trusted --change-interface=docker0 -q
     firewall-cmd --add-service=ssh --permanent -q  # Port 22
 
   else
