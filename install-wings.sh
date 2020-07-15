@@ -62,6 +62,12 @@ COLOR_NC='\033[0m'
 
 INSTALL_MARIADB=false
 
+# ufw firewall
+CONFIGURE_UFW=false
+
+# firewall_cmd firewall
+CONFIGURE_FIREWALL_CMD=false
+
 # visual functions
 function print_error {
   echo ""
@@ -382,12 +388,70 @@ function install_mariadb {
   systemctl start mariadb
 }
 
+#################################
+##### OS SPECIFIC FUNCTIONS #####
+#################################
+
+function firewall_ufw {
+  apt update
+  apt install ufw -y
+
+  echo -e "\n* Enabling Uncomplicated Firewall (UFW)"
+  echo "* Opening port 22 (SSH), 8080 (Daemon Port), 2022 (Daemon SFTP Port)"
+
+  # pointing to /dev/null silences the command output
+  ufw allow ssh > /dev/null
+  ufw allow 8080 > /dev/null
+  ufw allow 2022 > /dev/null
+
+  ufw enable
+  ufw status numbered | sed '/v6/d'
+}
+
+function firewall_firewalld {
+  echo -e "\n* Enabling firewall_cmd (firewalld)"
+  echo "* Opening port 22 (SSH), 8080 (Daemon Port), 2022 (Daemon SFTP Port)"
+
+  if [ "$OS_VER_MAJOR" == "7" ]; then
+    yum -y -q update
+    yum -y -q install firewalld > /dev/null
+
+    systemctl --now enable firewalld > /dev/null # Enable and start 
+    firewall-cmd --add-port 8080/tcp --permanent -q # Port 8080
+    firewall-cmd --add-port 2022/tcp --permanent -q # Port 2022
+    firewall-cmd --permanent --zone=trusted --change-interface=pterodactyl0 -q
+    firewall-cmd --zone=trusted --add-masquerade --permanent
+    firewall-cmd --ad-service=ssh --permanent -q # Port 22
+    firewall-cmd --reload -q # Enable firewall
+
+  elif [ "$OS_VER_MAJOR" == "8" ]; then
+    dnf -y -q update
+    dnf -y -q install firewalld > /dev/null
+
+    systemctl --now enable firewalld > /dev/null # Enable and start 
+    firewall-cmd --add-port 8080/tcp --permanent -q # Port 8080
+    firewall-cmd --add-port 2022/tcp --permanent -q # Port 2022
+    firewall-cmd --permanent --zone=trusted --change-interface=pterodactyl0 -q
+    firewall-cmd --zone=trusted --add-masquerade --permanent
+    firewall-cmd --ad-service=ssh --permanent -q # Port 22
+    firewall-cmd --reload -q # Enable firewall
+
+  else
+    print_error "Unsupported OS"
+    exit 1
+  fi
+
+  echo "* Firewall-cmd installed"
+  print_brake 70
+}
+
 ####################
 ## MAIN FUNCTIONS ##
 ####################
 function perform_install {
   echo "* Installing pterodactyl wings.."
-
+  [ "$CONFIGURE_UFW" == true ] && firewall_ufw
+  [ "$CONFIGURE_FIREWALL_CMD" == true ] && firewall_firewalld
   install_dep
   install_docker
   ptdl_dl
@@ -444,6 +508,26 @@ function main {
   read -r CONFIRM_INSTALL_MARIADB
   [[ "$CONFIRM_INSTALL_MARIADB" =~ [Yy] ]] && INSTALL_MARIADB=true
 
+  # UFW is available for Ubuntu/Debian
+  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
+    echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
+    read -r CONFIRM_UFW
+
+    if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
+      CONFIGURE_UFW=true
+    fi
+  fi
+
+  # Firewall-cmd is available for CentOS
+  if [ "$OS" == "centos" ]; then
+    echo -e -n "* Do you want to automatically configure firewall-cmd (firewall)? (y/N): "
+    read -r CONFIRM_FIREWALL_CMD
+
+    if [[ "$CONFIRM_FIREWALL_CMD" =~ [Yy] ]]; then
+      CONFIGURE_FIREWALL_CMD=true
+    fi
+  fi
+
   echo -n "* Proceed with installation? (y/N): "
 
   read -r CONFIRM
@@ -463,7 +547,7 @@ function goodbye {
   echo "* systemctl start wings"
   echo "* "
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: It is recommended to enable swap (for Docker, read more about it in official documentation)."
-  echo -e "* ${COLOR_RED}Note${COLOR_NC}: This script does not configure your firewall. Ports 8080 and 2022 needs to be open."
+  echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you haven't configured your firewall, ports 8080 and 2022 needs to be open."
   print_brake 70
   echo ""
 }

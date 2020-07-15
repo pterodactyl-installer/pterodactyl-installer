@@ -75,6 +75,12 @@ SOURCES_PATH="/etc/apt/sources.list"
 # ufw firewall
 CONFIGURE_UFW=false
 
+# firewall_cmd
+CONFIGURE_FIREWALL_CMD=false
+
+# firewall status
+CONFIGURE_FIREWALL=false
+
 # visual functions
 function print_error {
   COLOR_RED='\033[0;31m'
@@ -550,6 +556,43 @@ function firewall_ufw {
   ufw status numbered | sed '/v6/d'
 }
 
+function firewall_firewalld {
+  echo -e "\n* Enabling firewall_cmd (firewalld)"
+  echo "* Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
+
+  if [ "$OS_VER_MAJOR" == "7" ]; then
+    # pointing to /dev/null silences the command output
+    echo "* Installing firewall"
+    yum -y -q update > /dev/null
+    yum -y -q install firewalld > /dev/null
+
+    systemctl --now enable firewalld > /dev/null # Start and enable
+    firewall-cmd --add-service=http --permanent -q # Port 80
+    firewall-cmd --add-service=https --permanent -q # Port 443
+    firewall-cmd --add-service=ssh --permanent -q  # Port 22
+    firewall-cmd --reload -q # Enable firewall
+
+  elif [ "$OS_VER_MAJOR" == "8" ]; then
+    # pointing to /dev/null silences the command output
+    echo "* Installing firewall"
+    dnf -y -q update > /dev/null
+    dnf -y -q install firewalld > /dev/null
+
+    systemctl --now enable firewalld > /dev/null # Start and enable
+    firewall-cmd --add-service=http --permanent -q # Port 80
+    firewall-cmd --add-service=https --permanent -q # Port 443
+    firewall-cmd --add-service=ssh --permanent -q  # Port 22
+    firewall-cmd --reload -q # Enable firewall
+
+  else
+    print_error "Unsupported OS"
+    exit 1
+  fi
+
+  echo "* Firewall-cmd installed"
+  print_brake 70
+}
+
 function debian_based_letsencrypt {
   # Install certbot and setup the certificate using the FQDN
   apt install certbot -y
@@ -635,6 +678,8 @@ function perform_install {
   echo "* Starting installation.. this might take a while!"
 
   [ "$CONFIGURE_UFW" == true ] && firewall_ufw
+
+  [ "$CONFIGURE_FIREWALL_CMD" == true ] && firewall_firewalld
 
   # do different things depending on OS
   if [ "$OS" == "ubuntu" ]; then
@@ -831,6 +876,7 @@ function main {
 
     if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
       CONFIGURE_UFW=true
+      CONFIGURE_FIREWALL=true
     fi
 
     # Available for Debian 9/10
@@ -845,6 +891,17 @@ function main {
       if [ "$OS_VER_MAJOR" == "18" ] || [ "$OS_VER_MAJOR" == "20" ]; then
         ask_letsencrypt
       fi
+    fi
+  fi
+
+  # Firewall-cmd is available for CentOS
+  if [ "$OS" == "centos" ]; then
+    echo -e -n "* Do you want to automatically configure firewall-cmd (firewall)? (y/N): "
+    read -r CONFIRM_FIREWALL_CMD
+
+    if [[ "$CONFIRM_FIREWALL_CMD" =~ [Yy] ]]; then
+      CONFIGURE_FIREWALL_CMD=true
+      CONFIGURE_FIREWALL=true
     fi
   fi
 
@@ -884,7 +941,7 @@ function summary {
   echo "* Database user: $MYSQL_USER"
   echo "* Database password: (censored)"
   echo "* Hostname/FQDN: $FQDN"
-  echo "* Configure UFW? $CONFIGURE_UFW"
+  echo "* Configure Firewall? $CONFIGURE_FIREWALL"
   echo "* Configure Let's Encrypt? $CONFIGURE_LETSENCRYPT"
   echo "* Assume SSL? $ASSUME_SSL"
   print_brake 62
