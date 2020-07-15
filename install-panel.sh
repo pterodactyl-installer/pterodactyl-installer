@@ -454,8 +454,8 @@ function centos7_dep {
   # add remi repo (php7.4)
   yum install -y epel-release http://rpms.remirepo.net/enterprise/remi-release-7.rpm
   yum install -y yum-utils
-  yum-config-manager --disable remi-php54
-  yum-config-manager --enable remi-php74
+  yum-config-manager -y --disable remi-php54
+  yum-config-manager -y --enable remi-php74
   yum update -y
 
   # Install MariaDB
@@ -489,7 +489,7 @@ function centos8_dep {
 
   # add remi repo (php7.4)
   dnf install -y epel-release http://rpms.remirepo.net/enterprise/remi-release-8.rpm
-  dnf module enable php:remi-7.4
+  dnf module enable -y php:remi-7.4
   dnf update -y
 
   dnf install -y php php-common php-fpm php-cli php-json php-mysqlnd php-gd php-mbstring php-pdo php-zip php-bcmath php-dom php-opcache
