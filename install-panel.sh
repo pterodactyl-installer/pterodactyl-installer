@@ -107,6 +107,10 @@ function print_brake {
     echo ""
 }
 
+hyperlink() {
+  echo -e "\e]8;;${1}\a${1}\e]8;;\a"
+}
+
 # other functions
 function detect_distro {
   if [ -f /etc/os-release ]; then
@@ -949,8 +953,17 @@ function summary {
 
 function goodbye {
   print_brake 62
-  echo "* Pterodactyl Panel successfully installed @ $FQDN"
-  echo "* "
+  echo "* Panel installation completed"
+  echo "*"
+
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && echo "* Your panel should be accessible from $(hyperlink "https://$FQDN")"
+  [ "$ASSUME_SSL" == true ] && [ "$CONFIGURE_LETSENCRYPT" == false ] && echo "* You have opted in to use SSL, but not via Let's Encrypt automatically. Your panel will not work until SSL has been configured."
+  [ "$ASSUME_SSL" == false ] && [ "$CONFIGURE_LETSENCRYPT" == false ] && echo "* Your panel should be accessible from $(hyperlink "http://$FQDN")"
+
+  echo "*"
+  echo "* Unofficial add-ons and tips"
+  echo "* - Third-party themes, $(hyperlink 'https://github.com/TheFonix/Pterodactyl-Themes')"
+  echo "*"
   echo "* Installation is using $WEBSERVER on $OS"
   echo "* Thank you for using this script."
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you haven't configured the firewall: 80/443 (HTTP/HTTPS) is required to be open!"
