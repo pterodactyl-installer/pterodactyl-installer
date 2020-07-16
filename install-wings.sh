@@ -91,6 +91,9 @@ function print_brake {
     echo ""
 }
 
+hyperlink() {
+  echo -e "\e]8;;${1}\a${1}\e]8;;\a"
+}
 
 # other functions
 function detect_distro {
@@ -496,7 +499,7 @@ function main {
   echo "* as well as Wings itself. But it's still required to create the node"
   echo "* on the panel and then place the configuration file on the node manually after"
   echo "* the installation has finished. Read more about this process on the"
-  echo "* official documentation: https://pterodactyl.io/daemon/installing.html#configure-daemon"
+  echo "* official documentation: $(hyperlink 'https://pterodactyl.io/wings/1.0/installing.html#configure-daemon')"
   echo "* "
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: this script will not start Wings automatically (will install systemd service, not start it)."
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: this script will not enable swap (for docker)."
@@ -540,12 +543,20 @@ function main {
 function goodbye {
   echo ""
   print_brake 70
-  echo "* Installation completed."
-  echo ""
-  echo "* Make sure you create the node within the panel and then copy"
-  echo "* the config to this node. You may then start the daemon using "
+  echo "* Wings installation completed"
+  echo "*"
+  echo "* To continue, you need to configure Wings to run with your panel"
+  echo "* Please refer to the official guide, $(hyperlink 'https://pterodactyl.io/wings/1.0/installing.html#configure-daemon')"
+  echo "*"
+  echo "* Once the configuration has been created (usually in '/etc/pterodactyl/config.yml')"
+  echo "* you can then start Wings manually to verify that it's working"
+  echo "*"
+  echo "* sudo wings"
+  echo "*"
+  echo "* Once you have verified that it is working, you can then start it as a service (runs in the background)"
+  echo "*"
   echo "* systemctl start wings"
-  echo "* "
+  echo "*"
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: It is recommended to enable swap (for Docker, read more about it in official documentation)."
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you haven't configured your firewall, ports 8080 and 2022 needs to be open."
   print_brake 70
