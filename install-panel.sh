@@ -14,6 +14,18 @@
 #                                                                           #
 #############################################################################
 
+# Load progressbar
+source <(curl -s https://raw.githubusercontent.com/roddhjav/progressbar/master/progressbar.sh) || exit 1
+
+# Initialize percent done
+percentdone=0
+
+# Progress bar function
+display_progress() {                                                                                                                                         
+        progressbar "PANEL INSTALLATION COMPLETION" $percentdone 100                                                                                                    
+        echo                                                                                                                                                 
+}
+
 # exit with error status code if user is not root
 if [[ $EUID -ne 0 ]]; then
   echo "* This script must be executed with root privileges (sudo)." 1>&2
@@ -189,6 +201,9 @@ function install_composer {
   echo "* Installing composer.."
   curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
   echo "* Composer installed!"
+  
+  percentdone=36
+  display_progress
 }
 
 function ptdl_dl {
@@ -201,10 +216,16 @@ function ptdl_dl {
   chmod -R 755 storage/* bootstrap/cache/
 
   cp .env.example .env
+  
+  percentdone=37
+  display_progress
+  
   composer install --no-dev --optimize-autoloader
 
   php artisan key:generate --force
   echo "* Downloaded pterodactyl panel files & installed composer dependencies!"
+  percentdone=57
+  display_progress
 }
 
 function configure {
@@ -228,9 +249,13 @@ function configure {
 
   # configures database
   print_warning "You must type 'yes' or else the installer will fail! The default response 'no' will not properly initialize the database!"
+  percentdone=70
+  display_progress
   php artisan migrate --seed
 
   echo "* The installer will now ask you to create the initial admin user account."
+  percentdone=77
+  display_progress
   php artisan p:user:make
 
   # set folder permissions now
@@ -255,10 +280,13 @@ function set_folder_permissions {
 # insert cronjob
 function insert_cronjob {
   echo "* Installing cronjob.. "
+  percentdone=83
+  display_progress
 
   crontab -l | { cat; echo "* * * * * php /var/www/pterodactyl/artisan schedule:run >> /dev/null 2>&1"; } | crontab -
 
   echo "* Cronjob installed!"
+  
 }
 
 function install_pteroq {
@@ -335,6 +363,9 @@ function ubuntu18_dep {
 
   # Update repositories list
   apt update
+  
+  percentdone=4
+  display_progress
 
   # Install Dependencies
   apt -y install php7.2 php7.2-cli php7.2-gd php7.2-mysql php7.2-pdo php7.2-mbstring php7.2-tokenizer php7.2-bcmath php7.2-xml php7.2-fpm php7.2-curl php7.2-zip mariadb-server nginx curl tar unzip git redis-server redis
@@ -346,6 +377,9 @@ function ubuntu18_dep {
   systemctl enable redis-server
 
   echo "* Dependencies for Ubuntu installed!"
+  
+  percentdone=35
+  display_progress
 }
 
 function ubuntu16_dep {
@@ -360,6 +394,9 @@ function ubuntu16_dep {
 
   # Update repositories list
   apt update
+  
+  percentdone=4
+  display_progress
 
   # Install Dependencies
   apt -y install php7.2 php7.2-cli php7.2-gd php7.2-mysql php7.2-pdo php7.2-mbstring php7.2-tokenizer php7.2-bcmath php7.2-xml php7.2-fpm php7.2-curl php7.2-zip mariadb-server nginx curl tar unzip git redis-server
@@ -371,6 +408,9 @@ function ubuntu16_dep {
   systemctl enable redis-server
 
   echo "* Dependencies for Ubuntu installed!"
+  
+  percentdone=35
+  display_progress
 }
 
 function debian_jessie_dep {
@@ -520,6 +560,9 @@ function centos_php {
 function firewall_ufw {
   apt update
   apt install ufw -y
+  
+  percentdone=1
+  display_progress
 
   echo -e "\n* Enabling Uncomplicated Firewall (UFW)"
   echo "* Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
@@ -531,16 +574,24 @@ function firewall_ufw {
 
   ufw enable
   ufw status numbered | sed '/v6/d'
+  percentdone=2
+  display_progress
 }
 
 function debian_based_letsencrypt {
   # Install certbot and setup the certificate using the FQDN
+  percentdone=84
+  display_progress
   apt install certbot -y
 
   systemctl stop nginx
 
   echo -e "\nMake sure you choose Option 1, and create a Standalone Web Server during the certificate"
+  percentdone=90
+  display_progress
   certbot certonly -d "$FQDN"
+  percentdone=98
+  display_progress
 
   systemctl restart nginx
 }
@@ -616,6 +667,8 @@ function install_daemon {
 
 function perform_install {
   echo "* Starting installation.. this might take a while!"
+  percentdone=0
+  display_progress
 
   [ "$CONFIGURE_UFW" == true ] && firewall_ufw
 
@@ -623,6 +676,8 @@ function perform_install {
   if [ "$OS" == "ubuntu" ]; then
     ubuntu_universedep
     apt_update
+	percentdone=3
+	display_progress
     # different dependencies depending on if it's 18 or 16
     if [ "$OS_VER_MAJOR" == "18" ]; then
       ubuntu18_dep
@@ -889,6 +944,8 @@ function summary {
 }
 
 function goodbye {
+  percentdone=100
+  display_progress
   print_brake 62
   echo "* Pterodactyl Panel successfully installed @ $FQDN"
   echo "* "
