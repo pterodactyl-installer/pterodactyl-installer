@@ -603,6 +603,7 @@ function debian_based_letsencrypt {
 
   systemctl stop nginx
 
+  FAILED=false
   certbot certonly --standalone -d "$FQDN" || FAILED=true
 
   if [ ! -d "/etc/letsencrypt/live/$FQDN/" ] || [ "$FAILED" == true ]; then
