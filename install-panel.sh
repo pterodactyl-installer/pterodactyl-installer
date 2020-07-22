@@ -609,7 +609,7 @@ function debian_based_letsencrypt {
   if [ -d "/etc/letsencrypt/live/$FQDN/" ]; then
     systemctl restart nginx
   else
-    print_warning "Obtaining a certificate failed."
+    print_warning "The process of obtaining a Let's Encrypt certificate failed!"
     echo "* Still assume ssl? (y/N): "
     read -r CONFIGURE_SSL
 
