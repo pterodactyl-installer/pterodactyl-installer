@@ -615,6 +615,7 @@ function debian_based_letsencrypt {
       ASSUME_SSL=true
     else
       ASSUME_SSL=false
+      CONFIGURE_LETSENCRYPT=false
     fi
   else 
     systemctl restart nginx
