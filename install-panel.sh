@@ -604,7 +604,7 @@ function debian_based_letsencrypt {
   systemctl stop nginx
 
   echo -e "\nMake sure you choose Option 1, and create a Standalone Web Server during the certificate"
-  certbot certonly --standalone -d "$FQDN"
+  certbot certonly --standalone -d "$FQDN" || FAILED=true
 
   if [ -d "/etc/letsencrypt/live/$FQDN/" ] || [ "$FAILED" == true ]; then
     systemctl restart nginx
