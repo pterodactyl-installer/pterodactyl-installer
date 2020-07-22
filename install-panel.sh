@@ -613,6 +613,7 @@ function debian_based_letsencrypt {
 
     if [[ "$CONFIGURE_SSL" =~ [Yy] ]]; then
       ASSUME_SSL=true
+      CONFIGURE_LETSENCRYPT=false
     else
       ASSUME_SSL=false
       CONFIGURE_LETSENCRYPT=false
