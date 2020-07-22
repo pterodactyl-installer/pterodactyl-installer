@@ -610,7 +610,7 @@ function debian_based_letsencrypt {
     systemctl restart nginx
   else
     print_warning "The process of obtaining a Let's Encrypt certificate failed!"
-    echo "* Still assume ssl? (y/N): "
+    echo "* Still assume SSL? (y/N): "
     read -r CONFIGURE_SSL
 
     if [[ "$CONFIGURE_SSL" =~ [Yy] ]]; then
