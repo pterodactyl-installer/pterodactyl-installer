@@ -666,7 +666,12 @@ function configure_nginx {
   fi
 
   # restart nginx
-  systemctl restart nginx
+  if [ "$CONFIGURE_LETSENCRYPT" == true ] || { [ "$CONFIGURE_LETSENCRYPT" == false ] && [ "$ASSUME_SSL" == false ]; }; then
+    systemctl restart nginx
+  else
+    print_error "Fatal error" # Should never happen
+    exit 1
+  fi
   echo "* nginx configured!"
 }
 
