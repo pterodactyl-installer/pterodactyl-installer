@@ -596,20 +596,6 @@ function configure_apache {
   echo "soon .."
 }
 
-###########
-## OTHER ##
-###########
-
-function install_daemon {
-  echo "* It is recommended to have the panel and daemon on two separate nodes."
-  echo -n "* Would you like to also install the Pterodactyl daemon on this machine? (y/N): "
-  read -r INSTALL_DAEMON
-
-  if [[ "$INSTALL_DAEMON" =~ [Yy] ]]; then
-    bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install-daemon.sh)
-  fi
-}
-
 ####################
 ## MAIN FUNCTIONS ##
 ####################
@@ -896,7 +882,6 @@ function goodbye {
   echo "* Thank you for using this script."
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you haven't configured the firewall: 80/443 (HTTP/HTTPS) is required to be open!"
   print_brake 62
-  install_daemon
 }
 
 # run script
