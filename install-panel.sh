@@ -53,7 +53,7 @@ PTERODACTYL_VERSION="$(get_latest_release "pterodactyl/panel")"
 echo "* Latest version is $PTERODACTYL_VERSION"
 
 # variables
-WEBSERVER="nginx"
+WEBSERVER=""
 FQDN=""
 
 # default MySQL credentials
@@ -351,8 +351,15 @@ function ubuntu20_dep {
   apt update
 
   # Install Dependencies
-  apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis
-
+  if ["$WEBSERVER" == "nginx"]; then
+    apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis
+  elif ["$WEBSERVER" == "apache"]; then
+    apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,curl,zip} mariadb-server apache2 tar unzip git redis-server redis
+  else
+    print_error "Unsupported webserver"
+    exit 1
+  fi
+    
   # enable services
   systemctl start mariadb
   systemctl enable mariadb
@@ -378,7 +385,14 @@ function ubuntu18_dep {
   apt update
 
   # Install Dependencies
-  apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis
+  if ["$WEBSERVER" == "nginx"]; then
+    apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis
+  elif ["$WEBSERVER" == "apache"]; then
+    apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,curl,zip} mariadb-server apache2 tar unzip git redis-server redis
+  else
+    print_error "Unsupported webserver"
+    exit 1
+  fi
 
   # enable services
   systemctl start mariadb
@@ -408,7 +422,14 @@ function debian_stretch_dep {
   apt update
 
   # Install Dependencies
-  apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server
+  if ["$WEBSERVER" == "nginx"]; then
+    apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server
+  elif ["$WEBSERVER" == "apache"]; then
+    apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,curl,zip} mariadb-server apache2 curl tar unzip git redis-server
+  else
+    print_error "Unsupported webserver"
+    exit 1
+  fi
 
   # enable services
   systemctl start mariadb
@@ -434,8 +455,15 @@ function debian_dep {
   # Update repositories list
   apt update
 
-  # install dependencies
-  apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server
+  # Install Dependencies
+  if ["$WEBSERVER" == "nginx"]; then
+    apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server
+  elif ["$WEBSERVER" == "apache"]; then
+    apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,curl,zip} mariadb-server apache2 curl tar unzip git redis-server
+  else
+    print_error "Unsupported webserver"
+    exit 1
+  fi
 
   # enable services
   systemctl start mariadb
@@ -468,13 +496,23 @@ function centos7_dep {
   # install dependencies
   yum -y install php php-common php-tokenizer php-curl php-fpm php-cli php-json php-mysqlnd php-mcrypt php-gd php-mbstring php-pdo php-zip php-bcmath php-dom php-opcache mariadb-server nginx curl tar zip unzip git redis
 
+  # Install Dependencies
+  if ["$WEBSERVER" == "nginx"]; then
+    yum -y install php php-common php-tokenizer php-curl php-fpm php-cli php-json php-mysqlnd php-mcrypt php-gd php-mbstring php-pdo php-zip php-bcmath php-dom php-opcache mariadb-server nginx curl tar zip unzip git redis
+  elif ["$WEBSERVER" == "apache"]; then
+    yum -y install php php-common php-tokenizer php-curl php-cli php-json php-mysqlnd php-mcrypt php-gd php-mbstring php-pdo php-zip php-bcmath php-dom php-opcache mariadb-server apache2 curl tar zip unzip git redis
+  else
+    print_error "Unsupported webserver"
+    exit 1
+  fi
+
   # enable services
   systemctl enable mariadb
   systemctl enable redis
   systemctl start mariadb
   systemctl start redis
 
-  # SELinux (allow nginx and redis)
+  # SELinux (allow webserver and redis)
   setsebool -P httpd_can_network_connect 1
   setsebool -P httpd_execmem 1
   setsebool -P httpd_unified 1
@@ -496,13 +534,17 @@ function centos8_dep {
   dnf module enable -y php:remi-7.4
   dnf update -y
 
-  dnf install -y php php-common php-fpm php-cli php-json php-mysqlnd php-gd php-mbstring php-pdo php-zip php-bcmath php-dom php-opcache
+  dnf install -y php php-common php-fpm php-cli php-json php-mysqlnd php-gd php-mbstring php-pdo php-zip php-bcmath php-dom php-opcache mariadb mariadb-server nginx curl tar zip unzip git redis
 
-  # MariaDB (use from official repo)
-  dnf install -y mariadb mariadb-server
-
-  # Other dependencies
-  dnf install -y nginx curl tar zip unzip git redis
+  # Install Dependencies
+  if ["$WEBSERVER" == "nginx"]; then
+    dnf install -y php php-common php-fpm php-cli php-json php-mysqlnd php-gd php-mbstring php-pdo php-zip php-bcmath php-dom php-opcache mariadb mariadb-server nginx curl tar zip unzip git redis
+  elif ["$WEBSERVER" == "apache"]; then
+    dnf install -y php php-common php-cli php-json php-mysqlnd php-gd php-mbstring php-pdo php-zip php-bcmath php-dom php-opcache mariadb mariadb-server apache2 curl tar zip unzip git redis
+  else
+    print_error "Unsupported webserver"
+    exit 1
+  fi
 
   # enable services
   systemctl enable mariadb
@@ -628,8 +670,6 @@ function debian_based_letsencrypt {
 #######################################
 
 function configure_nginx {
-  echo "* Configuring nginx .."
-
   if [ "$ASSUME_SSL" == true ]; then
     DL_FILE="nginx_ssl.conf"
   else
@@ -669,11 +709,50 @@ function configure_nginx {
   if [ "$CONFIGURE_LETSENCRYPT" == true ] || { [ "$CONFIGURE_LETSENCRYPT" == false ] && [ "$ASSUME_SSL" == false ]; }; then
     systemctl restart nginx
   fi
-  echo "* nginx configured!"
 }
 
 function configure_apache {
-  echo "soon .."
+  if [ "$ASSUME_SSL" == true ]; then
+    DL_FILE="apache_ssl.conf"
+  else
+    DL_FILE="apache.conf"
+  fi
+  
+  if [ "$OS" == "centos" ]; then
+      # remove default config
+      rm -rf /etc/httpd/conf.d/default
+
+      # download new config
+      curl -o /etc/httpd/conf.d/pterodactyl.conf $CONFIGS_URL/$DL_FILE
+
+      # replace all <domain> places with the correct domain
+      sed -i -e "s@<domain>@${FQDN}@g" /etc/httpd/conf.d/pterodactyl.conf
+
+      # restart apache if needed
+      if [ "$CONFIGURE_LETSENCRYPT" == true ] || { [ "$CONFIGURE_LETSENCRYPT" == false ] && [ "$ASSUME_SSL" == false ]; }; then
+      systemctl restart httpd
+      fi
+  else
+      # remove default config
+      rm -rf /etc/apache2/sites-enabled/default
+
+      # download new config
+      curl -o /etc/apache2/sites-available/pterodactyl.conf $CONFIGS_URL/$DL_FILE
+
+      # replace all <domain> places with the correct domain
+      sed -i -e "s@<domain>@${FQDN}@g" /etc/apache2/sites-available/pterodactyl.conf
+
+      # enable pterodactyl
+      sudo ln -s /etc/apache2/sites-available/pterodactyl.conf /etc/apache2/sites-enabled/pterodactyl.conf
+
+      # enable module
+      sudo a2enmod rewrite
+
+      # restart apache if needed
+      if [ "$CONFIGURE_LETSENCRYPT" == true ] || { [ "$CONFIGURE_LETSENCRYPT" == false ] && [ "$ASSUME_SSL" == false ]; }; then
+      systemctl restart apache2
+      fi
+  fi
 }
 
 ###########
@@ -766,7 +845,7 @@ function perform_install {
     elif [ "$OS_VER_MAJOR" == "8" ]; then
       centos8_dep
     fi
-    centos_php
+    [ "$WEBSERVER" == "nginx"] && centos_php
     install_composer
     ptdl_dl
     create_database
@@ -780,6 +859,9 @@ function perform_install {
   fi
 
   # perform webserver configuration
+
+  echo "* Configuring $WEBSERVER .."
+
   if [ "$WEBSERVER" == "nginx" ]; then
     configure_nginx
   elif [ "$WEBSERVER" == "apache" ]; then
@@ -788,6 +870,8 @@ function perform_install {
     print_error "Invalid webserver."
     exit 1
   fi
+
+  echo "* $WEBSERVER configured!"
 }
 
 function ask_letsencrypt {
@@ -832,6 +916,25 @@ function main {
 
   # checks if the system is compatible with this installation script
   check_os_comp
+
+  while [ "$WEBSERVER_INPUT" != "1" ]; do
+    echo "* [1] - nginx"
+    echo "* [2] - apache"
+
+    echo ""
+
+    echo -n "* Select webserver to install pterodactyl panel with: "
+    read -r WEBSERVER_INPUT
+
+    if [ "$WEBSERVER_INPUT" == "1" ]; then
+      WEBSERVER="nginx"
+    elif [ "$WEBSERVER_INPUT" == "2" ]; then
+      WEBSERVER="apache"
+    else
+      # exit
+      print_error "Invalid webserver."
+    fi
+  done
 
   # set database credentials
   print_brake 72
