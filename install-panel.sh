@@ -845,7 +845,7 @@ function perform_install {
     elif [ "$OS_VER_MAJOR" == "8" ]; then
       centos8_dep
     fi
-    [ "$WEBSERVER" == "nginx"] && centos_php
+    [ "$WEBSERVER" == "nginx" ] && centos_php
     install_composer
     ptdl_dl
     create_database
