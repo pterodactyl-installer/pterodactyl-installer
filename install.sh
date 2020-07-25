@@ -61,7 +61,7 @@ wings=false
 output "Pterodactyl installation script"
 output
 output "Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al."
-output "https://github.com/VilhelmPrytz/pterodactyl-installer"
+output "https://github.com/vilhelmprytz/pterodactyl-installer"
 output
 output "This script is not associated with the official Pterodactyl Project."
 
