@@ -351,7 +351,7 @@ function ubuntu20_dep {
   apt update
 
   # Install Dependencies
-  if ["$WEBSERVER" == "nginx"]; then
+  if [ "$WEBSERVER" == "nginx" ]; then
     apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis
   elif ["$WEBSERVER" == "apache"]; then
     apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,curl,zip} mariadb-server apache2 tar unzip git redis-server redis
@@ -385,7 +385,7 @@ function ubuntu18_dep {
   apt update
 
   # Install Dependencies
-  if ["$WEBSERVER" == "nginx"]; then
+  if [ "$WEBSERVER" == "nginx" ]; then
     apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis
   elif ["$WEBSERVER" == "apache"]; then
     apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,curl,zip} mariadb-server apache2 tar unzip git redis-server redis
@@ -422,7 +422,7 @@ function debian_stretch_dep {
   apt update
 
   # Install Dependencies
-  if ["$WEBSERVER" == "nginx"]; then
+  if [ "$WEBSERVER" == "nginx" ]; then
     apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server
   elif ["$WEBSERVER" == "apache"]; then
     apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,curl,zip} mariadb-server apache2 curl tar unzip git redis-server
@@ -456,7 +456,7 @@ function debian_dep {
   apt update
 
   # Install Dependencies
-  if ["$WEBSERVER" == "nginx"]; then
+  if [ "$WEBSERVER" == "nginx" ]; then
     apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server
   elif ["$WEBSERVER" == "apache"]; then
     apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,curl,zip} mariadb-server apache2 curl tar unzip git redis-server
@@ -497,7 +497,7 @@ function centos7_dep {
   yum -y install php php-common php-tokenizer php-curl php-fpm php-cli php-json php-mysqlnd php-mcrypt php-gd php-mbstring php-pdo php-zip php-bcmath php-dom php-opcache mariadb-server nginx curl tar zip unzip git redis
 
   # Install Dependencies
-  if ["$WEBSERVER" == "nginx"]; then
+  if [ "$WEBSERVER" == "nginx" ]; then
     yum -y install php php-common php-tokenizer php-curl php-fpm php-cli php-json php-mysqlnd php-mcrypt php-gd php-mbstring php-pdo php-zip php-bcmath php-dom php-opcache mariadb-server nginx curl tar zip unzip git redis
   elif ["$WEBSERVER" == "apache"]; then
     yum -y install php php-common php-tokenizer php-curl php-cli php-json php-mysqlnd php-mcrypt php-gd php-mbstring php-pdo php-zip php-bcmath php-dom php-opcache mariadb-server apache2 curl tar zip unzip git redis
@@ -537,7 +537,7 @@ function centos8_dep {
   dnf install -y php php-common php-fpm php-cli php-json php-mysqlnd php-gd php-mbstring php-pdo php-zip php-bcmath php-dom php-opcache mariadb mariadb-server nginx curl tar zip unzip git redis
 
   # Install Dependencies
-  if ["$WEBSERVER" == "nginx"]; then
+  if [ "$WEBSERVER" == "nginx" ]; then
     dnf install -y php php-common php-fpm php-cli php-json php-mysqlnd php-gd php-mbstring php-pdo php-zip php-bcmath php-dom php-opcache mariadb mariadb-server nginx curl tar zip unzip git redis
   elif ["$WEBSERVER" == "apache"]; then
     dnf install -y php php-common php-cli php-json php-mysqlnd php-gd php-mbstring php-pdo php-zip php-bcmath php-dom php-opcache mariadb mariadb-server apache2 curl tar zip unzip git redis
