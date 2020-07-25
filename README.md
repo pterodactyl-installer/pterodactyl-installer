@@ -60,21 +60,13 @@ _* Ubuntu 16 and Debian 8 no longer supported since Pterodactyl does not activel
 
 ## Using the installation scripts
 
-Using the Pterodactyl Panel installation script:
+To use the installation scripts, simply run this command as root. The script will ask you whether you would like to install just the panel, just the daemon or both.
 
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install-panel.sh)
+bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install.sh)
 ```
 
-Using the Pterodactyl Wings installation script:
-
-```bash
-bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install-wings.sh)
-```
-
-The script will guide you through the install.
-
-*Note: On some systems, it's required to be already logged in as root before executing the one-line command.*
+*Note: On some systems, it's required to be already logged in as root before executing the one-line command (where `sudo` is in front of the command does not work).*
 
 ## Firewall setup
 
