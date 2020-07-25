@@ -4,7 +4,7 @@ set -e
 
 #############################################################################
 #                                                                           #
-# Project 'pterodactyl-installer' for master                                #
+# Project 'pterodactyl-installer'                                           #
 #                                                                           #
 # Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al.   #
 #                                                                           #
@@ -41,35 +41,59 @@ if ! [ -x "$(command -v curl)" ]; then
   exit 1
 fi
 
+output() {
+  echo "* ${1}"
+}
+
+error() {
+  COLOR_RED='\033[0;31m'
+  COLOR_NC='\033[0m'
+
+  echo ""
+  echo -e "* ${COLOR_RED}ERROR${COLOR_NC}: $1"
+  echo ""
+}
+
 beta=false
-daemon=false
+panel=false
+wings=false
 
-echo "* " # @Prytz fill in question if beta version is needed
+output "Pterodactyl installation script"
+output
+output "Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al."
+output "https://github.com/VilhelmPrytz/pterodactyl-installer"
+output
+output "This script is not associated with the official Pterodactyl Project."
 
+output
+
+output "What would you like to do?"
+output "[1] Install the panel"
+output "[2] Install the daemon (Wings)"
+output "[3] Install both on the same machine"
+
+echo -n "* Input 1-3: "
+read -r action
+
+case $action in
+    1 )
+        panel=true ;;
+    2 )
+        wings=true ;;
+    3 )
+        panel=true
+        wings=true ;;
+    * )
+        error "Invalid option"
+        exit 1 ;;
+esac
+
+echo -n "* Would you like to install the beta release of Pterodactyl (pterodactyl-1.0 beta, unstable)? (y/N) "
 read -r install_beta
+[[ "$install_beta" =~ [Yy] ]] && beta=true
 
-echo "* " # @Prytz fill in question if daemon (wings) is needed
+[ "$panel" == true ] && [ "$beta" == true ] && bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/pterodactyl-1.0/install-panel.sh)
+[ "$panel" == true ] && [ "$beta" == false ] && bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install-panel.sh)
 
-read -r install_daemon
-
-if [[ "$install_beta" =~ [Yy] ]]; then
-    beta=true
-fi
-
-if [[ "$install_daemon" =~ [Yy] ]]; then
-    daemon=true
-fi
-
-if "$beta"; then
-  bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/pterodactyl-1.0/install-panel.sh)
-  if "$daemon"; then
-    bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/pterodactyl-1.0/install-wings.sh)
-  fi
-fi
-
-if [ "$beta" == false ]; then
-  bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install-panel.sh)
-  if "$daemon"; then
-      bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install-daemon.sh)
-  fi
-fi
+[ "$wings" == true ] && [ "$beta" == true ] && bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/pterodactyl-1.0/install-wings.sh)
+[ "$wings" == true ] && [ "$beta" == false ] && bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install-daemon.sh)
