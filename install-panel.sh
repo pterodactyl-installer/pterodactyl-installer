@@ -707,6 +707,8 @@ function ask_letsencrypt {
     echo -e "* ${COLOR_RED}Note${COLOR_NC}: Let's Encrypt requires port 80/443 to be opened! You have opted out of the automatic UFW configuration; use this at your own risk (if port 80/443 is closed, the script will fail)!"
   fi
 
+  print_warning "You cannot use Let's Encrypt with your hostname as an IP address! It must be a FQDN (e.g. panel.example.org)."
+
   echo -e -n "* Do you want to automatically configure HTTPS using Let's Encrypt? (y/N): "
   read -r CONFIRM_SSL
 
