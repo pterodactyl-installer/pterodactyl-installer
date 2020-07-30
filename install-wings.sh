@@ -194,11 +194,15 @@ function check_os_comp {
   # check virtualization
   echo -e  "* Installing virt-what..."
   if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
-    apt-get -y update -qq > /dev/null
+    # silence dpkg output
+    export DEBIAN_FRONTEND=noninteractive
 
     # install virt-what
-    apt-get install -y virt-what -qq > /dev/null
+    apt-get -y update -qq
+    apt-get install -y virt-what -qq
 
+    # unsilence
+    unset DEBIAN_FRONTEND
   elif [ "$OS" == "centos" ]; then
     if [ "$OS_VER_MAJOR" == "7" ]; then
       yum -q -y update
