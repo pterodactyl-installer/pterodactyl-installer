@@ -134,6 +134,9 @@ function check_os_comp {
     elif [ "$OS_VER_MAJOR" == "18" ]; then
       SUPPORTED=true
       PHP_SOCKET="/run/php/php7.2-fpm.sock"
+    elif [ "$OS_VER_MAJOR" == "20" ]; then
+      SUPPORTED=true
+      PHP_SOCKET="/run/php/php7.4-fpm.sock"
     else
       SUPPORTED=false
     fi
@@ -323,6 +326,27 @@ function create_database {
 
 function apt_update {
   apt update -y && apt upgrade -y
+}
+
+function ubuntu20_dep {
+  echo "* Installing dependencies for Ubuntu 20.."
+
+  # Add "add-apt-repository" command
+  apt -y install software-properties-common curl apt-transport-https ca-certificates gnupg
+
+  # Update repositories list
+  apt update
+
+  # Install Dependencies
+  apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis
+
+  # enable services
+  systemctl start mariadb
+  systemctl enable mariadb
+  systemctl start redis-server
+  systemctl enable redis-server
+
+  echo "* Dependencies for Ubuntu installed!"
 }
 
 function ubuntu18_dep {
@@ -618,7 +642,9 @@ function perform_install {
     ubuntu_universedep
     apt_update
     # different dependencies depending on if it's 18 or 16
-    if [ "$OS_VER_MAJOR" == "18" ]; then
+    if [ "$OS_VER_MAJOR" == "20" ]; then
+      ubuntu20_dep
+    elif [ "$OS_VER_MAJOR" == "18" ]; then
       ubuntu18_dep
     elif [ "$OS_VER_MAJOR" == "16" ]; then
       ubuntu16_dep
@@ -633,7 +659,7 @@ function perform_install {
     insert_cronjob
     install_pteroq
 
-    if [ "$OS_VER_MAJOR" == "18" ]; then
+    if [ "$OS_VER_MAJOR" == "18" ] || [ "$OS_VER_MAJOR" == "20" ]; then
       if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
         debian_based_letsencrypt
       fi
@@ -836,9 +862,11 @@ function main {
       fi
     fi
 
-    # Available for Ubuntu 18
-    if [ "$OS" == "ubuntu" ] && [ "$OS_VER_MAJOR" == "18" ]; then
-      ask_letsencrypt
+    # Available for Ubuntu 18/20
+    if [ "$OS" == "ubuntu" ]; then
+      if [ "$OS_VER_MAJOR" == "18" ] || [ "$OS_VER_MAJOR" == "20" ]; then
+        ask_letsencrypt
+      fi
     fi
   fi
 
