@@ -63,6 +63,7 @@ output
 output "Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al."
 output "https://github.com/vilhelmprytz/pterodactyl-installer"
 output
+output "Sponsoring/Donations: https://github.com/vilhelmprytz/pterodactyl-installer?sponsor=1"
 output "This script is not associated with the official Pterodactyl Project."
 
 output
