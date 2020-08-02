@@ -214,7 +214,7 @@ function ptdl_dl {
   cd /var/www/pterodactyl || exit
 
   curl -Lo panel.tar.gz "$PANEL_DL_URL"
-  tar --strip-components=1 -xzvf panel.tar.gz
+  tar -xzvf panel.tar.gz
   chmod -R 755 storage/* bootstrap/cache/
 
   cp .env.example .env
