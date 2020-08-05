@@ -159,13 +159,6 @@ function check_os_comp {
     else
       SUPPORTED=false
     fi
-  elif [ "$OS" == "zorin" ]; then
-    if [ "$OS_VER_MAJOR" == "15" ]; then
-      SUPPORTED=true
-      PHP_SOCKET="/run/php/php7.4-fpm.sock"
-    else
-      SUPPORTED=false
-    fi
   elif [ "$OS" == "debian" ]; then
     PHP_SOCKET="/run/php/php7.4-fpm.sock"
     if [ "$OS_VER_MAJOR" == "9" ]; then
@@ -225,23 +218,24 @@ function ptdl_dl {
 }
 
 function configure {
-  print_brake 88
-  echo "* Please follow the steps below. The installer will ask you for configuration details."
-  print_brake 88
-  echo ""
-  php artisan p:environment:setup
+  [ "$ASSUME_SSL" == true ] && app_url=https://$FQDN || app_url=http://$FQDN
 
-  print_brake 67
-  echo "* The installer will now ask you for MySQL database credentials."
-  print_brake 67
-  echo ""
-  php artisan p:environment:database
+  # Replace timezone
+  sed -i -e "s@<timezone>@${timezone}@g" .env
+  # Replace database name
+  sed -i -e "s@<db_name>@${MYSQL_DB}@g" .env
+  # Replace database username
+  sed -i -e "s@<db_username>@${MYSQL_USER}@g" .env
+  # Replace database password
+  sed -i -e "s@<db_password>@${MYSQL_PASSWORD}@g" .env
+  # Replace email
+  sed -i -e "s+<app_service_author>+${email}+g" .env
+  # Replace app_url
+  sed -i -e "s@<app_url>@${app_url}@g" .env
 
-  print_brake 70
-  echo "* The installer will now ask you for mail setup / mail credentials."
-  print_brake 70
-  echo ""
-  php artisan p:environment:mail
+  if [[ "$mailneeded" =~ [Yy] ]]; then
+    php artisan p:environment:mail
+  fi
 
   # configures database
   php artisan migrate --seed --force
@@ -256,12 +250,10 @@ function configure {
 # set the correct folder permissions depending on OS and webserver
 function set_folder_permissions {
   # if os is ubuntu or debian, we do this
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
+  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
     chown -R www-data:www-data ./*
   elif [ "$OS" == "centos" ] && [ "$WEBSERVER" == "nginx" ]; then
     chown -R nginx:nginx ./*
-  elif [ "$OS" == "centos" ] && [ "$WEBSERVER" == "apache" ]; then
-    chown -R apache:apache ./*
   else
     print_error "Invalid webserver and OS setup."
     exit 1
@@ -680,10 +672,6 @@ function configure_nginx {
   echo "* nginx configured!"
 }
 
-function configure_apache {
-  echo "soon .."
-}
-
 ####################
 ## MAIN FUNCTIONS ##
 ####################
@@ -720,21 +708,6 @@ function perform_install {
         debian_based_letsencrypt
       fi
     fi
-  elif [ "$OS" == "zorin" ]; then
-    ubuntu_universedep
-    apt_update
-    if [ "$OS_VER_MAJOR" == "15" ]; then
-      ubuntu18_dep
-    else
-      print_error "Unsupported version of Zorin."
-      exit 1
-    fi
-    install_composer
-    ptdl_dl
-    create_database
-    configure
-    insert_cronjob
-    install_pteroq
   elif [ "$OS" == "debian" ]; then
     apt_update
     if [ "$OS_VER_MAJOR" == "9" ]; then
@@ -776,8 +749,6 @@ function perform_install {
   # perform webserver configuration
   if [ "$WEBSERVER" == "nginx" ]; then
     configure_nginx
-  elif [ "$WEBSERVER" == "apache" ]; then
-    configure_apache
   else
     print_error "Invalid webserver."
     exit 1
@@ -874,6 +845,20 @@ function main {
     [ -z "$MYSQL_PASSWORD" ] && print_error "MySQL password cannot be empty"
   done
 
+  print_brake 88
+  echo "* Please follow the steps below. The installer will ask you for configuration details."
+  print_brake 88
+  echo ""
+
+  echo "* Choose your timezone. e.g. (Europe/Amsterdam): " # This is really hard without autocomplete
+  read -r timezone
+
+  echo "* Provide the email address that eggs exported by this Panel should be from: "
+  read -r email
+
+  echo "* Would you like to setup email client for sending emails? (y/N): "
+  read -r mailneeded
+
   print_brake 72
 
   # set FQDN
@@ -886,7 +871,7 @@ function main {
 
   # UFW is available for Ubuntu/Debian
   # Let's Encrypt, in this setup, is only available on Ubuntu/Debian
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
+  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
     echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
     read -r CONFIRM_UFW
 
