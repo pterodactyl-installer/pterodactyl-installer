@@ -203,7 +203,7 @@ function ptdl_dl {
   tar --strip-components=1 -xzvf panel.tar.gz
   chmod -R 755 storage/* bootstrap/cache/
 
-  cp .env.example .env
+  curl -o .env $CONFIGS_URL/.env
   composer install --no-dev --optimize-autoloader
 
   php artisan key:generate --force
@@ -215,19 +215,34 @@ function configure {
   echo "* Please follow the steps below. The installer will ask you for configuration details."
   print_brake 88
   echo ""
-  php artisan p:environment:setup
 
-  print_brake 67
-  echo "* The installer will now ask you for MySQL database credentials."
-  print_brake 67
-  echo ""
-  php artisan p:environment:database
+  echo "* Choose your timezone. e.g. (Europe/Amsterdam): " # This is really hard without autocomplete
+  read -r timezone
 
-  print_brake 70
-  echo "* The installer will now ask you for mail setup / mail credentials."
-  print_brake 70
-  echo ""
-  php artisan p:environment:mail
+  echo "* Provide the email address that eggs exported by this Panel should be from: "
+  read -r email
+
+  echo "* Would you like to setup email client for sending emails? (y/N): "
+  read -r mailneeded
+
+  [ "$ASSUME_SSL" == true ] && app_url=https://$FQDN || app_url=http://$FQDN
+
+  # Replace timezone
+  sed -i -e "s@<timezone>@${timezone}@g" .env
+  # Replace database name
+  sed -i -e "s@<db_name>@${MYSQL_DB}@g" .env
+  # Replace database username
+  sed -i -e "s@<db_username>@${MYSQL_USER}@g" .env
+  # Replace database password
+  sed -i -e "s@<db_password>@${MYSQL_PASSWORD}@g" .env
+  # Replace email
+  sed -i -e "s@<app_service_author>@${email}@g" .env
+  # Replace app_url
+  sed -i -e "s@<app_url>@${app_url}@g" .env
+
+  if [[ "$mailneeded" =~ [Yy] ]]; then
+    php artisan p:environment:mail
+  fi
 
   # configures database
   print_warning "You must type 'yes' or else the installer will fail! The default response 'no' will not properly initialize the database!"
@@ -247,8 +262,6 @@ function set_folder_permissions {
     chown -R www-data:www-data ./*
   elif [ "$OS" == "centos" ] && [ "$WEBSERVER" == "nginx" ]; then
     chown -R nginx:nginx ./*
-  elif [ "$OS" == "centos" ] && [ "$WEBSERVER" == "apache" ]; then
-    chown -R apache:apache ./*
   else
     print_error "Invalid webserver and OS setup."
     exit 1
