@@ -236,7 +236,7 @@ function configure {
   # Replace database password
   sed -i -e "s@<db_password>@${MYSQL_PASSWORD}@g" .env
   # Replace email
-  sed -i -e "s@<app_service_author>@${email}@g" .env
+  sed -i -e "s+<app_service_author>+"${email}"+g" .env
   # Replace app_url
   sed -i -e "s@<app_url>@${app_url}@g" .env
 
