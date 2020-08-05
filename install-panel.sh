@@ -850,8 +850,10 @@ function main {
   print_brake 88
   echo ""
 
-  echo "* Choose your timezone. e.g. (Europe/Amsterdam): " # This is really hard without autocomplete
-  read -r timezone
+  echo "* Choose your timezone. e.g. [Europe/Amsterdam]: " # This is really hard without autocomplete
+  read -r timezone_input
+
+  [ -z "$timezone_input" ] && timezone="Europe/Amsterdam" || timezone=$timezone_input
 
   echo "* Provide the email address that eggs exported by this Panel should be from: "
   read -r email
