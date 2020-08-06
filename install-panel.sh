@@ -596,7 +596,7 @@ function debian_based_letsencrypt {
   systemctl stop nginx
 
   FAILED=false
-  certbot certonly --email "$email" --standalone -d "$FQDN" || FAILED=true
+  certbot certonly --email "$email" --standalone -d "$FQDN" || FAILED=true # -q could be added because it already checks if it failed
 
   if [ ! -d "/etc/letsencrypt/live/$FQDN/" ] || [ "$FAILED" == true ]; then
     print_warning "The process of obtaining a Let's Encrypt certificate failed!"
