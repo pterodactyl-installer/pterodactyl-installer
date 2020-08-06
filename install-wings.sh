@@ -156,12 +156,6 @@ function check_os_comp {
     else
       SUPPORTED=false
     fi
-  elif [ "$OS" == "zorin" ]; then
-    if [ "$OS_VER_MAJOR" == "15" ]; then
-      SUPPORTED=true
-    else
-      SUPPORTED=false
-    fi
   elif [ "$OS" == "debian" ]; then
     if [ "$OS_VER_MAJOR" == "9" ]; then
       SUPPORTED=true
@@ -193,7 +187,7 @@ function check_os_comp {
 
   # check virtualization
   echo -e  "* Installing virt-what..."
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
+  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
     # silence dpkg output
     export DEBIAN_FRONTEND=noninteractive
 
@@ -246,7 +240,7 @@ function apt_update {
 }
 
 function install_dep {
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
+  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
     apt_update
 
     # install dependencies
@@ -301,7 +295,7 @@ function install_docker {
     systemctl start docker
     systemctl enable docker
 
-  elif [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
+  elif [ "$OS" == "ubuntu" ]; then
     # install dependencies for Docker
     apt-get update
     apt-get -y install \
@@ -381,7 +375,7 @@ function systemd_file {
 }
 
 function install_mariadb {
-  if [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ] || [ "$OS" == "debian" ]; then
+  if [ "$OS" == "ubuntu" ] || [ "$OS" == "debian" ]; then
     curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
     apt update && apt install mariadb-server -y
   elif [ "$OS" == "centos" ]; then
@@ -516,7 +510,7 @@ function main {
   [[ "$CONFIRM_INSTALL_MARIADB" =~ [Yy] ]] && INSTALL_MARIADB=true
 
   # UFW is available for Ubuntu/Debian
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
+  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
     echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
     read -r CONFIRM_UFW
 
