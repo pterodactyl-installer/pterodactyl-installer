@@ -596,7 +596,7 @@ function debian_based_letsencrypt {
   systemctl stop nginx
 
   FAILED=false
-  certbot certonly --standalone -d "$FQDN" || FAILED=true
+  certbot certonly --email $email --standalone -d "$FQDN" || FAILED=true
 
   if [ ! -d "/etc/letsencrypt/live/$FQDN/" ] || [ "$FAILED" == true ]; then
     print_warning "The process of obtaining a Let's Encrypt certificate failed!"
@@ -855,7 +855,7 @@ function main {
 
   [ -z "$timezone_input" ] && timezone="Europe/Amsterdam" || timezone=$timezone_input
 
-  echo "* Provide the email address that eggs exported by this Panel should be from: "
+  echo "* Provide the email address that will be used to configure LetsEncrypt and Egg author: " # Make it more readable 
   read -r email
 
   echo "* Would you like to setup email client for sending emails? (y/N): "
