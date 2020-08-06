@@ -210,7 +210,7 @@ function ptdl_dl {
   tar -xzvf panel.tar.gz
   chmod -R 755 storage/* bootstrap/cache/
 
-  cp .env.example .env
+  curl -o .env $CONFIGS_URL/.env
   composer install --no-dev --optimize-autoloader
 
   php artisan key:generate --force
