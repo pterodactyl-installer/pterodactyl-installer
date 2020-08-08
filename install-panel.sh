@@ -860,10 +860,14 @@ function main {
     [ -z "$timezone_input" ] && timezone_input="$timezone"
   done
 
-  echo "* Provide the email address that will be used to configure Let's Encrypt and Pterodactyl: "
-  read -r email
+  while [ -z "$email" ]; do
+      echo -n "* Provide the email address that will be used to configure Let's Encrypt and Pterodactyl: "
+      read -r email
 
-  echo "* Would you like to set up email credentials so that Pterodactyl can send emails to users? (y/N): "
+      [ -z "$email" ] && print_error "Email cannot be empty"
+  done
+
+  echo -n "* Would you like to set up email credentials so that Pterodactyl can send emails to users? (y/N): "
   read -r mailneeded
 
   print_brake 72
