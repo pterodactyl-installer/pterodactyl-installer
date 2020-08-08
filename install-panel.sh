@@ -221,7 +221,7 @@ function configure {
   [ "$ASSUME_SSL" == true ] && app_url=https://$FQDN || app_url=http://$FQDN
 
   # Replace timezone
-  sed -i -e "s@<timezone>@${timezone}@g" .env
+  sed -i -e "s@Europe/Stockholm@${timezone}@g" .env
   # Replace database name
   sed -i -e "s@<db_name>@${MYSQL_DB}@g" .env
   # Replace database username
