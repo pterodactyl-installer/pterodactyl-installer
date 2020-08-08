@@ -855,7 +855,7 @@ function main {
 
   [ -z "$timezone_input" ] && timezone="Europe/Amsterdam" || timezone=$timezone_input
 
-  echo "* Provide the email address that will be used to configure LetsEncrypt and Egg author: " # Make it more readable 
+  echo "* Provide the email address that will be used to configure Let's Encrypt and Pterodactyl: "
   read -r email
 
   echo "* Would you like to set up email credentials so that Pterodactyl can send emails to users? (y/N): "
