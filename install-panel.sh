@@ -850,10 +850,15 @@ function main {
   print_brake 88
   echo ""
 
-  echo "* Choose your timezone. e.g. [Europe/Amsterdam]: " # This is really hard without autocomplete
-  read -r timezone_input
+  timezone="Europe/Stockholm" # because köttbullar!
+  valid_timezones="$(timedatectl list-timezones)"
 
-  [ -z "$timezone_input" ] && timezone="Europe/Amsterdam" || timezone=$timezone_input
+  echo "* List of valid timezones here $(hyperlink "https://www.php.net/manual/en/timezones.php")"
+  while [ -z "$timezone_input" ] || [ -z "$(echo $valid_timezones | grep $timezone_input)" ]; do
+    echo -n "* Select timezone [Europe/Stockholm]: "
+    read -r timezone_input
+    [ -z "$timezone_input" ] && timezone_input="$timezone"
+  done
 
   echo "* Provide the email address that will be used to configure Let's Encrypt and Pterodactyl: "
   read -r email
