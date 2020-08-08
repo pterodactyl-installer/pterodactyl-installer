@@ -220,6 +220,8 @@ function ptdl_dl {
 function configure {
   [ "$ASSUME_SSL" == true ] && app_url=https://$FQDN || app_url=http://$FQDN
 
+  # Set random HASHIDS_SALT
+  sed -i -e "s@<salt>@$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 20 ; echo '')@g" .env
   # Replace timezone
   sed -i -e "s@Europe/Stockholm@${timezone}@g" .env
   # Replace database name
