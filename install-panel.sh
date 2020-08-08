@@ -850,14 +850,13 @@ function main {
   print_brake 88
   echo ""
 
-  timezone="Europe/Stockholm" # because köttbullar!
   valid_timezones="$(timedatectl list-timezones)"
 
   echo "* List of valid timezones here $(hyperlink "https://www.php.net/manual/en/timezones.php")"
-  while [ -z "$timezone_input" ] || [ -z "$(echo $valid_timezones | grep $timezone_input)" ]; do
+  while [ -z "$timezone" ] || [[ ${valid_timezones} != *"$timezone_input"* ]]; do
     echo -n "* Select timezone [Europe/Stockholm]: "
     read -r timezone_input
-    [ -z "$timezone_input" ] && timezone_input="$timezone"
+    [ -z "$timezone_input" ] && timezone="Europe/Stockholm" || timezone=$timezone_input # because köttbullar!
   done
 
   while [ -z "$email" ]; do
