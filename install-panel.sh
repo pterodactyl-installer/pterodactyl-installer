@@ -858,7 +858,7 @@ function main {
   echo "* Provide the email address that will be used to configure LetsEncrypt and Egg author: " # Make it more readable 
   read -r email
 
-  echo "* Would you like to setup email client for sending emails? (y/N): "
+  echo "* Would you like to set up email credentials so that Pterodactyl can send emails to users? (y/N): "
   read -r mailneeded
 
   print_brake 72
