@@ -159,13 +159,6 @@ function check_os_comp {
     else
       SUPPORTED=false
     fi
-  elif [ "$OS" == "zorin" ]; then
-    if [ "$OS_VER_MAJOR" == "15" ]; then
-      SUPPORTED=true
-      PHP_SOCKET="/run/php/php7.4-fpm.sock"
-    else
-      SUPPORTED=false
-    fi
   elif [ "$OS" == "debian" ]; then
     PHP_SOCKET="/run/php/php7.4-fpm.sock"
     if [ "$OS_VER_MAJOR" == "9" ]; then
@@ -217,7 +210,7 @@ function ptdl_dl {
   tar -xzvf panel.tar.gz
   chmod -R 755 storage/* bootstrap/cache/
 
-  cp .env.example .env
+  curl -o .env $CONFIGS_URL/.env
   composer install --no-dev --optimize-autoloader
 
   php artisan key:generate --force
@@ -225,23 +218,26 @@ function ptdl_dl {
 }
 
 function configure {
-  print_brake 88
-  echo "* Please follow the steps below. The installer will ask you for configuration details."
-  print_brake 88
-  echo ""
-  php artisan p:environment:setup
+  [ "$ASSUME_SSL" == true ] && app_url=https://$FQDN || app_url=http://$FQDN
 
-  print_brake 67
-  echo "* The installer will now ask you for MySQL database credentials."
-  print_brake 67
-  echo ""
-  php artisan p:environment:database
+  # Set random HASHIDS_SALT
+  sed -i -e "s@<salt>@$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 20 ; echo '')@g" .env
+  # Replace timezone
+  sed -i -e "s@Europe/Stockholm@${timezone}@g" .env
+  # Replace database name
+  sed -i -e "s@<db_name>@${MYSQL_DB}@g" .env
+  # Replace database username
+  sed -i -e "s@<db_username>@${MYSQL_USER}@g" .env
+  # Replace database password
+  sed -i -e "s@<db_password>@${MYSQL_PASSWORD}@g" .env
+  # Replace email
+  sed -i -e "s+<app_service_author>+${email}+g" .env
+  # Replace app_url
+  sed -i -e "s@<app_url>@${app_url}@g" .env
 
-  print_brake 70
-  echo "* The installer will now ask you for mail setup / mail credentials."
-  print_brake 70
-  echo ""
-  php artisan p:environment:mail
+  if [[ "$mailneeded" =~ [Yy] ]]; then
+    php artisan p:environment:mail
+  fi
 
   # configures database
   php artisan migrate --seed --force
@@ -256,12 +252,10 @@ function configure {
 # set the correct folder permissions depending on OS and webserver
 function set_folder_permissions {
   # if os is ubuntu or debian, we do this
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
+  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
     chown -R www-data:www-data ./*
   elif [ "$OS" == "centos" ] && [ "$WEBSERVER" == "nginx" ]; then
     chown -R nginx:nginx ./*
-  elif [ "$OS" == "centos" ] && [ "$WEBSERVER" == "apache" ]; then
-    chown -R apache:apache ./*
   else
     print_error "Invalid webserver and OS setup."
     exit 1
@@ -604,7 +598,7 @@ function debian_based_letsencrypt {
   systemctl stop nginx
 
   FAILED=false
-  certbot certonly --standalone -d "$FQDN" || FAILED=true
+  certbot certonly --no-eff-email --email "$email" --standalone -d "$FQDN" || FAILED=true # -q could be added because it already checks if it failed
 
   if [ ! -d "/etc/letsencrypt/live/$FQDN/" ] || [ "$FAILED" == true ]; then
     print_warning "The process of obtaining a Let's Encrypt certificate failed!"
@@ -680,10 +674,6 @@ function configure_nginx {
   echo "* nginx configured!"
 }
 
-function configure_apache {
-  echo "soon .."
-}
-
 ####################
 ## MAIN FUNCTIONS ##
 ####################
@@ -720,21 +710,6 @@ function perform_install {
         debian_based_letsencrypt
       fi
     fi
-  elif [ "$OS" == "zorin" ]; then
-    ubuntu_universedep
-    apt_update
-    if [ "$OS_VER_MAJOR" == "15" ]; then
-      ubuntu18_dep
-    else
-      print_error "Unsupported version of Zorin."
-      exit 1
-    fi
-    install_composer
-    ptdl_dl
-    create_database
-    configure
-    insert_cronjob
-    install_pteroq
   elif [ "$OS" == "debian" ]; then
     apt_update
     if [ "$OS_VER_MAJOR" == "9" ]; then
@@ -776,8 +751,6 @@ function perform_install {
   # perform webserver configuration
   if [ "$WEBSERVER" == "nginx" ]; then
     configure_nginx
-  elif [ "$WEBSERVER" == "apache" ]; then
-    configure_apache
   else
     print_error "Invalid webserver."
     exit 1
@@ -874,6 +847,30 @@ function main {
     [ -z "$MYSQL_PASSWORD" ] && print_error "MySQL password cannot be empty"
   done
 
+  print_brake 88
+  echo "* Please follow the steps below. The installer will ask you for configuration details."
+  print_brake 88
+  echo ""
+
+  valid_timezones="$(timedatectl list-timezones)"
+
+  echo "* List of valid timezones here $(hyperlink "https://www.php.net/manual/en/timezones.php")"
+  while [ -z "$timezone" ] || [[ ${valid_timezones} != *"$timezone_input"* ]]; do
+    echo -n "* Select timezone [Europe/Stockholm]: "
+    read -r timezone_input
+    [ -z "$timezone_input" ] && timezone="Europe/Stockholm" || timezone=$timezone_input # because köttbullar!
+  done
+
+  while [ -z "$email" ]; do
+      echo -n "* Provide the email address that will be used to configure Let's Encrypt and Pterodactyl: "
+      read -r email
+
+      [ -z "$email" ] && print_error "Email cannot be empty"
+  done
+
+  echo -n "* Would you like to set up email credentials so that Pterodactyl can send emails to users? (y/N): "
+  read -r mailneeded
+
   print_brake 72
 
   # set FQDN
@@ -886,7 +883,7 @@ function main {
 
   # UFW is available for Ubuntu/Debian
   # Let's Encrypt, in this setup, is only available on Ubuntu/Debian
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
+  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
     echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
     read -r CONFIRM_UFW
 
@@ -968,9 +965,9 @@ function goodbye {
   echo "* Panel installation completed"
   echo "*"
 
-  [ "$CONFIGURE_LETSENCRYPT" == true ] && echo "* Your panel should be accessible from $(hyperlink "https://$FQDN")"
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && echo "* Your panel should be accessible from $(hyperlink "$app_url")"
   [ "$ASSUME_SSL" == true ] && [ "$CONFIGURE_LETSENCRYPT" == false ] && echo "* You have opted in to use SSL, but not via Let's Encrypt automatically. Your panel will not work until SSL has been configured."
-  [ "$ASSUME_SSL" == false ] && [ "$CONFIGURE_LETSENCRYPT" == false ] && echo "* Your panel should be accessible from $(hyperlink "http://$FQDN")"
+  [ "$ASSUME_SSL" == false ] && [ "$CONFIGURE_LETSENCRYPT" == false ] && echo "* Your panel should be accessible from $(hyperlink "$app_url")"
 
   echo "*"
   echo "* Unofficial add-ons and tips"
