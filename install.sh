@@ -68,26 +68,27 @@ output "This script is not associated with the official Pterodactyl Project."
 
 output
 
-output "What would you like to do?"
-output "[1] Install the panel"
-output "[2] Install the daemon (Wings)"
-output "[3] Install both on the same machine"
+while [ "$panel" == false ] && [ "$wings" == false ]; do
+  output "What would you like to do?"
+  output "[1] Install the panel"
+  output "[2] Install the daemon (Wings)"
+  output "[3] Install both on the same machine"
 
-echo -n "* Input 1-3: "
-read -r action
+  echo -n "* Input 1-3: "
+  read -r action
 
-case $action in
-    1 )
-        panel=true ;;
-    2 )
-        wings=true ;;
-    3 )
-        panel=true
-        wings=true ;;
-    * )
-        error "Invalid option"
-        exit 1 ;;
-esac
+  case $action in
+      1 )
+          panel=true ;;
+      2 )
+          wings=true ;;
+      3 )
+          panel=true
+          wings=true ;;
+      * )
+          error "Invalid option" ;;
+  esac
+done
 
 echo -n "* Would you like to install the beta release of Pterodactyl (pterodactyl-1.0 beta, unstable)? (y/N) "
 read -r install_beta
