@@ -592,15 +592,13 @@ function firewall_firewalld {
 }
 function centos_based_letsencrypt {
     if [ "$OS_VER_MAJOR" == "7" ]; then
-      # Enable EPEL falowing official guide https://fedoraproject.org/wiki/EPEL
-      yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+      # Enable EPEL folowing official guide https://fedoraproject.org/wiki/EPEL
       subscription-manager repos --enable "rhel-*-optional-rpms" --enable "rhel-*-extras-rpms"  --enable "rhel-ha-for-rhel-*-server-rpms"
 
       # Install certbot 
       yum install certbot
     elif [ "$OS_VER_MAJOR" == "8" ]; then
-      # Enable EPEL falowing official guide https://fedoraproject.org/wiki/EPEL
-      dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+      # Enable EPEL folowing official guide https://fedoraproject.org/wiki/EPEL
       ARCH=$(/bin/arch)
       subscription-manager repos --enable "codeready-builder-for-rhel-8-${ARCH}-rpms"
       dnf config-manager --set-enabled PowerTools
