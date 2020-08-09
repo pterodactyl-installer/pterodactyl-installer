@@ -590,16 +590,45 @@ function firewall_firewalld {
   echo "* Firewall-cmd installed"
   print_brake 70
 }
+function centos_based_letsencrypt {
+    if [ "$OS_VER_MAJOR" == "7" ]; then
+      # Enable EPEL falowing official guide https://fedoraproject.org/wiki/EPEL
+      yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+      subscription-manager repos --enable "rhel-*-optional-rpms" --enable "rhel-*-extras-rpms"  --enable "rhel-ha-for-rhel-*-server-rpms"
 
+      # Install certbot 
+      yum install certbot
+    elif [ "$OS_VER_MAJOR" == "8" ]; then
+      # Enable EPEL falowing official guide https://fedoraproject.org/wiki/EPEL
+      dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+      ARCH=$(/bin/arch)
+      subscription-manager repos --enable "codeready-builder-for-rhel-8-${ARCH}-rpms"
+      dnf config-manager --set-enabled PowerTools
+
+      # Install certbot 
+      dnf install certbot
+    else
+      error "Unsupported OS"
+      exit 1
+    fi
+    letsencrypt
+}
 function debian_based_letsencrypt {
-  # Install certbot and setup the certificate using the FQDN
+  # Install certbot
   apt install certbot -y
+  letsencrypt
+}
 
+function letsencrypt {
+  FAILED=false
+
+  # Stop nginx
   systemctl stop nginx
 
-  FAILED=false
+  # Obtain certificate
   certbot certonly --no-eff-email --email "$email" --standalone -d "$FQDN" || FAILED=true # -q could be added because it already checks if it failed
 
+  # Check if it succeded
   if [ ! -d "/etc/letsencrypt/live/$FQDN/" ] || [ "$FAILED" == true ]; then
     print_warning "The process of obtaining a Let's Encrypt certificate failed!"
     echo -n "* Still assume SSL? (y/N): "
@@ -742,6 +771,11 @@ function perform_install {
     configure
     insert_cronjob
     install_pteroq
+    if [ "$OS_VER_MAJOR" == "7" ] || [ "$OS_VER_MAJOR" == "8" ]; then
+      if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
+        centos_based_letsencrypt
+      fi
+    fi
   else
     # exit
     print_error "OS not supported."
@@ -882,7 +916,7 @@ function main {
   done
 
   # UFW is available for Ubuntu/Debian
-  # Let's Encrypt, in this setup, is only available on Ubuntu/Debian
+  # Let's Encrypt is available for Ubuntu/Debian
   if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
     echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
     read -r CONFIRM_UFW
@@ -907,7 +941,9 @@ function main {
     fi
   fi
 
+
   # Firewall-cmd is available for CentOS
+  # Let's Encrypt is available for CentOS
   if [ "$OS" == "centos" ]; then
     echo -e -n "* Do you want to automatically configure firewall-cmd (firewall)? (y/N): "
     read -r CONFIRM_FIREWALL_CMD
@@ -916,6 +952,8 @@ function main {
       CONFIGURE_FIREWALL_CMD=true
       CONFIGURE_FIREWALL=true
     fi
+
+    ask_letsencrypt
   fi
 
   # If it's already true, this should be a no-brainer
