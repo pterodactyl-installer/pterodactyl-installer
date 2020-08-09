@@ -61,6 +61,16 @@ MYSQL_DB="pterodactyl"
 MYSQL_USER="pterodactyl"
 MYSQL_PASSWORD=""
 
+# environment
+email=""
+
+# Initial admin account
+user_email=""
+user_username=""
+user_firstname=""
+user_lastname=""
+user_password=""
+
 # assume SSL, will fetch different config if true
 ASSUME_SSL=false
 CONFIGURE_LETSENCRYPT=false
@@ -109,6 +119,52 @@ function print_brake {
 
 hyperlink() {
   echo -e "\e]8;;${1}\a${1}\e]8;;\a"
+}
+
+required_input() {
+  local  __resultvar=$1
+  local  result=''
+
+  while [ -z "$result" ]; do
+      echo -n "* ${2}"
+      read -r result
+
+      [ -z "$result" ] && print_error "${3}"
+  done
+
+  eval "$__resultvar="'$result'""
+}
+
+password_input() {
+  local  __resultvar=$1
+  local  result=''
+
+  while [ -z "$result" ]; do
+    echo -n "* ${2}"
+
+    # modified from https://stackoverflow.com/a/22940001
+    while IFS= read -r -s -n1 char; do
+      [[ -z $char ]] && { printf '\n'; break; } # ENTER pressed; output \n and break.
+      if [[ $char == $'\x7f' ]]; then # backspace was pressed
+          # Only if variable is not empty
+          if [ -n "$result" ]; then
+            # Remove last char from output variable.
+            [[ -n $result ]] && result=${result%?}
+            # Erase '*' to the left.
+            printf '\b \b' 
+          fi
+      else
+        # Add typed char to output variable.
+        result+=$char
+        # Print '*' in its stead.
+        printf '*'
+      fi
+    done
+
+    [ -z "$result" ] && print_error "${3}"
+  done
+
+  eval "$__resultvar="'$result'""
 }
 
 # other functions
@@ -210,7 +266,7 @@ function ptdl_dl {
   tar -xzvf panel.tar.gz
   chmod -R 755 storage/* bootstrap/cache/
 
-  curl -o .env $CONFIGS_URL/.env
+  cp .env.example .env
   composer install --no-dev --optimize-autoloader
 
   php artisan key:generate --force
@@ -220,21 +276,28 @@ function ptdl_dl {
 function configure {
   [ "$ASSUME_SSL" == true ] && app_url=https://$FQDN || app_url=http://$FQDN
 
-  # Set random HASHIDS_SALT
-  sed -i -e "s@<salt>@$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 20 ; echo '')@g" .env
-  # Replace timezone
-  sed -i -e "s@Europe/Stockholm@${timezone}@g" .env
-  # Replace database name
-  sed -i -e "s@<db_name>@${MYSQL_DB}@g" .env
-  # Replace database username
-  sed -i -e "s@<db_username>@${MYSQL_USER}@g" .env
-  # Replace database password
-  sed -i -e "s@<db_password>@${MYSQL_PASSWORD}@g" .env
-  # Replace email
-  sed -i -e "s+<app_service_author>+${email}+g" .env
-  # Replace app_url
-  sed -i -e "s@<app_url>@${app_url}@g" .env
+  # Fill in environment:setup automatically
+  php artisan p:environment:setup \
+    --author="$email" \
+    --url="$app_url" \
+    --timezone="$timezone" \
+    --cache="redis" \
+    --session="redis" \
+    --queue="redis" \
+    --redis-host="localhost" \
+    --redis-pass="null" \
+    --redis-port="6379" \
+    --settings-ui="yes"
 
+  # Fill in environment:database credentials automatically
+  php artisan p:environment:database \
+    --host="127.0.0.1" \
+    --port="3306" \
+    --database="$MYSQL_DB" \
+    --username="$MYSQL_USER" \
+    --password="$MYSQL_PASSWORD"
+
+  # Email credentials manually set by user
   if [[ "$mailneeded" =~ [Yy] ]]; then
     php artisan p:environment:mail
   fi
@@ -242,8 +305,14 @@ function configure {
   # configures database
   php artisan migrate --seed --force
 
-  echo "* The installer will now ask you to create the initial admin user account."
-  php artisan p:user:make
+  # Create user account
+  php artisan p:user:make \
+    --email="$user_email" \
+    --username="$user_username" \
+    --name-first="$user_firstname" \
+    --name-last="$user_lastname" \
+    --password="$user_password" \
+    --admin=1
 
   # set folder permissions now
   set_folder_permissions
@@ -822,54 +891,28 @@ function main {
   [ -z "$MYSQL_USER_INPUT" ] && MYSQL_USER="pterodactyl" || MYSQL_USER=$MYSQL_USER_INPUT
 
   # MySQL password input
-  while [ -z "$MYSQL_PASSWORD" ]; do
-    echo -n "* Password (use something strong): "
-
-    # modified from https://stackoverflow.com/a/22940001
-    while IFS= read -r -s -n1 char; do
-      [[ -z $char ]] && { printf '\n'; break; } # ENTER pressed; output \n and break.
-      if [[ $char == $'\x7f' ]]; then # backspace was pressed
-          # Only if variable is not empty
-          if [ -n "$MYSQL_PASSWORD" ]; then
-            # Remove last char from output variable.
-            [[ -n $MYSQL_PASSWORD ]] && MYSQL_PASSWORD=${MYSQL_PASSWORD%?}
-            # Erase '*' to the left.
-            printf '\b \b' 
-          fi
-      else
-        # Add typed char to output variable.
-        MYSQL_PASSWORD+=$char
-        # Print '*' in its stead.
-        printf '*'
-      fi
-    done
-
-    [ -z "$MYSQL_PASSWORD" ] && print_error "MySQL password cannot be empty"
-  done
-
-  print_brake 88
-  echo "* Please follow the steps below. The installer will ask you for configuration details."
-  print_brake 88
-  echo ""
+  password_input MYSQL_PASSWORD "Password (use something strong): " "MySQL password cannot be empty"
 
   valid_timezones="$(timedatectl list-timezones)"
-
   echo "* List of valid timezones here $(hyperlink "https://www.php.net/manual/en/timezones.php")"
+
   while [ -z "$timezone" ] || [[ ${valid_timezones} != *"$timezone_input"* ]]; do
     echo -n "* Select timezone [Europe/Stockholm]: "
     read -r timezone_input
     [ -z "$timezone_input" ] && timezone="Europe/Stockholm" || timezone=$timezone_input # because köttbullar!
   done
 
-  while [ -z "$email" ]; do
-      echo -n "* Provide the email address that will be used to configure Let's Encrypt and Pterodactyl: "
-      read -r email
+  required_input email "Provide the email address that will be used to configure Let's Encrypt and Pterodactyl: " "Email cannot be empty"
 
-      [ -z "$email" ] && print_error "Email cannot be empty"
-  done
-
-  echo -n "* Would you like to set up email credentials so that Pterodactyl can send emails to users? (y/N): "
+  echo -n "* Would you like to set up email credentials so that Pterodactyl can send emails to users (usually not required)? (y/N): "
   read -r mailneeded
+
+  # Initial admin account
+  required_input user_email "Email address for the initial admin account: " "Email cannot be empty"
+  required_input user_username "Username for the initial admin account: " "Username cannot be empty"
+  required_input user_firstname "First name for the initial admin account: " "Name cannot be empty"
+  required_input user_lastname "Last name for the initial admin account: " "Name cannot be empty"
+  password_input user_password "Password for the initial admin account: " "Password cannot be empty"
 
   print_brake 72
 
