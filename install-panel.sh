@@ -590,41 +590,30 @@ function firewall_firewalld {
   echo "* Firewall-cmd installed"
   print_brake 70
 }
-function centos_based_letsencrypt {
-    if [ "$OS_VER_MAJOR" == "7" ]; then
-      # Enable EPEL folowing official guide https://fedoraproject.org/wiki/EPEL
-      subscription-manager repos --enable "rhel-*-optional-rpms" --enable "rhel-*-extras-rpms"  --enable "rhel-ha-for-rhel-*-server-rpms"
-
-      # Install certbot 
-      yum install certbot
-    elif [ "$OS_VER_MAJOR" == "8" ]; then
-      # Enable EPEL folowing official guide https://fedoraproject.org/wiki/EPEL
-      ARCH=$(/bin/arch)
-      subscription-manager repos --enable "codeready-builder-for-rhel-8-${ARCH}-rpms"
-      dnf config-manager --set-enabled PowerTools
-
-      # Install certbot 
-      dnf install certbot
-    else
-      error "Unsupported OS"
-      exit 1
-    fi
-    letsencrypt
-}
-function debian_based_letsencrypt {
-  # Install certbot
-  apt install certbot -y
-  letsencrypt
-}
 
 function letsencrypt {
   FAILED=false
+
+  # Install certbot
+  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
+    apt-get install certbot -y
+  elif [ "$OS" == "centos" ]; then
+    if [ "$OS_VER_MAJOR" == "7" ]; then
+      yum install certbot
+    elif [ "$OS_VER_MAJOR" == "8" ]; then
+      dnf install certbot
+    fi
+  else
+    # exit
+    print_error "OS not supported."
+    exit 1
+  fi
 
   # Stop nginx
   systemctl stop nginx
 
   # Obtain certificate
-  certbot certonly --no-eff-email --email "$email" --standalone -d "$FQDN" || FAILED=true # -q could be added because it already checks if it failed
+  certbot certonly --no-eff-email --email "$email" --standalone -d "$FQDN" || FAILED=true
 
   # Check if it succeded
   if [ ! -d "/etc/letsencrypt/live/$FQDN/" ] || [ "$FAILED" == true ]; then
@@ -734,7 +723,7 @@ function perform_install {
 
     if [ "$OS_VER_MAJOR" == "18" ] || [ "$OS_VER_MAJOR" == "20" ]; then
       if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
-        debian_based_letsencrypt
+        letsencrypt
       fi
     fi
   elif [ "$OS" == "debian" ]; then
@@ -771,7 +760,7 @@ function perform_install {
     install_pteroq
     if [ "$OS_VER_MAJOR" == "7" ] || [ "$OS_VER_MAJOR" == "8" ]; then
       if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
-        centos_based_letsencrypt
+        letsencrypt
       fi
     fi
   else
