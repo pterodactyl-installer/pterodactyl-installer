@@ -598,11 +598,8 @@ function letsencrypt {
   if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
     apt-get install certbot -y
   elif [ "$OS" == "centos" ]; then
-    if [ "$OS_VER_MAJOR" == "7" ]; then
-      yum install certbot
-    elif [ "$OS_VER_MAJOR" == "8" ]; then
-      dnf install certbot
-    fi
+    [ "$OS_VER_MAJOR" == "7" ] && yum install certbot
+    [ "$OS_VER_MAJOR" == "8" ] && dnf install certbot
   else
     # exit
     print_error "OS not supported."
