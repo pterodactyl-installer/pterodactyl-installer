@@ -227,8 +227,7 @@ function configure {
   php artisan p:environment:mail
 
   # configures database
-  print_warning "You must type 'yes' or else the installer will fail! The default response 'no' will not properly initialize the database!"
-  php artisan migrate --seed
+  php artisan migrate --seed --force
 
   echo "* The installer will now ask you to create the initial admin user account."
   php artisan p:user:make
