@@ -660,15 +660,28 @@ function firewall_firewalld {
   print_brake 70
 }
 
-function debian_based_letsencrypt {
-  # Install certbot and setup the certificate using the FQDN
-  apt install certbot -y
+function letsencrypt {
+  FAILED=false
 
+  # Install certbot
+  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
+    apt-get install certbot -y
+  elif [ "$OS" == "centos" ]; then
+    [ "$OS_VER_MAJOR" == "7" ] && yum install certbot
+    [ "$OS_VER_MAJOR" == "8" ] && dnf install certbot
+  else
+    # exit
+    print_error "OS not supported."
+    exit 1
+  fi
+
+  # Stop nginx
   systemctl stop nginx
 
-  FAILED=false
-  certbot certonly --no-eff-email --email "$email" --standalone -d "$FQDN" || FAILED=true # -q could be added because it already checks if it failed
+  # Obtain certificate
+  certbot certonly --no-eff-email --email "$email" --standalone -d "$FQDN" || FAILED=true
 
+  # Check if it succeded
   if [ ! -d "/etc/letsencrypt/live/$FQDN/" ] || [ "$FAILED" == true ]; then
     print_warning "The process of obtaining a Let's Encrypt certificate failed!"
     echo -n "* Still assume SSL? (y/N): "
@@ -776,7 +789,7 @@ function perform_install {
 
     if [ "$OS_VER_MAJOR" == "18" ] || [ "$OS_VER_MAJOR" == "20" ]; then
       if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
-        debian_based_letsencrypt
+        letsencrypt
       fi
     fi
   elif [ "$OS" == "debian" ]; then
@@ -811,6 +824,11 @@ function perform_install {
     configure
     insert_cronjob
     install_pteroq
+    if [ "$OS_VER_MAJOR" == "7" ] || [ "$OS_VER_MAJOR" == "8" ]; then
+      if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
+        letsencrypt
+      fi
+    fi
   else
     # exit
     print_error "OS not supported."
@@ -925,7 +943,7 @@ function main {
   done
 
   # UFW is available for Ubuntu/Debian
-  # Let's Encrypt, in this setup, is only available on Ubuntu/Debian
+  # Let's Encrypt is available for Ubuntu/Debian
   if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
     echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
     read -r CONFIRM_UFW
@@ -950,7 +968,9 @@ function main {
     fi
   fi
 
+
   # Firewall-cmd is available for CentOS
+  # Let's Encrypt is available for CentOS
   if [ "$OS" == "centos" ]; then
     echo -e -n "* Do you want to automatically configure firewall-cmd (firewall)? (y/N): "
     read -r CONFIRM_FIREWALL_CMD
@@ -959,6 +979,8 @@ function main {
       CONFIGURE_FIREWALL_CMD=true
       CONFIGURE_FIREWALL=true
     fi
+
+    ask_letsencrypt
   fi
 
   # If it's already true, this should be a no-brainer
