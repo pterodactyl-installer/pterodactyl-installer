@@ -134,6 +134,9 @@ function check_os_comp {
     elif [ "$OS_VER_MAJOR" == "18" ]; then
       SUPPORTED=true
       PHP_SOCKET="/run/php/php7.2-fpm.sock"
+    elif [ "$OS_VER_MAJOR" == "20" ]; then
+      SUPPORTED=true
+      PHP_SOCKET="/run/php/php7.4-fpm.sock"
     else
       SUPPORTED=false
     fi
@@ -322,6 +325,27 @@ function create_database {
 
 function apt_update {
   apt update -y && apt upgrade -y
+}
+
+function ubuntu20_dep {
+  echo "* Installing dependencies for Ubuntu 20.."
+
+  # Add "add-apt-repository" command
+  apt -y install software-properties-common curl apt-transport-https ca-certificates gnupg
+
+  # Update repositories list
+  apt update
+
+  # Install Dependencies
+  apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis
+
+  # enable services
+  systemctl start mariadb
+  systemctl enable mariadb
+  systemctl start redis-server
+  systemctl enable redis-server
+
+  echo "* Dependencies for Ubuntu installed!"
 }
 
 function ubuntu18_dep {
@@ -582,6 +606,14 @@ function configure_nginx {
       # replace all <php_socket> places with correct socket "path"
       sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" /etc/nginx/sites-available/pterodactyl.conf
 
+      # on debian 8/9, TLS v1.3 is not supported (see #76)
+      # this if statement can be refactored into a one-liner but I think this is more readable
+      if [ "$OS" == "debian" ]; then
+        if [ "$OS_VER_MAJOR" == "8" ] || [ "$OS_VER_MAJOR" == "9" ]; then
+          sed -i 's/ TLSv1.3//' file /etc/nginx/sites-available/pterodactyl.conf
+        fi
+      fi
+
       # enable pterodactyl
       ln -s /etc/nginx/sites-available/pterodactyl.conf /etc/nginx/sites-enabled/pterodactyl.conf
   fi
@@ -593,20 +625,6 @@ function configure_nginx {
 
 function configure_apache {
   echo "soon .."
-}
-
-###########
-## OTHER ##
-###########
-
-function install_daemon {
-  echo "* It is recommended to have the panel and daemon on two separate nodes."
-  echo -n "* Would you like to also install the Pterodactyl daemon on this machine? (y/N): "
-  read -r INSTALL_DAEMON
-
-  if [[ "$INSTALL_DAEMON" =~ [Yy] ]]; then
-    bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install-daemon.sh)
-  fi
 }
 
 ####################
@@ -623,7 +641,9 @@ function perform_install {
     ubuntu_universedep
     apt_update
     # different dependencies depending on if it's 18 or 16
-    if [ "$OS_VER_MAJOR" == "18" ]; then
+    if [ "$OS_VER_MAJOR" == "20" ]; then
+      ubuntu20_dep
+    elif [ "$OS_VER_MAJOR" == "18" ]; then
       ubuntu18_dep
     elif [ "$OS_VER_MAJOR" == "16" ]; then
       ubuntu16_dep
@@ -638,7 +658,7 @@ function perform_install {
     insert_cronjob
     install_pteroq
 
-    if [ "$OS_VER_MAJOR" == "18" ]; then
+    if [ "$OS_VER_MAJOR" == "18" ] || [ "$OS_VER_MAJOR" == "20" ]; then
       if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
         debian_based_letsencrypt
       fi
@@ -711,6 +731,8 @@ function ask_letsencrypt {
   if [ "$CONFIGURE_UFW" == false ]; then
     echo -e "* ${COLOR_RED}Note${COLOR_NC}: Let's Encrypt requires port 80/443 to be opened! You have opted out of the automatic UFW configuration; use this at your own risk (if port 80/443 is closed, the script will fail)!"
   fi
+
+  print_warning "You cannot use Let's Encrypt with your hostname as an IP address! It must be a FQDN (e.g. panel.example.org)."
 
   echo -e -n "* Do you want to automatically configure HTTPS using Let's Encrypt? (y/N): "
   read -r CONFIRM_SSL
@@ -839,9 +861,11 @@ function main {
       fi
     fi
 
-    # Available for Ubuntu 18
-    if [ "$OS" == "ubuntu" ] && [ "$OS_VER_MAJOR" == "18" ]; then
-      ask_letsencrypt
+    # Available for Ubuntu 18/20
+    if [ "$OS" == "ubuntu" ]; then
+      if [ "$OS_VER_MAJOR" == "18" ] || [ "$OS_VER_MAJOR" == "20" ]; then
+        ask_letsencrypt
+      fi
     fi
   fi
 
@@ -895,7 +919,6 @@ function goodbye {
   echo "* Thank you for using this script."
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you haven't configured the firewall: 80/443 (HTTP/HTTPS) is required to be open!"
   print_brake 62
-  install_daemon
 }
 
 # run script

@@ -33,15 +33,13 @@ List of supported installation setups for panel and daemon (installations suppor
 | Ubuntu            | 14.04   | :red_circle:         | :red_circle:   |             |
 |                   | 16.04   | :white_check_mark:   | :red_circle:   | 7.2         |
 |                   | 18.04   | :white_check_mark:   | :red_circle:   | 7.2         |
-|                   | 20.04   | :red_circle:         | :red_circle:   |             |
+|                   | 20.04   | :white_check_mark:   | :red_circle:   | 7.4         |
 | Debian            | 8       | :white_check_mark:   | :red_circle:   | 7.3         |
 |                   | 9       | :white_check_mark:   | :red_circle:   | 7.3         |
 |                   | 10      | :white_check_mark:   | :red_circle:   | 7.3         |
 | CentOS            | 6       | :red_circle:         | :red_circle:   |             |
 |                   | 7       | :white_check_mark:   | :red_circle:   | 7.3         |
 |                   | 8       | :white_check_mark:   | :red_circle:   | 7.2         |
-
-*Ubuntu 20.04 was recently released and is yet to be supported but will hopefully be supported soon.*
 
 ### Supported daemon operating systems
 
@@ -50,7 +48,7 @@ List of supported installation setups for panel and daemon (installations suppor
 | Ubuntu            | 14.04   | :red_circle:         |
 |                   | 16.04   | :white_check_mark:   |
 |                   | 18.04   | :white_check_mark:   |
-|                   | 20.04   | :red_circle:         |
+|                   | 20.04   | :white_check_mark:   |
 | Debian            | 8       | :red_circle:         |
 |                   | 9       | :white_check_mark:   |
 |                   | 10      | :white_check_mark:   |
@@ -58,25 +56,15 @@ List of supported installation setups for panel and daemon (installations suppor
 |                   | 7       | :white_check_mark:   |
 |                   | 8       | :white_check_mark:   |
 
-*Ubuntu 20.04 was recently released and is yet to be supported but will hopefully be supported soon.*
-
 ## Using the installation scripts
 
-Using the Pterodactyl Panel installation script:
+To use the installation scripts, simply run this command as root. The script will ask you whether you would like to install just the panel, just the daemon or both.
 
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install-panel.sh)
+bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install.sh)
 ```
 
-Using the Pterodactyl Daemon installation script:
-
-```bash
-bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install-daemon.sh)
-```
-
-The script will guide you through the install.
-
-*Note: On some systems, it's required to be already logged in as root before executing the one-line command.*
+*Note: On some systems, it's required to be already logged in as root before executing the one-line command (where `sudo` is in front of the command does not work).*
 
 ## Firewall setup
 
@@ -151,3 +139,5 @@ firewall-cmd --reload
 ## Contributors ✨
 
 Created and maintained by [Vilhelm Prytz](https://github.com/vilhelmprytz).
+
+Special thanks to [sam1370](https://github.com/sam1370) and [Linux1231233](https://github.com/Linux1231233) for helping on the Discord server!
