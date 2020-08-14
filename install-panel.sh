@@ -41,6 +41,12 @@ if ! [ -x "$(command -v curl)" ]; then
   exit 1
 fi
 
+if ! [ -x "$(command -v tput)" ]; then
+  echo "* curl is required in order for this script to work."
+  echo "* install using apt (Debian and derivatives) or yum/dnf (CentOS)"
+  exit 1
+fi
+
 # define version using information from GitHub
 get_latest_release() {
   curl --silent "https://api.github.com/repos/$1/releases/latest" | # Get latest release from GitHub api
@@ -51,6 +57,17 @@ get_latest_release() {
 echo "* Retrieving release information.."
 PTERODACTYL_VERSION="$(get_latest_release "pterodactyl/panel")"
 echo "* Latest version is $PTERODACTYL_VERSION"
+# progress bar variables
+
+CODE_SAVE_CURSOR="\033[s"
+CODE_RESTORE_CURSOR="\033[u"
+CODE_CURSOR_IN_SCROLL_AREA="\033[1A"
+COLOR_FG="\e[30m"
+COLOR_BG="\e[42m"
+COLOR_BG_BLOCKED="\e[43m"
+RESTORE_FG="\e[39m"
+RESTORE_BG="\e[49m"
+PROGRESS_BLOCKED="false"
 
 # variables
 WEBSERVER="nginx"
@@ -91,7 +108,111 @@ CONFIGURE_FIREWALL_CMD=false
 # firewall status
 CONFIGURE_FIREWALL=false
 
-# visual functions
+######################
+## visual functions ##
+######################
+
+###########################################################################################################
+
+# Modified https://github.com/pollev/bash_progress_bar
+
+# SPDX-License-Identifier: MIT
+#
+# Copyright (c) 2018--2020 Polle Vanhoof
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+function progress_bar {
+  trap exit_interrupt INT
+  lines=$(tput lines)
+  lines=$((lines-1))
+  echo -en "\n"
+  echo -en "$CODE_SAVE_CURSOR"
+  echo -en "\033[0;${lines}r"
+  echo -en "$CODE_RESTORE_CURSOR"
+  echo -en "$CODE_CURSOR_IN_SCROLL_AREA"
+  draw_progress_bar 0
+}
+
+function remove_progress_bar {
+  lines=$(tput lines)
+  echo -en "$CODE_SAVE_CURSOR"
+  echo -en "\033[0;${lines}r"
+  echo -en "$CODE_RESTORE_CURSOR"
+  echo -en "$CODE_CURSOR_IN_SCROLL_AREA"
+  clear_progress_bar
+  echo -en "\n\n"
+  trap - INT
+}
+
+function draw_progress_bar() {
+  percentage=$1
+  lines=$(tput lines)
+  lines=$lines
+  echo -en "$CODE_SAVE_CURSOR"
+  echo -en "\033[${lines};0f"
+  tput el || echo "Didn't work"
+  PROGRESS_BLOCKED="false" 
+  print_bar_text "$percentage"
+  echo -en "$CODE_RESTORE_CURSOR"
+}
+
+function block_progress_bar() {
+  percentage=$1
+  lines=$(tput lines)
+  lines=$lines
+  echo -en "$CODE_SAVE_CURSOR"
+  echo -en "\033[${lines};0f"
+  tput el
+  PROGRESS_BLOCKED="true"
+  print_bar_text "$percentage"
+  echo -en "$CODE_RESTORE_CURSOR"
+}
+
+function clear_progress_bar() {
+    lines=$(tput lines)
+    lines=$lines
+    echo -en "$CODE_SAVE_CURSOR"
+    echo -en "\033[${lines};0f"
+    tput el
+    echo -en "$CODE_RESTORE_CURSOR"
+}
+
+function print_bar_text() {
+    local percentage=$1
+    local cols
+    cols=$(tput cols)
+    bar_size=$((cols-17))
+    local color="${COLOR_FG}${COLOR_BG}"
+    if [ "$PROGRESS_BLOCKED" = "true" ]; then
+        color="${COLOR_FG}${COLOR_BG_BLOCKED}"
+    fi
+    complete_size=$((bar_size*percentage/100)) # Fix to complie to set -e
+    echo $complete_size
+    remainder_size=$((bar_size-complete_size))
+    progress_bar=$(echo -ne "["; echo -en "${color}"; printf_new "#" $complete_size; echo -en "${RESTORE_FG}${RESTORE_BG}"; printf_new "." $remainder_size; echo -ne "]");
+    echo -ne " Progress ${percentage}% ${progress_bar}"
+}
+
+function printf_new() {
+    str=$1
+    num=$2
+    v=$(printf "%-${num}s" "$str")
+    echo -ne "${v// /$str}"
+}
+
+function exit_interrupt {
+  remove_progress_bar
+  exit 1
+}
+
+###########################################################################################################
+
 function print_error {
   COLOR_RED='\033[0;31m'
   COLOR_NC='\033[0m'
@@ -621,6 +742,7 @@ function firewall_ufw {
 
   ufw enable
   ufw status numbered | sed '/v6/d'
+  draw_progress_bar 31
 }
 
 function firewall_firewalld {
@@ -658,6 +780,7 @@ function firewall_firewalld {
 
   echo "* Firewall-cmd installed"
   print_brake 70
+  block_progress_bar 31
 }
 
 function letsencrypt {
@@ -875,6 +998,9 @@ function main {
   # detect distro
   detect_distro
 
+  # Enable progress bar
+  progress_bar
+
   print_brake 70
   echo "* Pterodactyl panel installation script"
   echo "*"
@@ -891,6 +1017,8 @@ function main {
 
   # set database credentials
   print_brake 72
+  block_progress_bar 0
+
   echo "* Database configuration."
   echo ""
   echo "* This will be the credentials used for commuication between the MySQL"
@@ -903,13 +1031,19 @@ function main {
 
   [ -z "$MYSQL_DB_INPUT" ] && MYSQL_DB="panel" || MYSQL_DB=$MYSQL_DB_INPUT
 
+  block_progress_bar 2
+
   echo -n "* Username (pterodactyl): "
   read -r MYSQL_USER_INPUT
 
   [ -z "$MYSQL_USER_INPUT" ] && MYSQL_USER="pterodactyl" || MYSQL_USER=$MYSQL_USER_INPUT
 
+  block_progress_bar 4
+
   # MySQL password input
   password_input MYSQL_PASSWORD "Password (use something strong): " "MySQL password cannot be empty"
+
+  block_progress_bar 6
 
   valid_timezones="$(timedatectl list-timezones)"
   echo "* List of valid timezones here $(hyperlink "https://www.php.net/manual/en/timezones.php")"
@@ -920,17 +1054,28 @@ function main {
     [ -z "$timezone_input" ] && timezone="Europe/Stockholm" || timezone=$timezone_input # because köttbullar!
   done
 
+  block_progress_bar 8
+
   required_input email "Provide the email address that will be used to configure Let's Encrypt and Pterodactyl: " "Email cannot be empty"
+
+  block_progress_bar 10
 
   echo -n "* Would you like to set up email credentials so that Pterodactyl can send emails to users (usually not required)? (y/N): "
   read -r mailneeded
 
+  block_progress_bar 12
+
   # Initial admin account
   required_input user_email "Email address for the initial admin account: " "Email cannot be empty"
+  block_progress_bar 14
   required_input user_username "Username for the initial admin account: " "Username cannot be empty"
+  block_progress_bar 16
   required_input user_firstname "First name for the initial admin account: " "Name cannot be empty"
+  block_progress_bar 18
   required_input user_lastname "Last name for the initial admin account: " "Name cannot be empty"
+  block_progress_bar 20
   password_input user_password "Password for the initial admin account: " "Password cannot be empty"
+  block_progress_bar 22
 
   print_brake 72
 
@@ -941,6 +1086,8 @@ function main {
 
       [ -z "$FQDN" ] && print_error "FQDN cannot be empty"
   done
+
+  block_progress_bar 24
 
   # UFW is available for Ubuntu/Debian
   # Let's Encrypt is available for Ubuntu/Debian
@@ -983,6 +1130,8 @@ function main {
     ask_letsencrypt
   fi
 
+  block_progress_bar 26
+
   # If it's already true, this should be a no-brainer
   if [ "$CONFIGURE_LETSENCRYPT" == false ]; then
     echo "* Let's Encrypt is not going to be automatically configured by this script (either unsupported yet or user opted out)."
@@ -997,8 +1146,12 @@ function main {
     fi
   fi
 
+  draw_progress_bar 28
+
   # summary
   summary
+
+  block_progress_bar 30
 
   # confirm installation
   echo -e -n "\n* Initial configuration completed. Continue with installation? (y/N): "
