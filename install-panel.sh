@@ -41,12 +41,6 @@ if ! [ -x "$(command -v curl)" ]; then
   exit 1
 fi
 
-if ! [ -x "$(command -v tput)" ]; then
-  echo "* curl is required in order for this script to work."
-  echo "* install using apt (Debian and derivatives) or yum/dnf (CentOS)"
-  exit 1
-fi
-
 # define version using information from GitHub
 get_latest_release() {
   curl --silent "https://api.github.com/repos/$1/releases/latest" | # Get latest release from GitHub api
