@@ -147,10 +147,10 @@ function remove_progress_bar {
 function draw_progress_bar() {
   percentage=$1
   lines=$(tput lines)
-  lines=$lines
+  (( lines=lines ))
   echo -en "$CODE_SAVE_CURSOR"
   echo -en "\033[${lines};0f"
-  tput el || echo "Didn't work"
+  tput el
   PROGRESS_BLOCKED="false" 
   print_bar_text "$percentage"
   echo -en "$CODE_RESTORE_CURSOR"
@@ -159,7 +159,7 @@ function draw_progress_bar() {
 function block_progress_bar() {
   percentage=$1
   lines=$(tput lines)
-  lines=$lines
+  (( lines=lines ))
   echo -en "$CODE_SAVE_CURSOR"
   echo -en "\033[${lines};0f"
   tput el
@@ -170,7 +170,7 @@ function block_progress_bar() {
 
 function clear_progress_bar() {
     lines=$(tput lines)
-    lines=$lines
+    (( lines=lines ))
     echo -en "$CODE_SAVE_CURSOR"
     echo -en "\033[${lines};0f"
     tput el
