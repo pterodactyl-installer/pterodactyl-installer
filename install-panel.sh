@@ -808,7 +808,7 @@ function perform_install {
 
     if [ "$OS_VER_MAJOR" == "9" ] || [ "$OS_VER_MAJOR" == "10" ]; then
       if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
-        debian_based_letsencrypt
+        letsencrypt
       fi
     fi
   elif [ "$OS" == "centos" ]; then
