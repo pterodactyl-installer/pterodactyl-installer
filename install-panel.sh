@@ -51,17 +51,6 @@ get_latest_release() {
 echo "* Retrieving release information.."
 PTERODACTYL_VERSION="$(get_latest_release "pterodactyl/panel")"
 echo "* Latest version is $PTERODACTYL_VERSION"
-# progress bar variables
-
-CODE_SAVE_CURSOR="\033[s"
-CODE_RESTORE_CURSOR="\033[u"
-CODE_CURSOR_IN_SCROLL_AREA="\033[1A"
-COLOR_FG="\e[30m"
-COLOR_BG="\e[42m"
-COLOR_BG_BLOCKED="\e[43m"
-RESTORE_FG="\e[39m"
-RESTORE_BG="\e[49m"
-PROGRESS_BLOCKED="false"
 
 # variables
 WEBSERVER="nginx"
@@ -106,106 +95,8 @@ CONFIGURE_FIREWALL=false
 ## visual functions ##
 ######################
 
-###########################################################################################################
-
-# Modified https://github.com/pollev/bash_progress_bar
-
-# SPDX-License-Identifier: MIT
-#
-# Copyright (c) 2018--2020 Polle Vanhoof
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-
-function progress_bar {
-  trap exit_interrupt INT
-  lines=$(tput lines)
-  lines=$((lines-1))
-  echo -en "\n"
-  echo -en "$CODE_SAVE_CURSOR"
-  echo -en "\033[0;${lines}r"
-  echo -en "$CODE_RESTORE_CURSOR"
-  echo -en "$CODE_CURSOR_IN_SCROLL_AREA"
-  draw_progress_bar 0
-}
-
-function remove_progress_bar {
-  lines=$(tput lines)
-  echo -en "$CODE_SAVE_CURSOR"
-  echo -en "\033[0;${lines}r"
-  echo -en "$CODE_RESTORE_CURSOR"
-  echo -en "$CODE_CURSOR_IN_SCROLL_AREA"
-  clear_progress_bar
-  echo -en "\n\n"
-  trap - INT
-}
-
-function draw_progress_bar() {
-  percentage=$1
-  lines=$(tput lines)
-  (( lines=lines ))
-  echo -en "$CODE_SAVE_CURSOR"
-  echo -en "\033[${lines};0f"
-  tput el
-  PROGRESS_BLOCKED="false" 
-  print_bar_text "$percentage"
-  echo -en "$CODE_RESTORE_CURSOR"
-}
-
-function block_progress_bar() {
-  percentage=$1
-  lines=$(tput lines)
-  (( lines=lines ))
-  echo -en "$CODE_SAVE_CURSOR"
-  echo -en "\033[${lines};0f"
-  tput el
-  PROGRESS_BLOCKED="true"
-  print_bar_text "$percentage"
-  echo -en "$CODE_RESTORE_CURSOR"
-}
-
-function clear_progress_bar() {
-    lines=$(tput lines)
-    (( lines=lines ))
-    echo -en "$CODE_SAVE_CURSOR"
-    echo -en "\033[${lines};0f"
-    tput el
-    echo -en "$CODE_RESTORE_CURSOR"
-}
-
-function print_bar_text() {
-    local percentage=$1
-    local cols
-    cols=$(tput cols)
-    bar_size=$((cols-17))
-    local color="${COLOR_FG}${COLOR_BG}"
-    if [ "$PROGRESS_BLOCKED" = "true" ]; then
-        color="${COLOR_FG}${COLOR_BG_BLOCKED}"
-    fi
-    complete_size=$((bar_size*percentage/100)) # Fix to complie to set -e
-    echo $complete_size
-    remainder_size=$((bar_size-complete_size))
-    progress_bar=$(echo -ne "["; echo -en "${color}"; printf_new "#" $complete_size; echo -en "${RESTORE_FG}${RESTORE_BG}"; printf_new "." $remainder_size; echo -ne "]");
-    echo -ne " Progress ${percentage}% ${progress_bar}"
-}
-
-function printf_new() {
-    str=$1
-    num=$2
-    v=$(printf "%-${num}s" "$str")
-    echo -ne "${v// /$str}"
-}
-
-function exit_interrupt {
-  remove_progress_bar
-  exit 1
-}
-
-###########################################################################################################
+# shellcheck source=progress_bar.sh
+source <(curl -s https://raw.githubusercontent.com/Linux123123/pterodactyl-installer/pterodactyl-1.0/progress_bar.sh) || exit 1  # revert before merge
 
 function print_error {
   COLOR_RED='\033[0;31m'
@@ -993,7 +884,9 @@ function main {
   detect_distro
 
   # Enable progress bar
-  progress_bar
+  
+  enable_trapping
+  setup_scroll_area
 
   print_brake 70
   echo "* Pterodactyl panel installation script"
