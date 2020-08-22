@@ -68,6 +68,8 @@ bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-instal
 
 *Note: On some systems, it's required to be already logged in as root before executing the one-line command (where `sudo` is in front of the command does not work).*
 
+Here is a [YouTube video](https://youtu.be/J3l0uL-OBWM) that illustrates the installation process.
+
 ## Firewall setup
 
 The installation scripts do not configure your firewall automatically.
