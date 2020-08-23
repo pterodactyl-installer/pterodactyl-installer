@@ -68,6 +68,11 @@ CONFIGURE_UFW=false
 # firewall_cmd firewall
 CONFIGURE_FIREWALL_CMD=false
 
+# SSL (Let's Encrypt)
+CONFIGURE_LETSENCRYPT=false
+FQDN=""
+EMAIL=""
+
 # visual functions
 function print_error {
   echo ""
@@ -234,6 +239,31 @@ function check_os_comp {
 ############################
 ## INSTALLATION FUNCTIONS ##
 ############################
+
+letsencrypt() {
+  FAILED=false
+
+  # Install certbot
+  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
+    apt-get install certbot -y
+  elif [ "$OS" == "centos" ]; then
+    [ "$OS_VER_MAJOR" == "7" ] && yum install certbot
+    [ "$OS_VER_MAJOR" == "8" ] && dnf install certbot
+  else
+    # exit
+    print_error "OS not supported."
+    exit 1
+  fi
+
+  # Obtain certificate
+  certbot certonly --no-eff-email --email "$EMAIL" --standalone -d "$FQDN" || FAILED=true
+
+  # Check if it succeded
+  if [ ! -d "/etc/letsencrypt/live/$FQDN/" ] || [ "$FAILED" == true ]; then
+    print_warning "The process of obtaining a Let's Encrypt certificate failed!"
+  fi
+}
+
 function apt_update {
   apt update -y
   apt upgrade -y
@@ -458,9 +488,25 @@ function perform_install {
   ptdl_dl
   systemd_file
   [ "$INSTALL_MARIADB" == true ] && install_mariadb
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
 
   # return true if script has made it this far
   return 0
+}
+
+ask_letsencrypt() {
+  if [ "$CONFIGURE_UFW" == false ] && [ "$CONFIGURE_FIREWALL_CMD" == false ]; then
+    print_warning "Let's Encrypt requires port 80/443 to be opened! You have opted out of the automatic firewall configuration; use this at your own risk (if port 80/443 is closed, the script will fail)!"
+  fi
+
+  print_warning "You cannot use Let's Encrypt with your hostname as an IP address! It must be a FQDN (e.g. panel.example.org)."
+
+  echo -e -n "* Do you want to automatically configure HTTPS using Let's Encrypt? (y/N): "
+  read -r CONFIRM_SSL
+
+  if [[ "$CONFIRM_SSL" =~ [Yy] ]]; then
+    CONFIGURE_LETSENCRYPT=true
+  fi
 }
 
 function main {
@@ -517,6 +563,20 @@ function main {
     if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
       CONFIGURE_UFW=true
     fi
+
+    # Available for Debian 9/10
+    if [ "$OS" == "debian" ]; then
+      if [ "$OS_VER_MAJOR" == "9" ] || [ "$OS_VER_MAJOR" == "10" ]; then
+        ask_letsencrypt
+      fi
+    fi
+
+    # Available for Ubuntu 18/20
+    if [ "$OS" == "ubuntu" ]; then
+      if [ "$OS_VER_MAJOR" == "18" ] || [ "$OS_VER_MAJOR" == "20" ]; then
+        ask_letsencrypt
+      fi
+    fi
   fi
 
   # Firewall-cmd is available for CentOS
@@ -527,6 +587,27 @@ function main {
     if [[ "$CONFIRM_FIREWALL_CMD" =~ [Yy] ]]; then
       CONFIGURE_FIREWALL_CMD=true
     fi
+
+    ask_letsencrypt
+  fi
+
+  if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
+    # set FQDN
+    while [ -z "$FQDN" ] || [ -d "/etc/letsencrypt/live/$FQDN/" ]; do
+        echo -n "* Set the FQDN to use for Let's Encrypt (panel.example.com): "
+        read -r FQDN
+
+        [ -z "$FQDN" ] && print_error "FQDN cannot be empty"
+        [ -d "/etc/letsencrypt/live/$FQDN/" ] && print_error "A certificate with this FQDN already exists!"
+    done
+
+    # set EMAIL
+    while [ -z "$EMAIL" ]; do
+        echo -n "* Enter email address for Let's Encrypt: "
+        read -r EMAIL
+
+        [ -z "$EMAIL" ] && print_error "Email cannot be empty"
+    done
   fi
 
   echo -n "* Proceed with installation? (y/N): "
