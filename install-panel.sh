@@ -887,6 +887,7 @@ function main {
   
   enable_trapping
   setup_scroll_area
+  draw_progress_bar 0
 
   print_brake 70
   echo "* Pterodactyl panel installation script"
