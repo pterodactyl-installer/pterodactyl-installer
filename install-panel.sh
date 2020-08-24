@@ -853,8 +853,8 @@ function perform_install {
 }
 
 function ask_letsencrypt {
-  if [ "$CONFIGURE_UFW" == false ]; then
-    echo -e "* ${COLOR_RED}Note${COLOR_NC}: Let's Encrypt requires port 80/443 to be opened! You have opted out of the automatic UFW configuration; use this at your own risk (if port 80/443 is closed, the script will fail)!"
+  if [ "$CONFIGURE_UFW" == false ] && [ "$CONFIGURE_FIREWALL_CMD" == false ]; then
+    print_warning "Let's Encrypt requires port 80/443 to be opened! You have opted out of the automatic firewall configuration; use this at your own risk (if port 80/443 is closed, the script will fail)!"
   fi
 
   print_warning "You cannot use Let's Encrypt with your hostname as an IP address! It must be a FQDN (e.g. panel.example.org)."
