@@ -435,6 +435,9 @@ function firewall_ufw {
   ufw allow 8080 > /dev/null
   ufw allow 2022 > /dev/null
 
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && ufw allow http > /dev/null
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && ufw allow https > /dev/null
+
   ufw enable
   ufw status numbered | sed '/v6/d'
 }
@@ -443,34 +446,25 @@ function firewall_firewalld {
   echo -e "\n* Enabling firewall_cmd (firewalld)"
   echo "* Opening port 22 (SSH), 8080 (Daemon Port), 2022 (Daemon SFTP Port)"
 
-  if [ "$OS_VER_MAJOR" == "7" ]; then
-    yum -y -q update
-    yum -y -q install firewalld > /dev/null
+  # Install
+  [ "$OS_VER_MAJOR" == "7" ] && yum -y -q update
+  [ "$OS_VER_MAJOR" == "7" ] && yum -y -q install firewalld > /dev/null
+  [ "$OS_VER_MAJOR" == "8" ] && dnf -y -q update
+  [ "$OS_VER_MAJOR" == "8" ] && dnf -y -q install firewalld > /dev/null
 
-    systemctl --now enable firewalld > /dev/null # Enable and start 
-    firewall-cmd --add-port 8080/tcp --permanent -q # Port 8080
-    firewall-cmd --add-port 2022/tcp --permanent -q # Port 2022
-    firewall-cmd --permanent --zone=trusted --change-interface=pterodactyl0 -q
-    firewall-cmd --zone=trusted --add-masquerade --permanent
-    firewall-cmd --ad-service=ssh --permanent -q # Port 22
-    firewall-cmd --reload -q # Enable firewall
+  # Enable
+  systemctl --now enable firewalld > /dev/null # Enable and start
 
-  elif [ "$OS_VER_MAJOR" == "8" ]; then
-    dnf -y -q update
-    dnf -y -q install firewalld > /dev/null
+  # Configure
+  firewall-cmd --add-port 8080/tcp --permanent -q # Port 8080
+  firewall-cmd --add-port 2022/tcp --permanent -q # Port 2022
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && firewall-cmd --add-port 80/tcp --permanent -q # Port 80
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && firewall-cmd --add-port 443/tcp --permanent -q # Port 443
 
-    systemctl --now enable firewalld > /dev/null # Enable and start 
-    firewall-cmd --add-port 8080/tcp --permanent -q # Port 8080
-    firewall-cmd --add-port 2022/tcp --permanent -q # Port 2022
-    firewall-cmd --permanent --zone=trusted --change-interface=pterodactyl0 -q
-    firewall-cmd --zone=trusted --add-masquerade --permanent
-    firewall-cmd --ad-service=ssh --permanent -q # Port 22
-    firewall-cmd --reload -q # Enable firewall
-
-  else
-    print_error "Unsupported OS"
-    exit 1
-  fi
+  firewall-cmd --permanent --zone=trusted --change-interface=pterodactyl0 -q
+  firewall-cmd --zone=trusted --add-masquerade --permanent
+  firewall-cmd --ad-service=ssh --permanent -q # Port 22
+  firewall-cmd --reload -q # Enable firewall
 
   echo "* Firewall-cmd installed"
   print_brake 70
