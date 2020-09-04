@@ -586,15 +586,26 @@ function main {
   fi
 
   if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
-    # set FQDN
-    while [ -z "$FQDN" ] || [ -d "/etc/letsencrypt/live/$FQDN/" ]; do
+    while [ -z "$FQDN" ]; do
         echo -n "* Set the FQDN to use for Let's Encrypt (panel.example.com): "
         read -r FQDN
 
-        [ -z "$FQDN" ] && print_error "FQDN cannot be empty"
-        [ -d "/etc/letsencrypt/live/$FQDN/" ] && print_error "A certificate with this FQDN already exists!"
-    done
+        ASK=false
 
+        [ -z "$FQDN" ] && print_error "FQDN cannot be empty"
+        [ -d "/etc/letsencrypt/live/$FQDN/" ] && print_error "A certificate with this FQDN already exists!" && FQDN="" && ASK=true
+
+        [ "$ASK" == true ] && echo -e -n "* Do you still want to automatically configure HTTPS using Let's Encrypt? (y/N): "
+        [ "$ASK" == true ] && read -r CONFIRM_SSL
+
+        if [[ ! "$CONFIRM_SSL" =~ [Yy] ]] && [ "$ASK" == true ]; then
+          CONFIGURE_LETSENCRYPT=false
+          FQDN="none"
+        fi
+    done
+  fi
+
+  if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
     # set EMAIL
     while [ -z "$EMAIL" ]; do
         echo -n "* Enter email address for Let's Encrypt: "
