@@ -255,8 +255,13 @@ letsencrypt() {
     exit 1
   fi
 
+  # If user has nginx
+  systemctl stop nginx || true
+
   # Obtain certificate
   certbot certonly --no-eff-email --email "$EMAIL" --standalone -d "$FQDN" || FAILED=true
+
+  systemctl start nginx || true
 
   # Check if it succeded
   if [ ! -d "/etc/letsencrypt/live/$FQDN/" ] || [ "$FAILED" == true ]; then
