@@ -54,7 +54,7 @@ VERSION="$(get_latest_release "pterodactyl/wings")"
 echo "* Latest version is $VERSION"
 
 # download URLs
-DL_URL="https://github.com/pterodactyl/wings/releases/download/v1.0.0-rc.2/wings_linux_amd64" # REVERT THIS BEFORE MERGING!
+DL_URL="https://github.com/pterodactyl/wings/releases/download/v1.0.0-rc.5/wings_linux_amd64" # REVERT THIS BEFORE MERGING!
 CONFIGS_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/pterodactyl-1.0/configs" # REVERT THIS BEFORE MERGING!
 
 COLOR_RED='\033[0;31m'
@@ -67,6 +67,11 @@ CONFIGURE_UFW=false
 
 # firewall_cmd firewall
 CONFIGURE_FIREWALL_CMD=false
+
+# SSL (Let's Encrypt)
+CONFIGURE_LETSENCRYPT=false
+FQDN=""
+EMAIL=""
 
 # visual functions
 function print_error {
@@ -234,6 +239,36 @@ function check_os_comp {
 ############################
 ## INSTALLATION FUNCTIONS ##
 ############################
+
+letsencrypt() {
+  FAILED=false
+
+  # Install certbot
+  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
+    apt-get install certbot -y
+  elif [ "$OS" == "centos" ]; then
+    [ "$OS_VER_MAJOR" == "7" ] && yum install certbot
+    [ "$OS_VER_MAJOR" == "8" ] && dnf install certbot
+  else
+    # exit
+    print_error "OS not supported."
+    exit 1
+  fi
+
+  # If user has nginx
+  systemctl stop nginx || true
+
+  # Obtain certificate
+  certbot certonly --no-eff-email --email "$EMAIL" --standalone -d "$FQDN" || FAILED=true
+
+  systemctl start nginx || true
+
+  # Check if it succeded
+  if [ ! -d "/etc/letsencrypt/live/$FQDN/" ] || [ "$FAILED" == true ]; then
+    print_warning "The process of obtaining a Let's Encrypt certificate failed!"
+  fi
+}
+
 function apt_update {
   apt update -y
   apt upgrade -y
@@ -405,6 +440,9 @@ function firewall_ufw {
   ufw allow 8080 > /dev/null
   ufw allow 2022 > /dev/null
 
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && ufw allow http > /dev/null
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && ufw allow https > /dev/null
+
   ufw enable
   ufw status numbered | sed '/v6/d'
 }
@@ -413,34 +451,25 @@ function firewall_firewalld {
   echo -e "\n* Enabling firewall_cmd (firewalld)"
   echo "* Opening port 22 (SSH), 8080 (Daemon Port), 2022 (Daemon SFTP Port)"
 
-  if [ "$OS_VER_MAJOR" == "7" ]; then
-    yum -y -q update
-    yum -y -q install firewalld > /dev/null
+  # Install
+  [ "$OS_VER_MAJOR" == "7" ] && yum -y -q update
+  [ "$OS_VER_MAJOR" == "7" ] && yum -y -q install firewalld > /dev/null
+  [ "$OS_VER_MAJOR" == "8" ] && dnf -y -q update
+  [ "$OS_VER_MAJOR" == "8" ] && dnf -y -q install firewalld > /dev/null
 
-    systemctl --now enable firewalld > /dev/null # Enable and start 
-    firewall-cmd --add-port 8080/tcp --permanent -q # Port 8080
-    firewall-cmd --add-port 2022/tcp --permanent -q # Port 2022
-    firewall-cmd --permanent --zone=trusted --change-interface=pterodactyl0 -q
-    firewall-cmd --zone=trusted --add-masquerade --permanent
-    firewall-cmd --ad-service=ssh --permanent -q # Port 22
-    firewall-cmd --reload -q # Enable firewall
+  # Enable
+  systemctl --now enable firewalld > /dev/null # Enable and start
 
-  elif [ "$OS_VER_MAJOR" == "8" ]; then
-    dnf -y -q update
-    dnf -y -q install firewalld > /dev/null
+  # Configure
+  firewall-cmd --add-port 8080/tcp --permanent -q # Port 8080
+  firewall-cmd --add-port 2022/tcp --permanent -q # Port 2022
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && firewall-cmd --add-port 80/tcp --permanent -q # Port 80
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && firewall-cmd --add-port 443/tcp --permanent -q # Port 443
 
-    systemctl --now enable firewalld > /dev/null # Enable and start 
-    firewall-cmd --add-port 8080/tcp --permanent -q # Port 8080
-    firewall-cmd --add-port 2022/tcp --permanent -q # Port 2022
-    firewall-cmd --permanent --zone=trusted --change-interface=pterodactyl0 -q
-    firewall-cmd --zone=trusted --add-masquerade --permanent
-    firewall-cmd --ad-service=ssh --permanent -q # Port 22
-    firewall-cmd --reload -q # Enable firewall
-
-  else
-    print_error "Unsupported OS"
-    exit 1
-  fi
+  firewall-cmd --permanent --zone=trusted --change-interface=pterodactyl0 -q
+  firewall-cmd --zone=trusted --add-masquerade --permanent
+  firewall-cmd --ad-service=ssh --permanent -q # Port 22
+  firewall-cmd --reload -q # Enable firewall
 
   echo "* Firewall-cmd installed"
   print_brake 70
@@ -458,9 +487,25 @@ function perform_install {
   ptdl_dl
   systemd_file
   [ "$INSTALL_MARIADB" == true ] && install_mariadb
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
 
   # return true if script has made it this far
   return 0
+}
+
+ask_letsencrypt() {
+  if [ "$CONFIGURE_UFW" == false ] && [ "$CONFIGURE_FIREWALL_CMD" == false ]; then
+    print_warning "Let's Encrypt requires port 80/443 to be opened! You have opted out of the automatic firewall configuration; use this at your own risk (if port 80/443 is closed, the script will fail)!"
+  fi
+
+  print_warning "You cannot use Let's Encrypt with your hostname as an IP address! It must be a FQDN (e.g. node.example.org)."
+
+  echo -e -n "* Do you want to automatically configure HTTPS using Let's Encrypt? (y/N): "
+  read -r CONFIRM_SSL
+
+  if [[ "$CONFIRM_SSL" =~ [Yy] ]]; then
+    CONFIGURE_LETSENCRYPT=true
+  fi
 }
 
 function main {
@@ -517,6 +562,20 @@ function main {
     if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
       CONFIGURE_UFW=true
     fi
+
+    # Available for Debian 9/10
+    if [ "$OS" == "debian" ]; then
+      if [ "$OS_VER_MAJOR" == "9" ] || [ "$OS_VER_MAJOR" == "10" ]; then
+        ask_letsencrypt
+      fi
+    fi
+
+    # Available for Ubuntu 18/20
+    if [ "$OS" == "ubuntu" ]; then
+      if [ "$OS_VER_MAJOR" == "18" ] || [ "$OS_VER_MAJOR" == "20" ]; then
+        ask_letsencrypt
+      fi
+    fi
   fi
 
   # Firewall-cmd is available for CentOS
@@ -527,6 +586,38 @@ function main {
     if [[ "$CONFIRM_FIREWALL_CMD" =~ [Yy] ]]; then
       CONFIGURE_FIREWALL_CMD=true
     fi
+
+    ask_letsencrypt
+  fi
+
+  if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
+    while [ -z "$FQDN" ]; do
+        echo -n "* Set the FQDN to use for Let's Encrypt (node.example.com): "
+        read -r FQDN
+
+        ASK=false
+
+        [ -z "$FQDN" ] && print_error "FQDN cannot be empty"
+        [ -d "/etc/letsencrypt/live/$FQDN/" ] && print_error "A certificate with this FQDN already exists!" && FQDN="" && ASK=true
+
+        [ "$ASK" == true ] && echo -e -n "* Do you still want to automatically configure HTTPS using Let's Encrypt? (y/N): "
+        [ "$ASK" == true ] && read -r CONFIRM_SSL
+
+        if [[ ! "$CONFIRM_SSL" =~ [Yy] ]] && [ "$ASK" == true ]; then
+          CONFIGURE_LETSENCRYPT=false
+          FQDN="none"
+        fi
+    done
+  fi
+
+  if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
+    # set EMAIL
+    while [ -z "$EMAIL" ]; do
+        echo -n "* Enter email address for Let's Encrypt: "
+        read -r EMAIL
+
+        [ -z "$EMAIL" ] && print_error "Email cannot be empty"
+    done
   fi
 
   echo -n "* Proceed with installation? (y/N): "
