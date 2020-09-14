@@ -884,10 +884,8 @@ function main {
   detect_distro
 
   # Enable progress bar
-  
-  enable_trapping
-  setup_scroll_area
-  draw_progress_bar 0
+
+  enable_bar
 
   print_brake 70
   echo "* Pterodactyl panel installation script"

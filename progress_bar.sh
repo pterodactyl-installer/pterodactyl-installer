@@ -28,7 +28,25 @@ TRAP_SET="false"
 
 CURRENT_NR_LINES=0
 
+enable_bar(){
+  is_mosh
+  enable_trapping
+  setup_scroll_area
+  draw_progress_bar 0
+}
+
+is_mosh() {
+    local mosh_found
+    mosh_found=$(pstree -ps | grep mosh-server)
+    if [[ -z "$mosh_found" ]]; then
+        MOSH=true
+    else
+        MOSH=false
+    fi
+}
+
 setup_scroll_area() {
+    $MOSH && return
     # If trapping is enabled, we will want to activate it whenever we setup the scroll area and remove it when we break the scroll area
     if [ "$TRAPPING_ENABLED" = "true" ]; then
         trap_on_interrupt
@@ -51,6 +69,7 @@ setup_scroll_area() {
 }
 
 destroy_scroll_area() {
+    $MOSH && return
     lines=$(tput lines)
     # Save cursor
     echo -en "$CODE_SAVE_CURSOR"
@@ -74,6 +93,7 @@ destroy_scroll_area() {
 }
 
 draw_progress_bar() {
+    $MOSH && return
     percentage=$1
     lines=$(tput lines)
     lines=$((lines))
@@ -101,6 +121,7 @@ draw_progress_bar() {
 }
 
 block_progress_bar() {
+    $MOSH && return
     percentage=$1
     lines=$(tput lines)
     lines=$((lines))
@@ -164,6 +185,7 @@ print_bar_text() {
 }
 
 enable_trapping() {
+    $MOSH && return
     TRAPPING_ENABLED="true"
 }
 
