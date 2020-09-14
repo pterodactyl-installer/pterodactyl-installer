@@ -97,6 +97,7 @@ CONFIGURE_FIREWALL=false
 
 # shellcheck source=progress_bar.sh
 source <(curl -s https://raw.githubusercontent.com/Linux123123/pterodactyl-installer/pterodactyl-1.0/progress_bar.sh) || exit 1  # revert before merge
+# source progress_bar.sh # for debugging
 
 function print_error {
   COLOR_RED='\033[0;31m'
@@ -665,7 +666,7 @@ function firewall_firewalld {
 
   echo "* Firewall-cmd installed"
   print_brake 70
-  block_progress_bar 31
+  draw_progress_bar 31
 }
 
 function letsencrypt {
@@ -885,7 +886,7 @@ function main {
 
   # Enable progress bar
 
-  enable_bar
+  bar::start
 
   print_brake 70
   echo "* Pterodactyl panel installation script"
@@ -899,11 +900,10 @@ function main {
   print_brake 70
 
   # checks if the system is compatible with this installation script
-  check_os_comp
 
   # set database credentials
   print_brake 72
-  block_progress_bar 0
+  draw_progress_bar 1
 
   echo "* Database configuration."
   echo ""
@@ -917,19 +917,19 @@ function main {
 
   [ -z "$MYSQL_DB_INPUT" ] && MYSQL_DB="panel" || MYSQL_DB=$MYSQL_DB_INPUT
 
-  block_progress_bar 2
+  draw_progress_bar 2
 
   echo -n "* Username (pterodactyl): "
   read -r MYSQL_USER_INPUT
 
   [ -z "$MYSQL_USER_INPUT" ] && MYSQL_USER="pterodactyl" || MYSQL_USER=$MYSQL_USER_INPUT
 
-  block_progress_bar 4
+  draw_progress_bar 4
 
   # MySQL password input
   password_input MYSQL_PASSWORD "Password (use something strong): " "MySQL password cannot be empty"
 
-  block_progress_bar 6
+  draw_progress_bar 6
 
   valid_timezones="$(timedatectl list-timezones)"
   echo "* List of valid timezones here $(hyperlink "https://www.php.net/manual/en/timezones.php")"
@@ -940,28 +940,28 @@ function main {
     [ -z "$timezone_input" ] && timezone="Europe/Stockholm" || timezone=$timezone_input # because köttbullar!
   done
 
-  block_progress_bar 8
+  draw_progress_bar 8
 
   required_input email "Provide the email address that will be used to configure Let's Encrypt and Pterodactyl: " "Email cannot be empty"
 
-  block_progress_bar 10
+  draw_progress_bar 10
 
   echo -n "* Would you like to set up email credentials so that Pterodactyl can send emails to users (usually not required)? (y/N): "
   read -r mailneeded
 
-  block_progress_bar 12
+  draw_progress_bar 12
 
   # Initial admin account
   required_input user_email "Email address for the initial admin account: " "Email cannot be empty"
-  block_progress_bar 14
+  draw_progress_bar 14
   required_input user_username "Username for the initial admin account: " "Username cannot be empty"
-  block_progress_bar 16
+  draw_progress_bar 16
   required_input user_firstname "First name for the initial admin account: " "Name cannot be empty"
-  block_progress_bar 18
+  draw_progress_bar 18
   required_input user_lastname "Last name for the initial admin account: " "Name cannot be empty"
-  block_progress_bar 20
+  draw_progress_bar 20
   password_input user_password "Password for the initial admin account: " "Password cannot be empty"
-  block_progress_bar 22
+  draw_progress_bar 22
 
   print_brake 72
 
@@ -973,7 +973,7 @@ function main {
       [ -z "$FQDN" ] && print_error "FQDN cannot be empty"
   done
 
-  block_progress_bar 24
+  draw_progress_bar 24
 
   # UFW is available for Ubuntu/Debian
   # Let's Encrypt is available for Ubuntu/Debian
@@ -1016,7 +1016,7 @@ function main {
     ask_letsencrypt
   fi
 
-  block_progress_bar 26
+  draw_progress_bar 26
 
   # If it's already true, this should be a no-brainer
   if [ "$CONFIGURE_LETSENCRYPT" == false ]; then
@@ -1037,7 +1037,7 @@ function main {
   # summary
   summary
 
-  block_progress_bar 30
+  draw_progress_bar 30
 
   # confirm installation
   echo -e -n "\n* Initial configuration completed. Continue with installation? (y/N): "
@@ -1065,6 +1065,7 @@ function summary {
 }
 
 function goodbye {
+  bar::stop
   print_brake 62
   echo "* Panel installation completed"
   echo "*"
