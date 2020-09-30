@@ -98,10 +98,6 @@ CONFIGURE_FIREWALL_CMD=false
 # firewall status
 CONFIGURE_FIREWALL=false
 
-# pterodactyl version
-
-PTERODACTYL_VERSION="$(get_latest_release "pterodactyl/panel")"
-
 #################################
 ####### Version checking ########
 #################################
@@ -112,6 +108,10 @@ function get_latest_release() {
   grep '"tag_name":' |                                              # Get tag line
   sed -E 's/.*"([^"]+)".*/\1/'                                      # Pluck JSON value
 }
+
+# pterodactyl version
+
+PTERODACTYL_VERSION="$(get_latest_release "pterodactyl/panel")"
 
 #################################
 ####### Visual functions ########
