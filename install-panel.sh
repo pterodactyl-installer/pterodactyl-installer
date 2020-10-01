@@ -503,16 +503,6 @@ function selinux_allow {
   setsebool -P httpd_unified 1
 }
 
-function ubuntu_universedep {
-  if grep -q universe "$SOURCES_PATH"; then
-    # even if it detects it as already existent, we'll still run the apt command to make sure
-    add-apt-repository universe
-    echo "* Ubuntu universe repo already exists."
-  else
-    add-apt-repository universe
-  fi
-}
-
 function ubuntu20_dep {
   echo "* Installing dependencies for Ubuntu 20.."
 
@@ -520,7 +510,7 @@ function ubuntu20_dep {
   apt -y install software-properties-common curl apt-transport-https ca-certificates gnupg
 
   # Ubuntu universe repo
-  ubuntu_universedep
+  add-apt-repository universe
 
   # Install Dependencies
   apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis
@@ -538,7 +528,7 @@ function ubuntu18_dep {
   apt -y install software-properties-common curl apt-transport-https ca-certificates gnupg
 
   # Ubuntu universe repo
-  ubuntu_universedep
+  add-apt-repository universe
 
   # Add PPA for PHP (we need 7.3+ and bionic only has 7.2)
   LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php
