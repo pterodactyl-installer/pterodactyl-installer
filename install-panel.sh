@@ -781,7 +781,7 @@ function configure_nginx {
       sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" /etc/nginx/sites-available/pterodactyl.conf
 
       # replace all <domain> places with the correct domain
-      sed -i -e "s@<domain>@${FQDN}@g" /etc/nginx/conf.d/pterodactyl.conf
+      sed -i -e "s@<domain>@${FQDN}@g" /etc/nginx/sites-available/pterodactyl.conf
 
       # on debian 8/9, TLS v1.3 is not supported (see #76)
       # this if statement can be refactored into a one-liner but I think this is more readable
