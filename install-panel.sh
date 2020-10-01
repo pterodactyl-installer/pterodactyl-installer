@@ -722,7 +722,7 @@ function letsencrypt {
 
   # Install certbot
   if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
-    apt-get -y install certbot python-certbot-nginx
+    apt-get -y install certbot python3-certbot-nginx
   elif [ "$OS" == "centos" ]; then
     [ "$OS_VER_MAJOR" == "7" ] && yum -y -q install certbot python-certbot-nginx
     [ "$OS_VER_MAJOR" == "8" ] && dnf -y -q install certbot python-certbot-nginx
