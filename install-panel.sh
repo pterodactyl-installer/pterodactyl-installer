@@ -845,6 +845,7 @@ function perform_install {
   ptdl_dl
   create_database
   configure
+  set_folder_permissions
   insert_cronjob
   install_pteroq
   configure_nginx
