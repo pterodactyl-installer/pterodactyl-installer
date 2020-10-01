@@ -86,9 +86,6 @@ CONFIGURE_LETSENCRYPT=false
 PANEL_DL_URL="https://github.com/pterodactyl/panel/releases/download/v1.0.0-rc.6/panel.tar.gz" # REVERT THIS BEFORE MERGING!
 CONFIGS_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/pterodactyl-1.0/configs" # REVERT THIS BEFORE MERGING!
 
-# apt sources path
-SOURCES_PATH="/etc/apt/sources.list"
-
 # ufw firewall
 CONFIGURE_UFW=false
 
