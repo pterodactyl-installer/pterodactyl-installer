@@ -110,7 +110,6 @@ function get_latest_release() {
 }
 
 # pterodactyl version
-
 PTERODACTYL_VERSION="$(get_latest_release "pterodactyl/panel")"
 
 #################################
@@ -484,11 +483,18 @@ function dnf_update {
   dnf -y upgrade
 }
 
-function enable_services {
+function enable_services_debian_based {
+  systemctl enable mariadb
+  systemctl enable redis-server
+  systemctl start mariadb
+  systemctl start redis-server
+}
+
+function enable_services_centos_based {
   systemctl enable mariadb
   systemctl enable redis
   systemctl start mariadb
-  systemctl start redis
+  systemctl start redis-server
 }
 
 function selinux_allow {
@@ -520,7 +526,7 @@ function ubuntu20_dep {
   apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis
 
   # Enable services
-  enable_services
+  enable_services_debian_based
 
   echo "* Dependencies for Ubuntu installed!"
 }
@@ -547,7 +553,7 @@ function ubuntu18_dep {
   apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis
 
   # Enable services
-  enable_services
+  enable_services_debian_based
 
   echo "* Dependencies for Ubuntu installed!"
 }
@@ -574,7 +580,7 @@ function debian_stretch_dep {
   apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server
 
   # Enable services
-  enable_services
+  enable_services_debian_based
 
   echo "* Dependencies for Debian 8/9 installed!"
 }
@@ -598,7 +604,7 @@ function debian_dep {
   apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server
 
   # Enable services
-  enable_services
+  enable_services_debian_based
 
   echo "* Dependencies for Debian 10 installed!"
 }
@@ -623,7 +629,7 @@ function centos7_dep {
   yum -y install php php-common php-tokenizer php-curl php-fpm php-cli php-json php-mysqlnd php-mcrypt php-gd php-mbstring php-pdo php-zip php-bcmath php-dom php-opcache mariadb-server nginx curl tar zip unzip git redis
 
   # Enable services
-  enable_services
+  enable_services_centos_based
 
   # SELinux (allow nginx and redis)
   selinux_allow
@@ -651,7 +657,7 @@ function centos8_dep {
   dnf install -y nginx curl tar zip unzip git redis
 
   # Enable services
-  enable_services
+  enable_services_centos_based
 
   # SELinux (allow nginx and redis)
   selinux_allow
