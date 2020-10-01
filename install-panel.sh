@@ -733,7 +733,7 @@ function letsencrypt {
   fi
 
   # Obtain certificate
-  certbot certonly --nginx --redirect --uir --no-eff-email --email "$email" -d "$FQDN" || FAILED=true
+  certbot --nginx --redirect --uir --no-eff-email --email "$email" -d "$FQDN" || FAILED=true
 
   # Check if it succeded
   if [ ! -d "/etc/letsencrypt/live/$FQDN/" ] || [ "$FAILED" == true ]; then
