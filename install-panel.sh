@@ -758,18 +758,15 @@ function letsencrypt {
 function configure_nginx {
   echo "* Configuring nginx .."
 
-  if [ "$ASSUME_SSL" == true ]; then
-    DL_FILE="nginx_ssl.conf"
-  else
-    DL_FILE="nginx.conf"
-  fi
-
   if [ "$OS" == "centos" ]; then
       # remove default config
       rm -rf /etc/nginx/conf.d/default
 
       # download new config
-      curl -o /etc/nginx/conf.d/pterodactyl.conf $CONFIGS_URL/$DL_FILE
+      curl -o /etc/nginx/conf.d/pterodactyl.conf $CONFIGS_URL/nginx.conf
+
+      # replace all <domain> places with the correct domain
+      sed -i -e "s@<domain>@${FQDN}@g" /etc/nginx/conf.d/pterodactyl.conf
 
       # replace all <php_socket> places with correct socket "path"
       sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" /etc/nginx/conf.d/pterodactyl.conf
@@ -778,10 +775,13 @@ function configure_nginx {
       rm -rf /etc/nginx/sites-enabled/default
 
       # download new config
-      curl -o /etc/nginx/sites-available/pterodactyl.conf $CONFIGS_URL/$DL_FILE
+      curl -o /etc/nginx/sites-available/pterodactyl.conf $CONFIGS_URL/nginx.conf
 
       # replace all <php_socket> places with correct socket "path"
       sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" /etc/nginx/sites-available/pterodactyl.conf
+
+      # replace all <domain> places with the correct domain
+      sed -i -e "s@<domain>@${FQDN}@g" /etc/nginx/conf.d/pterodactyl.conf
 
       # on debian 8/9, TLS v1.3 is not supported (see #76)
       # this if statement can be refactored into a one-liner but I think this is more readable
