@@ -733,7 +733,7 @@ function letsencrypt {
   fi
 
   # Obtain certificate
-  certbot certonly --no-eff-email --email "$email" --nginx -d "$FQDN" || FAILED=true
+  certbot certonly --redirect --uir --no-eff-email --email "$email" --nginx -d "$FQDN" || FAILED=true
 
   # Check if it succeded
   if [ ! -d "/etc/letsencrypt/live/$FQDN/" ] || [ "$FAILED" == true ]; then
@@ -771,9 +771,6 @@ function configure_nginx {
       # download new config
       curl -o /etc/nginx/conf.d/pterodactyl.conf $CONFIGS_URL/$DL_FILE
 
-      # replace all <domain> places with the correct domain
-      sed -i -e "s@<domain>@${FQDN}@g" /etc/nginx/conf.d/pterodactyl.conf
-
       # replace all <php_socket> places with correct socket "path"
       sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" /etc/nginx/conf.d/pterodactyl.conf
   else
@@ -782,9 +779,6 @@ function configure_nginx {
 
       # download new config
       curl -o /etc/nginx/sites-available/pterodactyl.conf $CONFIGS_URL/$DL_FILE
-
-      # replace all <domain> places with the correct domain
-      sed -i -e "s@<domain>@${FQDN}@g" /etc/nginx/sites-available/pterodactyl.conf
 
       # replace all <php_socket> places with correct socket "path"
       sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" /etc/nginx/sites-available/pterodactyl.conf
@@ -801,10 +795,6 @@ function configure_nginx {
       ln -s /etc/nginx/sites-available/pterodactyl.conf /etc/nginx/sites-enabled/pterodactyl.conf
   fi
 
-  # restart nginx
-  if [ "$CONFIGURE_LETSENCRYPT" == true ] || { [ "$CONFIGURE_LETSENCRYPT" == false ] && [ "$ASSUME_SSL" == false ]; }; then
-    systemctl restart nginx
-  fi
   echo "* nginx configured!"
 }
 
