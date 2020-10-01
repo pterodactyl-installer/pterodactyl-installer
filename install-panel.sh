@@ -828,8 +828,6 @@ function perform_install {
     [ "$OS_VER_MAJOR" == "10" ] && debian_dep
     fi
 
-    [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
-
   elif [ "$OS" == "centos" ]; then
     [ "$OS_VER_MAJOR" == "7" ] && yum_update
     [ "$OS_VER_MAJOR" == "8" ] && dnf_update
@@ -849,7 +847,7 @@ function perform_install {
   insert_cronjob
   install_pteroq
   configure_nginx
-  letsencrypt
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
 }
 
 function main {
