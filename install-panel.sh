@@ -491,7 +491,7 @@ function enable_services_centos_based {
   systemctl enable mariadb
   systemctl enable redis
   systemctl start mariadb
-  systemctl start redis-server
+  systemctl start redis
 }
 
 function selinux_allow {
