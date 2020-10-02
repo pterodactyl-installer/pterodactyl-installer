@@ -437,7 +437,7 @@ function set_folder_permissions {
   # if os is ubuntu or debian, we do this
   if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
     chown -R www-data:www-data ./*
-  elif [ "$OS" == "centos" ] && [ "$WEBSERVER" == "nginx" ]; then
+  elif [ "$OS" == "centos" ]; then
     chown -R nginx:nginx ./*
   else
     print_error "Invalid webserver and OS setup."
@@ -935,7 +935,7 @@ function main {
 
 function summary {
   print_brake 62
-  echo "* Pterodactyl panel $PTERODACTYL_VERSION with $WEBSERVER on $OS"
+  echo "* Pterodactyl panel $PTERODACTYL_VERSION with nginx on $OS"
   echo "* Database name: $MYSQL_DB"
   echo "* Database user: $MYSQL_USER"
   echo "* Database password: (censored)"
