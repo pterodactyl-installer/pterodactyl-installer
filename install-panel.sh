@@ -667,12 +667,12 @@ function firewall_ufw {
   apt install -y ufw
 
   echo -e "\n* Enabling Uncomplicated Firewall (UFW)"
-  echo "* Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
+  echo "* Opening port 22 (SSH), 80 (HTTP) and (optionaly) 443 (HTTPS)"
 
   # pointing to /dev/null silences the command output
   ufw allow ssh > /dev/null
   ufw allow http > /dev/null
-  ufw allow https > /dev/null
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && ufw allow https > /dev/null
 
   ufw enable
   ufw status numbered | sed '/v6/d'
@@ -680,7 +680,7 @@ function firewall_ufw {
 
 function firewall_firewalld {
   echo -e "\n* Enabling firewall_cmd (firewalld)"
-  echo "* Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
+  echo "* Opening port 22 (SSH), 80 (HTTP) and (optionaly) 443 (HTTPS)"
 
   # Install
   [ "$OS_VER_MAJOR" == "7" ] && yum -y -q install firewalld > /dev/null
@@ -690,14 +690,9 @@ function firewall_firewalld {
   systemctl --now enable firewalld > /dev/null # Enable and start
 
   # Configure
-  firewall-cmd --add-port 8080/tcp --permanent -q # Port 8080
-  firewall-cmd --add-port 2022/tcp --permanent -q # Port 2022
-  [ "$CONFIGURE_LETSENCRYPT" == true ] && firewall-cmd --add-port 80/tcp --permanent -q # Port 80
-  [ "$CONFIGURE_LETSENCRYPT" == true ] && firewall-cmd --add-port 443/tcp --permanent -q # Port 443
-
-  firewall-cmd --permanent --zone=trusted --change-interface=pterodactyl0 -q
-  firewall-cmd --zone=trusted --add-masquerade --permanent
-  firewall-cmd --ad-service=ssh --permanent -q # Port 22
+  firewall-cmd --add-service=http --permanent -q # Port 80
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && firewall-cmd --add-service=https --permanent -q # Port 443
+  firewall-cmd --add-service=ssh --permanent -q  # Port 22
   firewall-cmd --reload -q # Enable firewall
 
   echo "* Firewall-cmd installed"
