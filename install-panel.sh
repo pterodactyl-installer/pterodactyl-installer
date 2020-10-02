@@ -427,9 +427,6 @@ function configure {
     --name-last="$user_lastname" \
     --password="$user_password" \
     --admin=1
-
-  # set folder permissions now
-  # set_folder_permissions !!!!!!!!!
 }
 
 # set the correct folder permissions depending on OS and webserver
