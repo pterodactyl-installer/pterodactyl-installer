@@ -45,17 +45,6 @@ if ! [ -x "$(command -v curl)" ]; then
   exit 1
 fi
 
-# check if we can detect an already existing installation
-if [ -d "/var/www/pterodactyl" ]; then
-  print_warning "The script has detected that you already have Pterodactyl panel on your system! You cannot run the script multiple times, it will fail!"
-  echo -e -n "* Are you sure you want to proceed? (y/N): "
-  read -r CONFIRM_PROCEED
-  if [[ ! "$CONFIRM_PROCEED" =~ [Yy] ]]; then
-    print_error "Installation aborted!"
-    exit 1
-  fi
-fi
-
 #################################
 ########## Variables ############
 #################################
@@ -820,6 +809,16 @@ function perform_install {
 }
 
 function main {
+  # check if we can detect an already existing installation
+  if [ -d "/var/www/pterodactyl" ]; then
+    print_warning "The script has detected that you already have Pterodactyl panel on your system! You cannot run the script multiple times, it will fail!"
+    echo -e -n "* Are you sure you want to proceed? (y/N): "
+    read -r CONFIRM_PROCEED
+    if [[ ! "$CONFIRM_PROCEED" =~ [Yy] ]]; then
+      print_error "Installation aborted!"
+      exit 1
+    fi
+  fi
 
   # detect distro
   detect_distro
