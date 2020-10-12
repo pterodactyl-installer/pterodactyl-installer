@@ -54,7 +54,6 @@ error() {
   echo ""
 }
 
-beta=false
 panel=false
 wings=false
 
@@ -90,12 +89,5 @@ while [ "$panel" == false ] && [ "$wings" == false ]; do
   esac
 done
 
-echo -n "* Would you like to install the beta release of Pterodactyl (pterodactyl-1.0 beta, unstable)? (y/N) "
-read -r install_beta
-[[ "$install_beta" =~ [Yy] ]] && beta=true
-
-[ "$panel" == true ] && [ "$beta" == true ] && bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/pterodactyl-1.0/install-panel.sh)
-[ "$panel" == true ] && [ "$beta" == false ] && bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install-panel.sh)
-
-[ "$wings" == true ] && [ "$beta" == true ] && bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/pterodactyl-1.0/install-wings.sh)
-[ "$wings" == true ] && [ "$beta" == false ] && bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install-daemon.sh)
+[ "$panel" == true ] && bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install-panel.sh)
+[ "$wings" == true ] && bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install-wings.sh)
