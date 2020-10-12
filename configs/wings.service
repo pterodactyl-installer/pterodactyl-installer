@@ -4,11 +4,10 @@ After=docker.service
 
 [Service]
 User=root
-#Group=some_group
-WorkingDirectory=/srv/daemon
+WorkingDirectory=/etc/pterodactyl
 LimitNOFILE=4096
 PIDFile=/var/run/wings/daemon.pid
-ExecStart=/usr/bin/node /srv/daemon/src/index.js
+ExecStart=/usr/local/bin/wings
 Restart=on-failure
 StartLimitInterval=600
 

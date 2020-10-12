@@ -22,7 +22,7 @@ If applicable, add screenshots to help explain your problem.
 
 **OS (please complete the following information):**
  - OS: [e.g. Ubuntu, Debian, CentOS]
- - Installation: [panel or daemon]
+ - Installation: [panel or wings]
 
 **Additional context**
 Add any other context about the problem here.

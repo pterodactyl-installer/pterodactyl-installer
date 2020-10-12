@@ -1,12 +1,26 @@
 #!/bin/bash
 
+set -e
+
 #############################################################################
 #                                                                           #
-# Project 'pterodactyl-installer' for daemon                                #
+# Project 'pterodactyl-installer' for wings                                 #
 #                                                                           #
 # Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al.   #
 #                                                                           #
-# This script is licensed under the terms of the GNU GPL v3.0 license       #
+#   This program is free software: you can redistribute it and/or modify    #
+#   it under the terms of the GNU General Public License as published by    #
+#   the Free Software Foundation, either version 3 of the License, or       #
+#   (at your option) any later version.                                     #
+#                                                                           #
+#   This program is distributed in the hope that it will be useful,         #
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of          #
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the           #
+#   GNU General Public License for more details.                            #
+#                                                                           #
+#   You should have received a copy of the GNU General Public License       #
+#   along with this program.  If not, see <https://www.gnu.org/licenses/>.  #
+#                                                                           #
 # https://github.com/vilhelmprytz/pterodactyl-installer/blob/master/LICENSE #
 #                                                                           #
 # This script is not associated with the official Pterodactyl Project.      #
@@ -21,11 +35,10 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 # check for curl
-CURLPATH="$(command -v curl)"
-if [ -z "$CURLPATH" ]; then
-    echo "* curl is required in order for this script to work."
-    echo "* install using apt (Debian and derivatives) or yum/dnf (CentOS)"
-    exit 1
+if ! [ -x "$(command -v curl)" ]; then
+  echo "* curl is required in order for this script to work."
+  echo "* install using apt (Debian and derivatives) or yum/dnf (CentOS)"
+  exit 1
 fi
 
 # define version using information from GitHub
@@ -36,19 +49,29 @@ get_latest_release() {
 }
 
 echo "* Retrieving release information.."
-VERSION="$(get_latest_release "pterodactyl/daemon")"
+VERSION="$(get_latest_release "pterodactyl/wings")"
 
 echo "* Latest version is $VERSION"
 
 # download URLs
-DL_URL="https://github.com/pterodactyl/daemon/releases/latest/download/daemon.tar.gz"
+DL_URL="https://github.com/pterodactyl/wings/releases/latest/download/wings_linux_amd64"
 CONFIGS_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/configs"
 
 COLOR_RED='\033[0;31m'
 COLOR_NC='\033[0m'
 
-INSTALL_STANDALONE_SFTP_SERVER=false
 INSTALL_MARIADB=false
+
+# ufw firewall
+CONFIGURE_UFW=false
+
+# firewall_cmd firewall
+CONFIGURE_FIREWALL_CMD=false
+
+# SSL (Let's Encrypt)
+CONFIGURE_LETSENCRYPT=false
+FQDN=""
+EMAIL=""
 
 # visual functions
 function print_error {
@@ -73,6 +96,9 @@ function print_brake {
     echo ""
 }
 
+hyperlink() {
+  echo -e "\e]8;;${1}\a${1}\e]8;;\a"
+}
 
 # other functions
 function detect_distro {
@@ -128,17 +154,9 @@ function check_os_comp {
   fi
 
   if [ "$OS" == "ubuntu" ]; then
-    if [ "$OS_VER_MAJOR" == "16" ]; then
-      SUPPORTED=true
-    elif [ "$OS_VER_MAJOR" == "18" ]; then
+    if [ "$OS_VER_MAJOR" == "18" ]; then
       SUPPORTED=true
     elif [ "$OS_VER_MAJOR" == "20" ]; then
-      SUPPORTED=true
-    else
-      SUPPORTED=false
-    fi
-  elif [ "$OS" == "zorin" ]; then
-    if [ "$OS_VER_MAJOR" == "15" ]; then
       SUPPORTED=true
     else
       SUPPORTED=false
@@ -174,12 +192,16 @@ function check_os_comp {
 
   # check virtualization
   echo -e  "* Installing virt-what..."
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
-    apt-get -y update -qq > /dev/null
+  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
+    # silence dpkg output
+    export DEBIAN_FRONTEND=noninteractive
 
     # install virt-what
-    apt-get install -y virt-what -qq > /dev/null
+    apt-get -y update -qq
+    apt-get install -y virt-what -qq
 
+    # unsilence
+    unset DEBIAN_FRONTEND
   elif [ "$OS" == "centos" ]; then
     if [ "$OS_VER_MAJOR" == "7" ]; then
       yum -q -y update
@@ -217,36 +239,65 @@ function check_os_comp {
 ############################
 ## INSTALLATION FUNCTIONS ##
 ############################
+
+letsencrypt() {
+  FAILED=false
+
+  # Install certbot
+  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
+    apt-get install certbot -y
+  elif [ "$OS" == "centos" ]; then
+    [ "$OS_VER_MAJOR" == "7" ] && yum install certbot
+    [ "$OS_VER_MAJOR" == "8" ] && dnf install certbot
+  else
+    # exit
+    print_error "OS not supported."
+    exit 1
+  fi
+
+  # If user has nginx
+  systemctl stop nginx || true
+
+  # Obtain certificate
+  certbot certonly --no-eff-email --email "$EMAIL" --standalone -d "$FQDN" || FAILED=true
+
+  systemctl start nginx || true
+
+  # Check if it succeded
+  if [ ! -d "/etc/letsencrypt/live/$FQDN/" ] || [ "$FAILED" == true ]; then
+    print_warning "The process of obtaining a Let's Encrypt certificate failed!"
+  fi
+}
+
 function apt_update {
   apt update -y
   apt upgrade -y
 }
 
 function install_dep {
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
+  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
     apt_update
 
     # install dependencies
-    apt -y install tar unzip make gcc g++ python
+    apt -y install curl
   elif [ "$OS" == "centos" ]; then
     if [ "$OS_VER_MAJOR" == "7" ]; then
       yum -y update
 
       # install dependencies
-      yum -y install tar unzip make gcc gcc-c++ python
+      yum -y install curl
     elif [ "$OS_VER_MAJOR" == "8" ]; then
       dnf -y update
 
       # install dependencies
-      dnf install -y tar unzip make gcc gcc-c++ python2
-
-      alternatives --set python /usr/bin/python2
+      dnf install -y curl
     fi
   else
     print_error "Invalid OS."
     exit 1
   fi
 }
+
 function install_docker {
   echo "* Installing docker .."
   if [ "$OS" == "debian" ]; then
@@ -273,13 +324,13 @@ function install_docker {
 
     # install docker
     apt-get update
-    apt-get -y install docker-ce
+    apt-get -y install docker-ce docker-ce-cli containerd.io
 
     # make sure it's enabled & running
     systemctl start docker
     systemctl enable docker
 
-  elif [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
+  elif [ "$OS" == "ubuntu" ]; then
     # install dependencies for Docker
     apt-get update
     apt-get -y install \
@@ -302,7 +353,7 @@ function install_docker {
 
     # install docker
     apt-get update
-    apt-get -y install docker-ce
+    apt-get -y install docker-ce docker-ce-cli containerd.io
 
     # make sure it's enabled & running
     systemctl start docker
@@ -319,7 +370,7 @@ function install_docker {
         https://download.docker.com/linux/centos/docker-ce.repo
 
       # install Docker
-      yum install -y docker-ce
+      yum install -y docker-ce docker-ce-cli containerd.io
     elif [ "$OS_VER_MAJOR" == "8" ]; then
       # install dependencies for Docker
       dnf install -y dnf-utils device-mapper-persistent-data lvm2
@@ -328,7 +379,7 @@ function install_docker {
       dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
 
       # install Docker
-      dnf install -y docker-ce --nobest
+      dnf install -y docker-ce docker-ce-cli containerd.io --nobest
     fi
 
     # make sure it's enabled & running
@@ -339,31 +390,13 @@ function install_docker {
   echo "* Docker has now been installed."
 }
 
-function install_nodejs {
-  if [ "$OS" == "debian" ]; then
-    curl -sL https://deb.nodesource.com/setup_10.x | bash -
-    apt-get install -y nodejs
-  elif [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ]; then
-    curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
-    apt -y install nodejs
-  elif [ "$OS" == "centos" ]; then
-    curl --silent --location https://rpm.nodesource.com/setup_10.x | sudo bash -
-
-    if [ "$OS_VER_MAJOR" == "7" ]; then
-      yum -y install nodejs
-    elif [ "$OS_VER_MAJOR" == "8" ]; then
-      dnf -y install nodejs
-    fi
-  fi
-}
-
 function ptdl_dl {
-  echo "* Installing pterodactyl daemon .. "
-  mkdir -p /srv/daemon /srv/daemon-data
-  cd /srv/daemon || exit
+  echo "* Installing Pterodactyl Wings .. "
 
-  curl -L "$DL_URL" | tar --strip-components=1 -xzv
-  npm install --only=production --unsafe-perm
+  mkdir -p /etc/pterodactyl
+  curl -L -o /usr/local/bin/wings "$DL_URL"
+
+  chmod u+x /usr/local/bin/wings
 
   echo "* Done."
 }
@@ -376,22 +409,8 @@ function systemd_file {
   echo "* Installed systemd service!"
 }
 
-function install_standalone_sftp_server {
-  echo "* Installing standalone SFTP server.."
-
-  INSTALL_PATH="/srv/daemon/sftp-server"
-
-  curl -Lo $INSTALL_PATH https://github.com/pterodactyl/sftp-server/releases/download/v1.0.4/sftp-server
-  chmod +x $INSTALL_PATH
-
-  curl -o /etc/systemd/system/pterosftp.service $CONFIGS_URL/pterosftp.service
-
-  systemctl daemon-reload
-  systemctl enable pterosftp
-}
-
 function install_mariadb {
-  if [ "$OS" == "ubuntu" ] || [ "$OS" == "zorin" ] || [ "$OS" == "debian" ]; then
+  if [ "$OS" == "ubuntu" ] || [ "$OS" == "debian" ]; then
     curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
     apt update && apt install mariadb-server -y
   elif [ "$OS" == "centos" ]; then
@@ -405,28 +424,94 @@ function install_mariadb {
   systemctl start mariadb
 }
 
+#################################
+##### OS SPECIFIC FUNCTIONS #####
+#################################
+
+function firewall_ufw {
+  apt update
+  apt install ufw -y
+
+  echo -e "\n* Enabling Uncomplicated Firewall (UFW)"
+  echo "* Opening port 22 (SSH), 8080 (Daemon Port), 2022 (Daemon SFTP Port)"
+
+  # pointing to /dev/null silences the command output
+  ufw allow ssh > /dev/null
+  ufw allow 8080 > /dev/null
+  ufw allow 2022 > /dev/null
+
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && ufw allow http > /dev/null
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && ufw allow https > /dev/null
+
+  ufw enable
+  ufw status numbered | sed '/v6/d'
+}
+
+function firewall_firewalld {
+  echo -e "\n* Enabling firewall_cmd (firewalld)"
+  echo "* Opening port 22 (SSH), 8080 (Daemon Port), 2022 (Daemon SFTP Port)"
+
+  # Install
+  [ "$OS_VER_MAJOR" == "7" ] && yum -y -q update
+  [ "$OS_VER_MAJOR" == "7" ] && yum -y -q install firewalld > /dev/null
+  [ "$OS_VER_MAJOR" == "8" ] && dnf -y -q update
+  [ "$OS_VER_MAJOR" == "8" ] && dnf -y -q install firewalld > /dev/null
+
+  # Enable
+  systemctl --now enable firewalld > /dev/null # Enable and start
+
+  # Configure
+  firewall-cmd --add-port 8080/tcp --permanent -q # Port 8080
+  firewall-cmd --add-port 2022/tcp --permanent -q # Port 2022
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && firewall-cmd --add-port 80/tcp --permanent -q # Port 80
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && firewall-cmd --add-port 443/tcp --permanent -q # Port 443
+
+  firewall-cmd --permanent --zone=trusted --change-interface=pterodactyl0 -q
+  firewall-cmd --zone=trusted --add-masquerade --permanent
+  firewall-cmd --ad-service=ssh --permanent -q # Port 22
+  firewall-cmd --reload -q # Enable firewall
+
+  echo "* Firewall-cmd installed"
+  print_brake 70
+}
+
 ####################
 ## MAIN FUNCTIONS ##
 ####################
 function perform_install {
-  echo "* Installing pterodactyl daemon.."
-
+  echo "* Installing pterodactyl wings.."
+  [ "$CONFIGURE_UFW" == true ] && firewall_ufw
+  [ "$CONFIGURE_FIREWALL_CMD" == true ] && firewall_firewalld
   install_dep
   install_docker
-  install_nodejs
   ptdl_dl
   systemd_file
-  [ "$INSTALL_STANDALONE_SFTP_SERVER" == true ] && install_standalone_sftp_server
   [ "$INSTALL_MARIADB" == true ] && install_mariadb
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
 
   # return true if script has made it this far
   return 0
 }
 
+ask_letsencrypt() {
+  if [ "$CONFIGURE_UFW" == false ] && [ "$CONFIGURE_FIREWALL_CMD" == false ]; then
+    print_warning "Let's Encrypt requires port 80/443 to be opened! You have opted out of the automatic firewall configuration; use this at your own risk (if port 80/443 is closed, the script will fail)!"
+  fi
+
+  print_warning "You cannot use Let's Encrypt with your hostname as an IP address! It must be a FQDN (e.g. node.example.org)."
+
+  echo -e -n "* Do you want to automatically configure HTTPS using Let's Encrypt? (y/N): "
+  read -r CONFIRM_SSL
+
+  if [[ "$CONFIRM_SSL" =~ [Yy] ]]; then
+    CONFIGURE_LETSENCRYPT=true
+  fi
+}
+
 function main {
   # check if we can detect an already existing installation
-  if [ -d "/srv/daemon" ]; then
-    print_warning "The script has detected that you already have Pterodactyl daemon on your system! You cannot run the script multiple times, it will fail!"
+  if [ -d "/etc/pterodactyl" ]; then
+    print_warning "The script has detected that you already have Pterodactyl wings on your system! You cannot run the script multiple times, it will fail!"
     echo -e -n "* Are you sure you want to proceed? (y/N): "
     read -r CONFIRM_PROCEED
     if [[ ! "$CONFIRM_PROCEED" =~ [Yy] ]]; then
@@ -442,7 +527,7 @@ function main {
   check_os_comp
 
   print_brake 70
-  echo "* Pterodactyl daemon installation script"
+  echo "* Pterodactyl Wings installation script"
   echo "*"
   echo "* Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al."
   echo "* https://github.com/vilhelmprytz/pterodactyl-installer"
@@ -453,26 +538,87 @@ function main {
   print_brake 70
 
   echo "* "
-  echo "* The installer will install Docker, required dependencies for the daemon"
-  echo "* as well as the daemon itself. But it's still required to create the node"
+  echo "* The installer will install Docker, required dependencies for Wings"
+  echo "* as well as Wings itself. But it's still required to create the node"
   echo "* on the panel and then place the configuration file on the node manually after"
   echo "* the installation has finished. Read more about this process on the"
-  echo "* official documentation: https://pterodactyl.io/daemon/installing.html#configure-daemon"
+  echo "* official documentation: $(hyperlink 'https://pterodactyl.io/wings/1.0/installing.html#configure-daemon')"
   echo "* "
-  echo -e "* ${COLOR_RED}Note${COLOR_NC}: this script will not start the daemon automatically (will install systemd service, not start it)."
+  echo -e "* ${COLOR_RED}Note${COLOR_NC}: this script will not start Wings automatically (will install systemd service, not start it)."
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: this script will not enable swap (for docker)."
   print_brake 42
-
-  echo -n "* Would you like to install the standalone SFTP server after daemon has installed? (y/N): "
-
-  read -r CONFIRM_STANDALONE_SFTP_SERVER
-  [[ "$CONFIRM_STANDALONE_SFTP_SERVER" =~ [Yy] ]] && INSTALL_STANDALONE_SFTP_SERVER=true
 
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you installed the Pterodactyl panel on the same machine, do not use this option or the script will fail!"
   echo -n "* Would you like to install MariaDB (MySQL) server on the daemon as well? (y/N): "
 
   read -r CONFIRM_INSTALL_MARIADB
   [[ "$CONFIRM_INSTALL_MARIADB" =~ [Yy] ]] && INSTALL_MARIADB=true
+
+  # UFW is available for Ubuntu/Debian
+  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
+    echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
+    read -r CONFIRM_UFW
+
+    if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
+      CONFIGURE_UFW=true
+    fi
+
+    # Available for Debian 9/10
+    if [ "$OS" == "debian" ]; then
+      if [ "$OS_VER_MAJOR" == "9" ] || [ "$OS_VER_MAJOR" == "10" ]; then
+        ask_letsencrypt
+      fi
+    fi
+
+    # Available for Ubuntu 18/20
+    if [ "$OS" == "ubuntu" ]; then
+      if [ "$OS_VER_MAJOR" == "18" ] || [ "$OS_VER_MAJOR" == "20" ]; then
+        ask_letsencrypt
+      fi
+    fi
+  fi
+
+  # Firewall-cmd is available for CentOS
+  if [ "$OS" == "centos" ]; then
+    echo -e -n "* Do you want to automatically configure firewall-cmd (firewall)? (y/N): "
+    read -r CONFIRM_FIREWALL_CMD
+
+    if [[ "$CONFIRM_FIREWALL_CMD" =~ [Yy] ]]; then
+      CONFIGURE_FIREWALL_CMD=true
+    fi
+
+    ask_letsencrypt
+  fi
+
+  if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
+    while [ -z "$FQDN" ]; do
+        echo -n "* Set the FQDN to use for Let's Encrypt (node.example.com): "
+        read -r FQDN
+
+        ASK=false
+
+        [ -z "$FQDN" ] && print_error "FQDN cannot be empty"
+        [ -d "/etc/letsencrypt/live/$FQDN/" ] && print_error "A certificate with this FQDN already exists!" && FQDN="" && ASK=true
+
+        [ "$ASK" == true ] && echo -e -n "* Do you still want to automatically configure HTTPS using Let's Encrypt? (y/N): "
+        [ "$ASK" == true ] && read -r CONFIRM_SSL
+
+        if [[ ! "$CONFIRM_SSL" =~ [Yy] ]] && [ "$ASK" == true ]; then
+          CONFIGURE_LETSENCRYPT=false
+          FQDN="none"
+        fi
+    done
+  fi
+
+  if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
+    # set EMAIL
+    while [ -z "$EMAIL" ]; do
+        echo -n "* Enter email address for Let's Encrypt: "
+        read -r EMAIL
+
+        [ -z "$EMAIL" ] && print_error "Email cannot be empty"
+    done
+  fi
 
   echo -n "* Proceed with installation? (y/N): "
 
@@ -486,14 +632,22 @@ function main {
 function goodbye {
   echo ""
   print_brake 70
-  echo "* Installation completed."
-  echo ""
-  echo "* Make sure you create the node within the panel and then copy"
-  echo "* the config to this node. You may then start the daemon using "
+  echo "* Wings installation completed"
+  echo "*"
+  echo "* To continue, you need to configure Wings to run with your panel"
+  echo "* Please refer to the official guide, $(hyperlink 'https://pterodactyl.io/wings/1.0/installing.html#configure-daemon')"
+  echo "*"
+  echo "* Once the configuration has been created (usually in '/etc/pterodactyl/config.yml')"
+  echo "* you can then start Wings manually to verify that it's working"
+  echo "*"
+  echo "* sudo wings"
+  echo "*"
+  echo "* Once you have verified that it is working, you can then start it as a service (runs in the background)"
+  echo "*"
   echo "* systemctl start wings"
-  echo "* "
+  echo "*"
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: It is recommended to enable swap (for Docker, read more about it in official documentation)."
-  echo -e "* ${COLOR_RED}Note${COLOR_NC}: This script does not configure your firewall. Ports 8080 and 2022 needs to be open."
+  echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you haven't configured your firewall, ports 8080 and 2022 needs to be open."
   print_brake 70
   echo ""
 }
