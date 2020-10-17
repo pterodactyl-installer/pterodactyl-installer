@@ -198,23 +198,26 @@ function ask_letsencrypt {
 }
 
 function ask_firewall {
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
-    echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
-    read -r CONFIRM_UFW
+  case "$OS" in
+    ubuntu | debian)
+      echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
+      read -r CONFIRM_UFW
 
-    if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
-      CONFIGURE_UFW=true
-      CONFIGURE_FIREWALL=true
-    fi
-  elif [ "$OS" == "centos" ]; then
-    echo -e -n "* Do you want to automatically configure firewall-cmd (firewall)? (y/N): "
-    read -r CONFIRM_FIREWALL_CMD
+      if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
+        CONFIGURE_UFW=true
+        CONFIGURE_FIREWALL=true
+      fi
+      ;;
+    centos)
+      echo -e -n "* Do you want to automatically configure firewall-cmd (firewall)? (y/N): "
+      read -r CONFIRM_FIREWALL_CMD
 
-    if [[ "$CONFIRM_FIREWALL_CMD" =~ [Yy] ]]; then
-      CONFIGURE_FIREWALL_CMD=true
-      CONFIGURE_FIREWALL=true
-    fi
-  fi
+      if [[ "$CONFIRM_FIREWALL_CMD" =~ [Yy] ]]; then
+        CONFIGURE_FIREWALL_CMD=true
+        CONFIGURE_FIREWALL=true
+      fi
+      ;;
+  esac
 }
 
 #################################
@@ -259,36 +262,26 @@ function detect_distro {
 }
 
 function check_os_comp {
-  if [ "$OS" == "ubuntu" ]; then
-    PHP_SOCKET="/run/php/php7.4-fpm.sock"
-    if [ "$OS_VER_MAJOR" == "18" ]; then
-      SUPPORTED=true
-    elif [ "$OS_VER_MAJOR" == "20" ]; then
-      SUPPORTED=true
-    else
-      SUPPORTED=false
-    fi
-  elif [ "$OS" == "debian" ]; then
-    PHP_SOCKET="/run/php/php7.4-fpm.sock"
-    if [ "$OS_VER_MAJOR" == "9" ]; then
-      SUPPORTED=true
-    elif [ "$OS_VER_MAJOR" == "10" ]; then
-      SUPPORTED=true
-    else
-      SUPPORTED=false
-    fi
-  elif [ "$OS" == "centos" ]; then
-    PHP_SOCKET="/var/run/php-fpm/pterodactyl.sock"
-    if [ "$OS_VER_MAJOR" == "7" ]; then
-      SUPPORTED=true
-    elif [ "$OS_VER_MAJOR" == "8" ]; then
-      SUPPORTED=true
-    else
-      SUPPORTED=false
-    fi
-  else
-    SUPPORTED=false
-  fi
+  SUPPORTED=false
+  case "$OS" in
+    ubuntu)
+      PHP_SOCKET="/run/php/php7.4-fpm.sock"
+      [ "$OS_VER_MAJOR" == "18" ] && SUPPORTED=true
+      [ "$OS_VER_MAJOR" == "20" ] && SUPPORTED=true
+      ;;
+    debian)
+      PHP_SOCKET="/run/php/php7.4-fpm.sock"
+      [ "$OS_VER_MAJOR" == "9" ] && SUPPORTED=true
+      [ "$OS_VER_MAJOR" == "10" ] && SUPPORTED=true
+      ;;
+    centos)
+      PHP_SOCKET="/var/run/php-fpm/pterodactyl.sock"
+      [ "$OS_VER_MAJOR" == "7" ] && SUPPORTED=true
+      [ "$OS_VER_MAJOR" == "8" ] && SUPPORTED=true
+      ;;
+    *)
+      SUPPORTED=false ;;
+  esac
 
   # exit if not supported
   if [ "$SUPPORTED" == true ]; then
@@ -421,14 +414,12 @@ function configure {
 # set the correct folder permissions depending on OS and webserver
 function set_folder_permissions {
   # if os is ubuntu or debian, we do this
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
-    chown -R www-data:www-data ./*
-  elif [ "$OS" == "centos" ]; then
-    chown -R nginx:nginx ./*
-  else
-    print_error "Invalid webserver and OS setup."
-    exit 1
-  fi
+  case "$OS" in
+    debian | ubuntu)
+      chown -R www-data:www-data ./* ;;
+    centos)
+      chown -R nginx:nginx ./* ;;
+  esac
 }
 
 # insert cronjob
@@ -689,16 +680,15 @@ function letsencrypt {
   FAILED=false
 
   # Install certbot
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
-    apt-get -y install certbot python3-certbot-nginx
-  elif [ "$OS" == "centos" ]; then
-    [ "$OS_VER_MAJOR" == "7" ] && yum -y -q install certbot python-certbot-nginx
-    [ "$OS_VER_MAJOR" == "8" ] && dnf -y -q install certbot python3-certbot-nginx
-  else
-    # exit
-    print_error "OS not supported."
-    exit 1
-  fi
+  case "$OS" in
+    debian | ubuntu)
+      apt-get -y install certbot python3-certbot-nginx
+      ;;
+    centos)
+      [ "$OS_VER_MAJOR" == "7" ] && yum -y -q install certbot python-certbot-nginx
+      [ "$OS_VER_MAJOR" == "8" ] && dnf -y -q install certbot python3-certbot-nginx
+      ;;
+  esac
 
   # Obtain certificate
   certbot --nginx --redirect --no-eff-email --email "$email" -d "$FQDN" || FAILED=true
@@ -773,28 +763,31 @@ function configure_nginx {
 function perform_install {
   echo "* Starting installation.. this might take a while!"
 
-  if [ "$OS" == "ubuntu" ] || [ "$OS" == "debian" ]; then
-    apt_update
+  case "$OS" in
+    debian | ubuntu)
+      apt_update
 
-    [ "$CONFIGURE_UFW" == true ] && firewall_ufw
+      [ "$CONFIGURE_UFW" == true ] && firewall_ufw
 
-    if [ "$OS" == "ubuntu" ]; then
-      [ "$OS_VER_MAJOR" == "20" ] && ubuntu20_dep
-      [ "$OS_VER_MAJOR" == "18" ] && ubuntu18_dep
-    elif [ "$OS" == "debian" ]; then
-    [ "$OS_VER_MAJOR" == "9" ] && debian_stretch_dep
-    [ "$OS_VER_MAJOR" == "10" ] && debian_dep
-    fi
+      if [ "$OS" == "ubuntu" ]; then
+        [ "$OS_VER_MAJOR" == "20" ] && ubuntu20_dep
+        [ "$OS_VER_MAJOR" == "18" ] && ubuntu18_dep
+      elif [ "$OS" == "debian" ]; then
+      [ "$OS_VER_MAJOR" == "9" ] && debian_stretch_dep
+      [ "$OS_VER_MAJOR" == "10" ] && debian_dep
+      fi
+      ;;
 
-  elif [ "$OS" == "centos" ]; then
-    [ "$OS_VER_MAJOR" == "7" ] && yum_update
-    [ "$OS_VER_MAJOR" == "8" ] && dnf_update
+    centos)
+      [ "$OS_VER_MAJOR" == "7" ] && yum_update
+      [ "$OS_VER_MAJOR" == "8" ] && dnf_update
 
-    [ "$CONFIGURE_FIREWALL_CMD" == true ] && firewall_firewalld
+      [ "$CONFIGURE_FIREWALL_CMD" == true ] && firewall_firewalld
 
-    [ "$OS_VER_MAJOR" == "7" ] && centos7_dep
-    [ "$OS_VER_MAJOR" == "8" ] && centos8_dep
-  fi
+      [ "$OS_VER_MAJOR" == "7" ] && centos7_dep
+      [ "$OS_VER_MAJOR" == "8" ] && centos8_dep
+    ;;
+  esac
 
   [ "$OS" == "centos" ] && centos_php
   install_composer
