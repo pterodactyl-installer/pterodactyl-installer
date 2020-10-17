@@ -153,6 +153,8 @@ detect_distro() {
 }
 
 check_os_comp() {
+  SUPPORTED=false
+
   MACHINE_TYPE=$(uname -m)
   if [ "${MACHINE_TYPE}" != "x86_64" ]; then # check the architecture
     print_warning "Detected architecture $MACHINE_TYPE"
@@ -167,33 +169,22 @@ check_os_comp() {
     fi
   fi
 
-  if [ "$OS" == "ubuntu" ]; then
-    if [ "$OS_VER_MAJOR" == "18" ]; then
-      SUPPORTED=true
-    elif [ "$OS_VER_MAJOR" == "20" ]; then
-      SUPPORTED=true
-    else
-      SUPPORTED=false
-    fi
-  elif [ "$OS" == "debian" ]; then
-    if [ "$OS_VER_MAJOR" == "9" ]; then
-      SUPPORTED=true
-    elif [ "$OS_VER_MAJOR" == "10" ]; then
-      SUPPORTED=true
-    else
-      SUPPORTED=false
-    fi
-  elif [ "$OS" == "centos" ]; then
-    if [ "$OS_VER_MAJOR" == "7" ]; then
-      SUPPORTED=true
-    elif [ "$OS_VER_MAJOR" == "8" ]; then
-      SUPPORTED=true
-    else
-      SUPPORTED=false
-    fi
-  else
-    SUPPORTED=false
-  fi
+  case "$OS" in
+    ubuntu)
+      [ "$OS_VER_MAJOR" == "18" ] && SUPPORTED=true
+      [ "$OS_VER_MAJOR" == "20" ] && SUPPORTED=true
+      ;;
+    debian)
+      [ "$OS_VER_MAJOR" == "9" ] && SUPPORTED=true
+      [ "$OS_VER_MAJOR" == "10" ] && SUPPORTED=true
+      ;;
+    centos)
+      [ "$OS_VER_MAJOR" == "7" ] && SUPPORTED=true
+      [ "$OS_VER_MAJOR" == "8" ] && SUPPORTED=true
+      ;;
+    *)
+      SUPPORTED=false ;;
+  esac
 
   # exit if not supported
   if [ "$SUPPORTED" == true ]; then
@@ -346,16 +337,18 @@ systemd_file() {
 }
 
 install_mariadb() {
-  if [ "$OS" == "ubuntu" ] || [ "$OS" == "debian" ]; then
-    curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
-    apt update && apt install mariadb-server -y
-  elif [ "$OS" == "centos" ]; then
-    [ "$OS_VER_MAJOR" == "7" ] && curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
-    [ "$OS_VER_MAJOR" == "7" ] && yum -y install mariadb-server
-    [ "$OS_VER_MAJOR" == "8" ] && dnf install -y mariadb mariadb-server
-  else
-    print_error "Unsupported OS for MariaDB installations!"
-  fi
+  case "$OS" in
+    ubuntu | debian)
+      curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
+      apt update && apt install mariadb-server -y
+      ;;
+    centos)
+      [ "$OS_VER_MAJOR" == "7" ] && curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
+      [ "$OS_VER_MAJOR" == "7" ] && yum -y install mariadb-server
+      [ "$OS_VER_MAJOR" == "8" ] && dnf install -y mariadb mariadb-server
+      ;;
+  esac
+
   systemctl enable mariadb
   systemctl start mariadb
 }
@@ -461,13 +454,13 @@ perform_install() {
   [ "$OS" == "ubuntu" ] || [ "$OS" == "debian" ] && apt_update
   [ "$OS" == "centos" ] || [ "$OS_VER_MAJOR" == "7" ] && yum_update
   [ "$OS" == "centos" ] || [ "$OS_VER_MAJOR" == "8" ] && dnf_update
-  [ "$CONFIGURE_UFW" == true ] && firewall_ufw
-  [ "$CONFIGURE_FIREWALL_CMD" == true ] && firewall_firewalld
+  "$CONFIGURE_UFW" && firewall_ufw
+  "$CONFIGURE_FIREWALL_CMD" && firewall_firewalld
   install_docker
   ptdl_dl
   systemd_file
-  [ "$INSTALL_MARIADB" == true ] && install_mariadb
-  [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
+  "$INSTALL_MARIADB" && install_mariadb
+  "$CONFIGURE_LETSENCRYPT" && letsencrypt
 
   # return true if script has made it this far
   return 0
