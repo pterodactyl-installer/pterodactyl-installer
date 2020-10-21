@@ -73,7 +73,8 @@ while [ "$panel" == false ] && [ "$wings" == false ]; do
   output "[1] Install the panel"
   output "[2] Install the daemon (Wings)"
   output "[3] Install both on the same machine"
-  output "[4] Upgrade current machine from old daemon to new Wings"
+  output "[4] Upgrade current machine from old daemon to new Wings (0.7 to 1.0)"
+  output "[5] Upgrade current machine from old panel to new panel (0.7 to 1.0)"
 
   echo -n "* Input 1-3: "
   read -r action
@@ -89,6 +90,9 @@ while [ "$panel" == false ] && [ "$wings" == false ]; do
       4 )
           upgrade=true
           wings=true ;;
+      5 )
+          upgrade=true
+          panel=true ;;
       * )
           error "Invalid option" ;;
   esac
@@ -99,4 +103,5 @@ done
 [ "$wings" == true ] && [ "$upgrade" == false ] && bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install-wings.sh)
 
 # upgrade
-[ "$wings" == true ] && [ "$upgrade" == true ] && bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/upgrade/migrate_to_wings.sh)
+[ "$panel" == true ] && [ "$upgrade" == true ] && bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/upgrade/upgrade_panel.sh)
+[ "$wings" == true ] && [ "$upgrade" == true ] && bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/upgrade/panel_0.7_to_1.0.sh)
