@@ -468,7 +468,7 @@ perform_install() {
 
 main() {
   # check if we can detect an already existing installation
-  if [ -d "/etc/pterodactyl/" ]; then
+  if [ -d "/etc/pterodactyl" ]; then
     print_warning "The script has detected that you already have Pterodactyl wings on your system! You cannot run the script multiple times, it will fail!"
     echo -e -n "* Are you sure you want to proceed? (y/N): "
     read -r CONFIRM_PROCEED
