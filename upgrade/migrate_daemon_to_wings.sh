@@ -4,7 +4,7 @@ set -e
 
 #############################################################################
 #                                                                           #
-# Project 'pterodactyl-installer' for panel                                 #
+# Project 'pterodactyl-installer', upgrade for Wings                        #
 #                                                                           #
 # Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al.   #
 #                                                                           #

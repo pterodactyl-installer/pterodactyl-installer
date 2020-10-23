@@ -4,7 +4,7 @@ set -e
 
 #############################################################################
 #                                                                           #
-# Project 'pterodactyl-installer' for panel                                 #
+# Project 'pterodactyl-installer', upgrade panel 0.7 to 1.0                 #
 #                                                                           #
 # Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al.   #
 #                                                                           #
@@ -92,7 +92,8 @@ gather_environment() {
 
 maintenance() {
   cd /var/www/pterodactyl && php artisan down
-  systemctl stop php"$php_version"-fpm
+  # php-fpm is service name on CentOS, php version included on other distros
+  systemctl stop php-fpm || systemctl stop php"$php_version"-fpm
 }
 
 upgrade_php() {
