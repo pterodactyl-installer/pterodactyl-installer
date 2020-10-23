@@ -52,12 +52,12 @@ fi
 # No default FQDN
 FQDN=""
 
-# default MySQL credentials
+# Default MySQL credentials
 MYSQL_DB="pterodactyl"
 MYSQL_USER="pterodactyl"
 MYSQL_PASSWORD=""
 
-# environment
+# Environment
 email=""
 
 # Initial admin account
@@ -67,7 +67,7 @@ user_firstname=""
 user_lastname=""
 user_password=""
 
-# assume SSL, will fetch different config if true
+# Assume SSL, will fetch different config if true
 ASSUME_SSL=false
 CONFIGURE_LETSENCRYPT=false
 
@@ -394,9 +394,7 @@ function configure {
     --password="$MYSQL_PASSWORD"
 
   # Email credentials manually set by user
-  if [[ "$mailneeded" =~ [Yy] ]]; then
-    php artisan p:environment:mail
-  fi
+  [[ "$mailneeded" =~ [Yy] ]] && php artisan p:environment:mail
 
   # configures database
   php artisan migrate --seed --force
