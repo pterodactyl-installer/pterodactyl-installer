@@ -761,8 +761,8 @@ function perform_install {
         [ "$OS_VER_MAJOR" == "20" ] && ubuntu20_dep
         [ "$OS_VER_MAJOR" == "18" ] && ubuntu18_dep
       elif [ "$OS" == "debian" ]; then
-      [ "$OS_VER_MAJOR" == "9" ] && debian_stretch_dep
-      [ "$OS_VER_MAJOR" == "10" ] && debian_dep
+        [ "$OS_VER_MAJOR" == "9" ] && debian_stretch_dep
+        [ "$OS_VER_MAJOR" == "10" ] && debian_dep
       fi
       ;;
 
