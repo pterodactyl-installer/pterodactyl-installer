@@ -89,7 +89,7 @@ CONFIGURE_FIREWALL=false
 #################################
 
 # define version using information from GitHub
-function get_latest_release() {
+get_latest_release() {
   curl --silent "https://api.github.com/repos/$1/releases/latest" | # Get latest release from GitHub api
   grep '"tag_name":' |                                              # Get tag line
   sed -E 's/.*"([^"]+)".*/\1/'                                      # Pluck JSON value
@@ -102,7 +102,7 @@ PTERODACTYL_VERSION="$(get_latest_release "pterodactyl/panel")"
 ####### Visual functions ########
 #################################
 
-function print_error {
+print_error() {
   COLOR_RED='\033[0;31m'
   COLOR_NC='\033[0m'
 
@@ -111,7 +111,7 @@ function print_error {
   echo ""
 }
 
-function print_warning {
+print_warning() {
   COLOR_YELLOW='\033[1;33m'
   COLOR_NC='\033[0m'
   echo ""
@@ -119,7 +119,7 @@ function print_warning {
   echo ""
 }
 
-function print_brake {
+print_brake() {
   for ((n=0;n<$1;n++));
     do
       echo -n "#"
@@ -127,7 +127,7 @@ function print_brake {
     echo ""
 }
 
-function hyperlink() {
+hyperlink() {
   echo -e "\e]8;;${1}\a${1}\e]8;;\a"
 }
 
@@ -135,7 +135,7 @@ function hyperlink() {
 ##### User input functions ######
 #################################
 
-function required_input() {
+required_input() {
   local  __resultvar=$1
   local  result=''
 
@@ -149,7 +149,7 @@ function required_input() {
   eval "$__resultvar="'$result'""
 }
 
-function password_input() {
+password_input() {
   local  __resultvar=$1
   local  result=''
 
@@ -181,7 +181,7 @@ function password_input() {
   eval "$__resultvar="'$result'""
 }
 
-function ask_letsencrypt {
+ask_letsencrypt() {
   if [ "$CONFIGURE_UFW" == false ] && [ "$CONFIGURE_FIREWALL_CMD" == false ]; then
     print_warning "Let's Encrypt requires port 80/443 to be opened! You have opted out of the automatic firewall configuration; use this at your own risk (if port 80/443 is closed, the script will fail)!"
   fi
@@ -197,7 +197,7 @@ function ask_letsencrypt {
   fi
 }
 
-function ask_firewall {
+ask_firewall() {
   case "$OS" in
     ubuntu | debian)
       echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
@@ -224,7 +224,7 @@ function ask_firewall {
 ####### OS check funtions #######
 #################################
 
-function detect_distro {
+detect_distro() {
   if [ -f /etc/os-release ]; then
     # freedesktop.org and systemd
     . /etc/os-release
@@ -261,7 +261,7 @@ function detect_distro {
   OS_VER_MAJOR=$(echo "$OS_VER" | cut -d. -f1)
 }
 
-function check_os_comp {
+check_os_comp() {
   SUPPORTED=false
   case "$OS" in
     ubuntu)
@@ -298,14 +298,14 @@ function check_os_comp {
 #################################
 
 # Install composer
-function install_composer {
+install_composer() {
   echo "* Installing composer.."
   curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
   echo "* Composer installed!"
 }
 
 # Download pterodactyl files
-function ptdl_dl {
+ptdl_dl() {
   echo "* Downloading pterodactyl panel files .. "
   mkdir -p /var/www/pterodactyl
   cd /var/www/pterodactyl || exit
@@ -322,7 +322,7 @@ function ptdl_dl {
 }
 
 # Create a databse with user
-function create_database {
+create_database() {
   if [ "$OS" == "centos" ]; then
     # secure MariaDB
     echo "* MariaDB secure installation. The following are safe defaults."
@@ -369,7 +369,7 @@ function create_database {
 }
 
 # Configure environment
-function configure {
+configure() {
   [ "$ASSUME_SSL" == true ] && app_url="https://$FQDN" || app_url="http://$FQDN"
 
   # Fill in environment:setup automatically
@@ -410,7 +410,7 @@ function configure {
 }
 
 # set the correct folder permissions depending on OS and webserver
-function set_folder_permissions {
+set_folder_permissions() {
   # if os is ubuntu or debian, we do this
   case "$OS" in
     debian | ubuntu)
@@ -421,7 +421,7 @@ function set_folder_permissions {
 }
 
 # insert cronjob
-function insert_cronjob {
+insert_cronjob() {
   echo "* Installing cronjob.. "
 
   crontab -l | { cat; echo "* * * * * php /var/www/pterodactyl/artisan schedule:run >> /dev/null 2>&1"; } | crontab -
@@ -429,7 +429,7 @@ function insert_cronjob {
   echo "* Cronjob installed!"
 }
 
-function install_pteroq {
+install_pteroq() {
   echo "* Installing pteroq service.."
 
   curl -o /etc/systemd/system/pteroq.service $CONFIGS_URL/pteroq.service
@@ -443,39 +443,39 @@ function install_pteroq {
 # OS specific install functions ##
 ##################################
 
-function apt_update {
+apt_update() {
   apt update -q -y && apt upgrade -y
 }
 
-function yum_update {
+yum_update() {
   yum -y update
 }
 
-function dnf_update {
+dnf_update() {
   dnf -y upgrade
 }
 
-function enable_services_debian_based {
+enable_services_debian_based() {
   systemctl enable mariadb
   systemctl enable redis-server
   systemctl start mariadb
   systemctl start redis-server
 }
 
-function enable_services_centos_based {
+enable_services_centos_based() {
   systemctl enable mariadb
   systemctl enable redis
   systemctl start mariadb
   systemctl start redis
 }
 
-function selinux_allow {
+selinux_allow() {
   setsebool -P httpd_can_network_connect 1
   setsebool -P httpd_execmem 1
   setsebool -P httpd_unified 1
 }
 
-function ubuntu20_dep {
+ubuntu20_dep() {
   echo "* Installing dependencies for Ubuntu 20.."
 
   # Add "add-apt-repository" command
@@ -493,7 +493,7 @@ function ubuntu20_dep {
   echo "* Dependencies for Ubuntu installed!"
 }
 
-function ubuntu18_dep {
+ubuntu18_dep() {
   echo "* Installing dependencies for Ubuntu 18.."
 
   # Add "add-apt-repository" command
@@ -520,7 +520,7 @@ function ubuntu18_dep {
   echo "* Dependencies for Ubuntu installed!"
 }
 
-function debian_stretch_dep {
+debian_stretch_dep() {
   echo "* Installing dependencies for Debian 8/9.."
 
   # MariaDB need dirmngr
@@ -547,7 +547,7 @@ function debian_stretch_dep {
   echo "* Dependencies for Debian 8/9 installed!"
 }
 
-function debian_dep {
+debian_dep() {
   echo "* Installing dependencies for Debian 10.."
 
   # MariaDB need dirmngr
@@ -571,7 +571,7 @@ function debian_dep {
   echo "* Dependencies for Debian 10 installed!"
 }
 
-function centos7_dep {
+centos7_dep() {
   echo "* Installing dependencies for CentOS 7.."
 
   # SELinux tools
@@ -599,7 +599,7 @@ function centos7_dep {
   echo "* Dependencies for CentOS installed!"
 }
 
-function centos8_dep {
+centos8_dep() {
   echo "* Installing dependencies for CentOS 8.."
 
   # SELinux tools
@@ -631,14 +631,14 @@ function centos8_dep {
 ## OTHER OS SPECIFIC FUNCTIONS ##
 #################################
 
-function centos_php {
+centos_php() {
   curl -o /etc/php-fpm.d/www-pterodactyl.conf $CONFIGS_URL/www-pterodactyl.conf
 
   systemctl enable php-fpm
   systemctl start php-fpm
 }
 
-function firewall_ufw {
+firewall_ufw() {
   apt install -y ufw
 
   echo -e "\n* Enabling Uncomplicated Firewall (UFW)"
@@ -653,7 +653,7 @@ function firewall_ufw {
   ufw status numbered | sed '/v6/d'
 }
 
-function firewall_firewalld {
+firewall_firewalld() {
   echo -e "\n* Enabling firewall_cmd (firewalld)"
   echo "* Opening port 22 (SSH), 80 (HTTP) and (optionaly) 443 (HTTPS)"
 
@@ -674,7 +674,7 @@ function firewall_firewalld {
   print_brake 70
 }
 
-function letsencrypt {
+letsencrypt() {
   FAILED=false
 
   # Install certbot
@@ -701,7 +701,7 @@ function letsencrypt {
 ## WEBSERVER CONFIGURATION FUNCTIONS ##
 #######################################
 
-function configure_nginx {
+configure_nginx() {
   echo "* Configuring nginx .."
 
   if [ "$OS" == "centos" ]; then
@@ -748,7 +748,7 @@ function configure_nginx {
 ## MAIN FUNCTIONS ##
 ####################
 
-function perform_install {
+perform_install() {
   echo "* Starting installation.. this might take a while!"
 
   case "$OS" in
@@ -789,7 +789,7 @@ function perform_install {
   [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
 }
 
-function main {
+main() {
   # check if we can detect an already existing installation
   if [ -d "/var/www/pterodactyl" ]; then
     print_warning "The script has detected that you already have Pterodactyl panel on your system! You cannot run the script multiple times, it will fail!"
@@ -910,7 +910,7 @@ function main {
   goodbye
 }
 
-function summary {
+summary() {
   print_brake 62
   echo "* Pterodactyl panel $PTERODACTYL_VERSION with nginx on $OS"
   echo "* Database name: $MYSQL_DB"
@@ -930,7 +930,7 @@ function summary {
   print_brake 62
 }
 
-function goodbye {
+goodbye() {
   print_brake 62
   echo "* Panel installation completed"
   echo "*"
