@@ -225,15 +225,19 @@ check_os_comp() {
   fi
 
   virt_serv=$(virt-what)
-  if [ "$virt_serv" != "" ]; then
-    print_warning "Virtualization: ${virt_serv//$'\n'/ } detected."
-  fi
 
-  if [ "$virt_serv" == "openvz" ] || [ "$virt_serv" == "lxc" ] ; then # add more virtualization types which are not supported
-    print_warning "Unsupported type of virtualization detected. Please consult with your hosting provider whether your server can run Docker or not. Proceed at your own risk."
-    print_error "Installation aborted!"
-    exit 1
-  fi
+  case "$virt_serv" in
+    openvz | lxc)
+      print_warning "Unsupported type of virtualization detected. Please consult with your hosting provider whether your server can run Docker or not. Proceed at your own risk."
+      print_error "Installation aborted!"
+      exit 1
+      ;;
+    "")
+      ;;
+    *)
+      print_warning "Virtualization: ${virt_serv//$'\n'/ } detected."
+      ;;
+  esac
 
   if uname -r | grep -q "xxxx"; then
     print_error "Unsupported kernel detected."
