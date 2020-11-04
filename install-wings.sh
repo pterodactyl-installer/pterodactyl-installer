@@ -406,7 +406,7 @@ firewall_firewalld() {
   systemctl --now enable firewalld > /dev/null # Enable and start
 
   # Configure
-  firewall-cmd --ad-service=ssh --permanent -q # Port 22
+  firewall-cmd --add-service=ssh --permanent -q # Port 22
   firewall-cmd --add-port 8080/tcp --permanent -q # Port 8080
   firewall-cmd --add-port 2022/tcp --permanent -q # Port 2022
   [ "$CONFIGURE_LETSENCRYPT" == true ] && firewall-cmd --add-service=http --permanent -q # Port 80
