@@ -281,9 +281,9 @@ install_docker() {
 
     # Add docker repo
     add-apt-repository \
-      "deb [arch=amd64] https://download.docker.com/linux/$OS \
-      $(lsb_release -cs) \
-      stable"
+    "deb [arch=amd64] https://download.docker.com/linux/$OS \
+    $(lsb_release -cs) \
+    stable"
 
     # Install docker
     apt_update
