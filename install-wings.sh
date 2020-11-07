@@ -232,10 +232,8 @@ check_os_comp() {
       print_error "Installation aborted!"
       exit 1
       ;;
-    "")
-      ;;
     *)
-      print_warning "Virtualization: ${virt_serv//$'\n'/ } detected."
+      [ "$virt_serv" != "" ] && print_warning "Virtualization: $virt_serv detected."
       ;;
   esac
 
