@@ -470,9 +470,9 @@ enable_services_centos_based() {
 }
 
 selinux_allow() {
-  setsebool -P httpd_can_network_connect 1
-  setsebool -P httpd_execmem 1
-  setsebool -P httpd_unified 1
+  setsebool -P httpd_can_network_connect 1 || true
+  setsebool -P httpd_execmem 1 || true
+  setsebool -P httpd_unified 1 || true
 }
 
 ubuntu20_dep() {
