@@ -82,7 +82,7 @@ webserver() {
 
 main() {
     echo "Trying http://$1:80"
-    webserver "8080" "$1"
+    webserver "80" "$1"
 
     echo "Trying http://$1:443"
     webserver "443" "$1"
