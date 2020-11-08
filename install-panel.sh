@@ -77,7 +77,7 @@ CONFIGURE_LETSENCRYPT=false
 
 # download URLs
 PANEL_DL_URL="https://github.com/pterodactyl/panel/releases/latest/download/panel.tar.gz"
-CONFIGS_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/configs"
+GITHUB_BASE_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master"
 
 # apt sources path
 SOURCES_PATH="/etc/apt/sources.list"
@@ -343,7 +343,7 @@ function insert_cronjob {
 function install_pteroq {
   echo "* Installing pteroq service.."
 
-  curl -o /etc/systemd/system/pteroq.service $CONFIGS_URL/pteroq.service
+  curl -o /etc/systemd/system/pteroq.service $GITHUB_BASE_URL/configs/pteroq.service
   systemctl enable pteroq.service
   systemctl start pteroq
 
@@ -601,7 +601,7 @@ function ubuntu_universedep {
 }
 
 function centos_php {
-  curl -o /etc/php-fpm.d/www-pterodactyl.conf $CONFIGS_URL/www-pterodactyl.conf
+  curl -o /etc/php-fpm.d/www-pterodactyl.conf $GITHUB_BASE_URL/configs/www-pterodactyl.conf
 
   systemctl enable php-fpm
   systemctl start php-fpm
@@ -717,7 +717,7 @@ function configure_nginx {
       rm -rf /etc/nginx/conf.d/default
 
       # download new config
-      curl -o /etc/nginx/conf.d/pterodactyl.conf $CONFIGS_URL/$DL_FILE
+      curl -o /etc/nginx/conf.d/pterodactyl.conf $GITHUB_BASE_URL/configs/$DL_FILE
 
       # replace all <domain> places with the correct domain
       sed -i -e "s@<domain>@${FQDN}@g" /etc/nginx/conf.d/pterodactyl.conf
@@ -729,7 +729,7 @@ function configure_nginx {
       rm -rf /etc/nginx/sites-enabled/default
 
       # download new config
-      curl -o /etc/nginx/sites-available/pterodactyl.conf $CONFIGS_URL/$DL_FILE
+      curl -o /etc/nginx/sites-available/pterodactyl.conf $GITHUB_BASE_URL/configs/$DL_FILE
 
       # replace all <domain> places with the correct domain
       sed -i -e "s@<domain>@${FQDN}@g" /etc/nginx/sites-available/pterodactyl.conf
@@ -941,6 +941,9 @@ function main {
 
       [ -z "$FQDN" ] && print_error "FQDN cannot be empty"
   done
+
+  # verify FQDN
+  bash <(curl -s $GITHUB_BASE_URL/lib/verify-fqdn.sh) "$FQDN"
 
   # UFW is available for Ubuntu/Debian
   # Let's Encrypt is available for Ubuntu/Debian
