@@ -54,9 +54,7 @@ error() {
   echo ""
 }
 
-panel=false
-wings=false
-legacy_version=false
+done=false
 
 output "Pterodactyl installation script"
 output
@@ -68,7 +66,25 @@ output "This script is not associated with the official Pterodactyl Project."
 
 output
 
-while [ "$panel" == false ] && [ "$wings" == false ]; do
+panel() {
+  bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install-panel.sh)
+}
+
+wings() {
+  bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install-wings.sh)
+}
+
+legacy_panel() {
+  bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/legacy/panel_0.7.sh)
+}
+
+legacy_wings() {
+  bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/legacy/daemon_0.6.sh)
+}
+
+while [ "$done" == false ]; do
+  done=true
+
   output "What would you like to do?"
   output "[1] Install the panel"
   output "[2] Install the daemon (Wings)"
@@ -82,31 +98,21 @@ while [ "$panel" == false ] && [ "$wings" == false ]; do
 
   case $action in
       1 )
-          panel=true ;;
+          panel ;;
       2 )
-          wings=true ;;
+          wings ;;
       3 )
-          panel=true
-          wings=true ;;
+          panel
+          wings ;;
       4 )
-          panel=true
-          legacy_version=true ;;
+          legacy_panel ;;
       5 )
-          wings=true
-          legacy_version=true ;;
+          legacy_wings ;;
       6 )
-          panel=true
-          wings=true
-          legacy_version=true ;;
+          legacy_panel
+          legacy_wings ;;          
       * )
-          error "Invalid option" ;;
+          error "Invalid option"
+          done=false ;;
   esac
 done
-
-# standard installation scripts
-[ "$panel" == true ] && [ "$legacy_version" == false ] && bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install-panel.sh)
-[ "$wings" == true ] && [ "$legacy_version" == false ] && bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install-wings.sh)
-
-# 0.7.x / 0.6.x legacy patches of script
-[ "$panel" == true ] && [ "$legacy_version" == true ] && bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/legacy/panel_0.7.sh)
-[ "$wings" == true ] && [ "$legacy_version" == true ] && bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/legacy/daemon_0.6.sh)
