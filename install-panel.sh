@@ -893,7 +893,7 @@ function main {
   print_brake 72
   echo "* Database configuration."
   echo ""
-  echo "* This will be the credentials used for commuication between the MySQL"
+  echo "* This will be the credentials used for communication between the MySQL"
   echo "* database and the panel. You do not need to create the database"
   echo "* before running this script, the script will do that for you."
   echo ""
