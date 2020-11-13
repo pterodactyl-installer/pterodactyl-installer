@@ -277,6 +277,10 @@ install_docker() {
     # Add docker gpg key
     curl -fsSL https://download.docker.com/linux/"$OS"/gpg | apt-key add -
 
+    # Show fingerprint to user
+
+    apt-key fingerprint 0EBFCD88
+
     # Add docker repo
     add-apt-repository \
     "deb [arch=amd64] https://download.docker.com/linux/$OS \
