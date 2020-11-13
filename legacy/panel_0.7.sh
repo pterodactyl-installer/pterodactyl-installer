@@ -28,6 +28,8 @@ set -e
 #                                                                           #
 #############################################################################
 
+SCRIPT_PATH="/tmp/panel_install_0.7.sh"
+
 # exit with error status code if user is not root
 if [[ $EUID -ne 0 ]]; then
   echo "* This script must be executed with root privileges (sudo)." 1>&2
@@ -41,72 +43,25 @@ if ! [ -x "$(command -v curl)" ]; then
   exit 1
 fi
 
-output() {
-  echo "* ${1}"
+dl_script() {
+    rm -rf "$SCRIPT_PATH"
+    curl -o "$SCRIPT_PATH" https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/b8e298003fe3120edccb02fabc5d7e86daef22e6/install-panel.sh
+    chmod +x "$SCRIPT_PATH"
 }
 
-error() {
-  COLOR_RED='\033[0;31m'
-  COLOR_NC='\033[0m'
+replace() {
+    sed -i 's/master/b8e298003fe3120edccb02fabc5d7e86daef22e6/g' "$SCRIPT_PATH"
+    sed -i '/PTERODACTYL_VERSION=/c\PTERODACTYL_VERSION="v0.7.19"' "$SCRIPT_PATH"
+    sed -i 's*https://github.com/pterodactyl/panel/releases/latest/download/panel.tar.gz*https://github.com/pterodactyl/panel/releases/download/v0.7.19/panel.tar.gz*g' "$SCRIPT_PATH"
 
-  echo ""
-  echo -e "* ${COLOR_RED}ERROR${COLOR_NC}: $1"
-  echo ""
+    # an older version of composer is required for 0.7
+    sed -i 's/--filename=composer/--filename=composer --version=1.10.17/g' "$SCRIPT_PATH"
 }
 
-panel=false
-wings=false
-legacy_version=false
+main() {
+    dl_script
+    replace
+    bash "$SCRIPT_PATH"
+}
 
-output "Pterodactyl installation script"
-output
-output "Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al."
-output "https://github.com/vilhelmprytz/pterodactyl-installer"
-output
-output "Sponsoring/Donations: https://github.com/vilhelmprytz/pterodactyl-installer?sponsor=1"
-output "This script is not associated with the official Pterodactyl Project."
-
-output
-
-while [ "$panel" == false ] && [ "$wings" == false ]; do
-  output "What would you like to do?"
-  output "[1] Install the panel"
-  output "[2] Install the daemon (Wings)"
-  output "[3] Install both on the same machine, i.e. [1] and [2]"
-  output "[4] Install 0.7 version of panel (no longer maintained)"
-  output "[5] Install 0.6 version of daemon (works with panel 0.7, no longer maintained)"
-  output "[6] Install both [4] and [5] on the same machine (daemon script runs after panel)"
-
-  echo -n "* Input 1-6: "
-  read -r action
-
-  case $action in
-      1 )
-          panel=true ;;
-      2 )
-          wings=true ;;
-      3 )
-          panel=true
-          wings=true ;;
-      4 )
-          panel=true
-          legacy_version=true ;;
-      5 )
-          wings=true
-          legacy_version=true ;;
-      6 )
-          panel=true
-          wings=true
-          legacy_version=true ;;
-      * )
-          error "Invalid option" ;;
-  esac
-done
-
-# standard installation scripts
-[ "$panel" == true ] && [ "$legacy_version" == false ] && bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install-panel.sh)
-[ "$wings" == true ] && [ "$legacy_version" == false ] && bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install-wings.sh)
-
-# 0.7.x / 0.6.x legacy patches of script
-[ "$panel" == true ] && [ "$legacy_version" == true ] && bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/legacy/panel_0.7.sh)
-[ "$wings" == true ] && [ "$legacy_version" == true ] && bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/legacy/daemon_0.6.sh)
+main

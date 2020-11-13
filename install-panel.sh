@@ -538,9 +538,9 @@ function centos7_dep {
   systemctl start redis
 
   # SELinux (allow nginx and redis)
-  setsebool -P httpd_can_network_connect 1
-  setsebool -P httpd_execmem 1
-  setsebool -P httpd_unified 1
+  setsebool -P httpd_can_network_connect 1 || true  # these commands can fail OK
+  setsebool -P httpd_execmem 1 || true
+  setsebool -P httpd_unified 1 || true
 
   echo "* Dependencies for CentOS installed!"
 }
@@ -574,9 +574,9 @@ function centos8_dep {
   systemctl start redis
 
   # SELinux (allow nginx and redis)
-  setsebool -P httpd_can_network_connect 1
-  setsebool -P httpd_execmem 1
-  setsebool -P httpd_unified 1
+  setsebool -P httpd_can_network_connect 1 || true  # these commands can fail OK
+  setsebool -P httpd_execmem 1 || true
+  setsebool -P httpd_unified 1 || true
 
   echo "* Dependencies for CentOS installed!"
 }
@@ -893,7 +893,7 @@ function main {
   print_brake 72
   echo "* Database configuration."
   echo ""
-  echo "* This will be the credentials used for commuication between the MySQL"
+  echo "* This will be the credentials used for communication between the MySQL"
   echo "* database and the panel. You do not need to create the database"
   echo "* before running this script, the script will do that for you."
   echo ""
