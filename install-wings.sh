@@ -79,6 +79,7 @@ get_latest_release() {
     sed -E 's/.*"([^"]+)".*/\1/'                                    # Pluck JSON value
 }
 
+echo "* Retrieving release information.."
 WINGS_VERSION="$(get_latest_release "pterodactyl/wings")"
 
 #################################
