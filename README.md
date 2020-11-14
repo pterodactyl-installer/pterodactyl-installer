@@ -72,76 +72,10 @@ Here is a [YouTube video](https://www.youtube.com/watch?v=E8UJhyUFoHM) that illu
 
 ## Firewall setup
 
-The installation scripts do not configure your firewall automatically.
-
-### Debian/Ubuntu
-
-On Debian and Ubuntu, `ufw` can be used. Install it using `apt`.
-
-```bash
-apt install -y ufw
-```
-
-#### Panel
-
-The script can automatically open the ports for SSH (22), HTTP (80) and HTTPS (443). The installer script should ask whether you'd like it to configure UFW automatically or not.
-
-#### Wings
-
-Allow 8080 and 2022.
-
-```bash
-ufw allow 8080
-ufw allow 2022
-```
-
-#### Enable the firewall
-
-Make sure to also enable SSH (or allow SSH from your IP only, depending on your setup).
-
-```bash
-ufw allow ssh
-```
-
-Enable the firewall.
-
-```bash
-ufw enable
-```
-
-### CentOS
-
-On CentOS, `firewall-cmd` can be used.
-
-#### Panel
-
-Allow HTTP and HTTPS.
-
-```bash
-firewall-cmd --add-service=http --permanent
-firewall-cmd --add-service=https --permanent
-```
-
-#### Wings
-
-Allow 8080 and 2022.
-
-```bash
-firewall-cmd --add-port 8080/tcp --permanent
-firewall-cmd --add-port 2022/tcp --permanent
-firewall-cmd --permanent --zone=trusted --change-interface=docker0
-```
-
-#### Enable the firewall
-
-Reload the firewall to enable the changes.
-
-```bash
-firewall-cmd --reload
-```
+The installation scripts can install and configure a firewall for you. The script will ask whether you want this or not. It is highly recommended to opt-in for the automatic firewall setup.
 
 ## Contributors ✨
 
 Created and maintained by [Vilhelm Prytz](https://github.com/vilhelmprytz).
 
-Special thanks to [sam1370](https://github.com/sam1370) and [Linux123123](https://github.com/Linux123123) for helping on the Discord server!
+Special thanks to the Discord moderators [sam1370](https://github.com/sam1370) and [Linux123123](https://github.com/Linux123123) for helping on the Discord server!
