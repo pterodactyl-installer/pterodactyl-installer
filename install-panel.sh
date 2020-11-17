@@ -737,13 +737,8 @@ function configure_nginx {
       # replace all <php_socket> places with correct socket "path"
       sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" /etc/nginx/sites-available/pterodactyl.conf
 
-      # on debian 8/9, TLS v1.3 is not supported (see #76)
-      # this if statement can be refactored into a one-liner but I think this is more readable
-      if [ "$OS" == "debian" ]; then
-        if [ "$OS_VER_MAJOR" == "8" ] || [ "$OS_VER_MAJOR" == "9" ]; then
-          sed -i 's/ TLSv1.3//' /etc/nginx/sites-available/pterodactyl.conf
-        fi
-      fi
+      # on debian 9, TLS v1.3 is not supported (see #76)
+      [ "$OS" == "debian" ] && [ "$OS_VER_MAJOR" == "9" ] && sed -i 's/ TLSv1.3//' /etc/nginx/sites-available/pterodactyl.conf
 
       # enable pterodactyl
       ln -s /etc/nginx/sites-available/pterodactyl.conf /etc/nginx/sites-enabled/pterodactyl.conf
