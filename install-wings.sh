@@ -224,7 +224,7 @@ check_os_comp() {
   MACHINE_TYPE=$(uname -m)
   if [ "${MACHINE_TYPE}" != "x86_64" ]; then # check the architecture
     print_warning "Detected architecture $MACHINE_TYPE"
-    print_warning "Using any other architecture then 64 bit(x86_64) may (and will) cause problems."
+    print_warning "Using any other architecture than 64 bit (x86_64) will cause problems."
 
     echo -e -n  "* Are you sure you want to proceed? (y/N):"
     read -r choice
