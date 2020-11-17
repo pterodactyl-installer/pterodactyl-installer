@@ -741,7 +741,7 @@ function configure_nginx {
       # this if statement can be refactored into a one-liner but I think this is more readable
       if [ "$OS" == "debian" ]; then
         if [ "$OS_VER_MAJOR" == "8" ] || [ "$OS_VER_MAJOR" == "9" ]; then
-          sed -i 's/ TLSv1.3//' file /etc/nginx/sites-available/pterodactyl.conf
+          sed -i 's/ TLSv1.3//' /etc/nginx/sites-available/pterodactyl.conf
         fi
       fi
 
