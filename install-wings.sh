@@ -458,8 +458,8 @@ letsencrypt() {
 perform_install() {
   echo "* Installing pterodactyl wings.."
   [ "$OS" == "ubuntu" ] || [ "$OS" == "debian" ] && apt_update
-  [ "$OS" == "centos" ] || [ "$OS_VER_MAJOR" == "7" ] && yum_update
-  [ "$OS" == "centos" ] || [ "$OS_VER_MAJOR" == "8" ] && dnf_update
+  [ "$OS" == "centos" ] && [ "$OS_VER_MAJOR" == "7" ] && yum_update
+  [ "$OS" == "centos" ] && [ "$OS_VER_MAJOR" == "8" ] && dnf_update
   "$CONFIGURE_UFW" && firewall_ufw
   "$CONFIGURE_FIREWALL_CMD" && firewall_firewalld
   install_docker
