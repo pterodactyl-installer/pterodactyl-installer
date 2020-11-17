@@ -113,6 +113,71 @@ hyperlink() {
 }
 
 #################################
+##### User input functions ######
+#################################
+
+ask_firewall() {
+  case "$OS" in
+    debian | ubuntu)
+      # UFW is available for Ubuntu/Debian
+      echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
+      read -r CONFIRM_UFW
+
+      [[ "$CONFIRM_UFW" =~ [Yy] ]] && CONFIGURE_UFW=true
+      ;;
+    centos)
+      # Firewall-cmd is available for CentOS
+      echo -e -n "* Do you want to automatically configure firewall-cmd (firewall)? (y/N): "
+      read -r CONFIRM_FIREWALL_CMD
+
+      [[ "$CONFIRM_FIREWALL_CMD" =~ [Yy] ]] && CONFIGURE_FIREWALL_CMD=true
+      ;;
+  esac
+}
+
+ask_letsencrypt() {
+  if [ "$CONFIGURE_UFW" == false ] && [ "$CONFIGURE_FIREWALL_CMD" == false ]; then
+    print_warning "Let's Encrypt requires port 80/443 to be opened! You have opted out of the automatic firewall configuration; use this at your own risk (if port 80/443 is closed, the script will fail)!"
+  fi
+
+  print_warning "You cannot use Let's Encrypt with your hostname as an IP address! It must be a FQDN (e.g. node.example.org)."
+
+  echo -e -n "* Do you want to automatically configure HTTPS using Let's Encrypt? (y/N): "
+  read -r CONFIRM_SSL
+
+  [[ "$CONFIRM_SSL" =~ [Yy] ]] && CONFIGURE_LETSENCRYPT=true
+}
+
+conf_letsencrypt() {
+  # Set FQDN
+  while [ -z "$FQDN" ]; do
+    echo -n "* Set the FQDN to use for Let's Encrypt (node.example.com): "
+    read -r FQDN
+
+    ASK=false
+
+    [ -z "$FQDN" ] && print_error "FQDN cannot be empty"
+    [ -d "/etc/letsencrypt/live/$FQDN/" ] && print_error "A certificate with this FQDN already exists!" && FQDN="" && ASK=true
+
+    [ "$ASK" == true ] && echo -e -n "* Do you still want to automatically configure HTTPS using Let's Encrypt? (y/N): "
+    [ "$ASK" == true ] && read -r CONFIRM_SSL
+
+    if [[ ! "$CONFIRM_SSL" =~ [Yy] ]] && [ "$ASK" == true ]; then
+      CONFIGURE_LETSENCRYPT=false
+      FQDN="none"
+    fi
+  done
+
+  # set EMAIL
+  while [ -z "$EMAIL" ]; do
+    echo -n "* Enter email address for Let's Encrypt: "
+    read -r EMAIL
+
+    [ -z "$EMAIL" ] && print_error "Email cannot be empty"
+  done
+}
+
+#################################
 ####### OS check funtions #######
 #################################
 
@@ -198,32 +263,32 @@ check_os_comp() {
 
   # check virtualization
   echo -e  "* Installing virt-what..."
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
-    # silence dpkg output
-    export DEBIAN_FRONTEND=noninteractive
-
-    # install virt-what
-    apt-get -y update -qq
-    apt-get install -y virt-what -qq
-
-    # unsilence
-    unset DEBIAN_FRONTEND
-  elif [ "$OS" == "centos" ]; then
-    if [ "$OS_VER_MAJOR" == "7" ]; then
-      yum -q -y update
+  case "$OS" in
+    ubuntu | debian)
+      # silence dpkg output
+      export DEBIAN_FRONTEND=noninteractive
 
       # install virt-what
-      yum -q -y install virt-what
-    elif [ "$OS_VER_MAJOR" == "8" ]; then
-      dnf -y -q update
+      apt-get -y update -qq
+      apt-get install -y virt-what -qq
 
-      # install virt-what
-      dnf install -y -q virt-what
-    fi
-  else
-    print_error "Invalid OS."
-    exit 1
-  fi
+      # unsilence
+      unset DEBIAN_FRONTEND
+      ;;
+    centos)
+      if [ "$OS_VER_MAJOR" == "7" ]; then
+        yum -q -y update
+
+        # install virt-what
+        yum -q -y install virt-what
+      elif [ "$OS_VER_MAJOR" == "8" ]; then
+        dnf -y -q update
+
+        # install virt-what
+        dnf install -y -q virt-what
+      fi
+      ;;
+  esac
 
   virt_serv=$(virt-what)
 
@@ -267,58 +332,59 @@ enable_docker(){
 
 install_docker() {
   echo "* Installing docker .."
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
-    # Install dependencies
-    apt-get -y install \
-      apt-transport-https \
-      ca-certificates \
-      gnupg2 \
-      software-properties-common
+  case "$OS" in
+    ubuntu | debian)
+      # Install dependencies
+      apt-get -y install \
+        apt-transport-https \
+        ca-certificates \
+        gnupg2 \
+        software-properties-common
 
-    # Add docker gpg key
-    curl -fsSL https://download.docker.com/linux/"$OS"/gpg | apt-key add -
+      # Add docker gpg key
+      curl -fsSL https://download.docker.com/linux/"$OS"/gpg | apt-key add -
 
-    # Show fingerprint to user
-    apt-key fingerprint 0EBFCD88
+      # Show fingerprint to user
+      apt-key fingerprint 0EBFCD88
 
-    # Add docker repo
-    add-apt-repository \
-    "deb [arch=amd64] https://download.docker.com/linux/$OS \
-    $(lsb_release -cs) \
-    stable"
+      # Add docker repo
+      add-apt-repository \
+      "deb [arch=amd64] https://download.docker.com/linux/$OS \
+      $(lsb_release -cs) \
+      stable"
 
-    # Install docker
-    apt_update
-    apt-get -y install docker-ce docker-ce-cli containerd.io
+      # Install docker
+      apt_update
+      apt-get -y install docker-ce docker-ce-cli containerd.io
 
-    # Make sure docker is enabled
-    enable_docker
+      # Make sure docker is enabled
+      enable_docker
+      ;;
+    centos)
+      if [ "$OS_VER_MAJOR" == "7" ]; then
+        # Install dependencies for Docker
+        yum install -y yum-utils device-mapper-persistent-data lvm2
 
-  elif [ "$OS" == "centos" ]; then
-    if [ "$OS_VER_MAJOR" == "7" ]; then
-      # Install dependencies for Docker
-      yum install -y yum-utils device-mapper-persistent-data lvm2
+        # Add repo to yum
+        yum-config-manager \
+          --add-repo \
+          https://download.docker.com/linux/centos/docker-ce.repo
 
-      # Add repo to yum
-      yum-config-manager \
-        --add-repo \
-        https://download.docker.com/linux/centos/docker-ce.repo
+        # Install Docker
+        yum install -y docker-ce docker-ce-cli containerd.io
+      elif [ "$OS_VER_MAJOR" == "8" ]; then
+        # Install dependencies for Docker
+        dnf install -y dnf-utils device-mapper-persistent-data lvm2
 
-      # Install Docker
-      yum install -y docker-ce docker-ce-cli containerd.io
-    elif [ "$OS_VER_MAJOR" == "8" ]; then
-      # Install dependencies for Docker
-      dnf install -y dnf-utils device-mapper-persistent-data lvm2
+        # Add repo to dnf
+        dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
 
-      # Add repo to dnf
-      dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
-
-      # Install Docker
-      dnf install -y docker-ce docker-ce-cli containerd.io --nobest
-    fi
-
-    enable_docker
-  fi
+        # Install Docker
+        dnf install -y docker-ce docker-ce-cli containerd.io --nobest
+      fi
+      enable_docker
+      ;;
+  esac
 
   echo "* Docker has now been installed."
 }
@@ -362,21 +428,6 @@ install_mariadb() {
 #################################
 ##### OS SPECIFIC FUNCTIONS #####
 #################################
-
-ask_letsencrypt() {
-  if [ "$CONFIGURE_UFW" == false ] && [ "$CONFIGURE_FIREWALL_CMD" == false ]; then
-    print_warning "Let's Encrypt requires port 80/443 to be opened! You have opted out of the automatic firewall configuration; use this at your own risk (if port 80/443 is closed, the script will fail)!"
-  fi
-
-  print_warning "You cannot use Let's Encrypt with your hostname as an IP address! It must be a FQDN (e.g. node.example.org)."
-
-  echo -e -n "* Do you want to automatically configure HTTPS using Let's Encrypt? (y/N): "
-  read -r CONFIRM_SSL
-
-  if [[ "$CONFIRM_SSL" =~ [Yy] ]]; then
-    CONFIGURE_LETSENCRYPT=true
-  fi
-}
 
 firewall_ufw() {
   apt install ufw -y
@@ -426,16 +477,14 @@ letsencrypt() {
   FAILED=false
 
   # Install certbot
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
-    apt-get install certbot -y
-  elif [ "$OS" == "centos" ]; then
-    [ "$OS_VER_MAJOR" == "7" ] && yum install certbot
-    [ "$OS_VER_MAJOR" == "8" ] && dnf install certbot
-  else
-    # exit
-    print_error "OS not supported."
-    exit 1
-  fi
+  case "$OS" in
+    debian | ubuntu)
+      apt-get install certbot -y ;;
+    centos)
+      [ "$OS_VER_MAJOR" == "7" ] && yum install certbot
+      [ "$OS_VER_MAJOR" == "8" ] && dnf install certbot
+      ;;
+  esac
 
   # If user has nginx
   systemctl stop nginx || true
@@ -458,8 +507,8 @@ letsencrypt() {
 perform_install() {
   echo "* Installing pterodactyl wings.."
   [ "$OS" == "ubuntu" ] || [ "$OS" == "debian" ] && apt_update
-  [ "$OS" == "centos" ] || [ "$OS_VER_MAJOR" == "7" ] && yum_update
-  [ "$OS" == "centos" ] || [ "$OS_VER_MAJOR" == "8" ] && dnf_update
+  [ "$OS" == "centos" ] && [ "$OS_VER_MAJOR" == "7" ] && yum_update
+  [ "$OS" == "centos" ] && [ "$OS_VER_MAJOR" == "8" ] && dnf_update
   "$CONFIGURE_UFW" && firewall_ufw
   "$CONFIGURE_FIREWALL_CMD" && firewall_firewalld
   install_docker
@@ -519,57 +568,14 @@ main() {
   read -r CONFIRM_INSTALL_MARIADB
   [[ "$CONFIRM_INSTALL_MARIADB" =~ [Yy] ]] && INSTALL_MARIADB=true
 
-  # UFW is available for Ubuntu/Debian
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
-    echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
-    read -r CONFIRM_UFW
+  # Ask for firewall
+  ask_firewall
 
-    if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
-      CONFIGURE_UFW=true
-    fi
-  fi
-
-  # Firewall-cmd is available for CentOS
-  if [ "$OS" == "centos" ]; then
-    echo -e -n "* Do you want to automatically configure firewall-cmd (firewall)? (y/N): "
-    read -r CONFIRM_FIREWALL_CMD
-
-    if [[ "$CONFIRM_FIREWALL_CMD" =~ [Yy] ]]; then
-      CONFIGURE_FIREWALL_CMD=true
-    fi
-  fi
-
+  # Ask for letsencrypt
   ask_letsencrypt
 
-  if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
-    while [ -z "$FQDN" ]; do
-        echo -n "* Set the FQDN to use for Let's Encrypt (node.example.com): "
-        read -r FQDN
-
-        ASK=false
-
-        [ -z "$FQDN" ] && print_error "FQDN cannot be empty"
-        [ -d "/etc/letsencrypt/live/$FQDN/" ] && print_error "A certificate with this FQDN already exists!" && FQDN="" && ASK=true
-
-        [ "$ASK" == true ] && echo -e -n "* Do you still want to automatically configure HTTPS using Let's Encrypt? (y/N): "
-        [ "$ASK" == true ] && read -r CONFIRM_SSL
-
-        if [[ ! "$CONFIRM_SSL" =~ [Yy] ]] && [ "$ASK" == true ]; then
-          CONFIGURE_LETSENCRYPT=false
-          FQDN="none"
-        fi
-    done
-  fi
-
-  if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
-    # set EMAIL
-    while [ -z "$EMAIL" ]; do
-        echo -n "* Enter email address for Let's Encrypt: "
-        read -r EMAIL
-
-        [ -z "$EMAIL" ] && print_error "Email cannot be empty"
-    done
-  fi
+  # Configure letsencrypt information
+  "$CONFIGURE_LETSENCRYPT" && conf_letsencrypt
 
   echo -n "* Proceed with installation? (y/N): "
 
