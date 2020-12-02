@@ -485,7 +485,7 @@ ubuntu20_dep() {
   add-apt-repository universe
 
   # Install Dependencies
-  apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis
+  apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis cron
 
   # Enable services
   enable_services_debian_based
@@ -512,7 +512,7 @@ ubuntu18_dep() {
   apt_update
 
   # Install Dependencies
-  apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis
+  apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis cron
 
   # Enable services
   enable_services_debian_based
@@ -539,7 +539,7 @@ debian_stretch_dep() {
   apt_update
 
   # Install Dependencies
-  apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server
+  apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server cron
 
   # Enable services
   enable_services_debian_based
@@ -562,8 +562,8 @@ debian_dep() {
   # Update repositories list
   apt_update
 
-  # Install dependencies
-  apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server
+  # install dependencies
+  apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server cron
 
   # Enable services
   enable_services_debian_based
@@ -723,19 +723,14 @@ configure_nginx() {
       # download new config
       curl -o /etc/nginx/sites-available/pterodactyl.conf $CONFIGS_URL/nginx.conf
 
-      # replace all <php_socket> places with correct socket "path"
-      sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" /etc/nginx/sites-available/pterodactyl.conf
-
       # replace all <domain> places with the correct domain
       sed -i -e "s@<domain>@${FQDN}@g" /etc/nginx/sites-available/pterodactyl.conf
 
-      # on debian 8/9, TLS v1.3 is not supported (see #76)
-      # this if statement can be refactored into a one-liner but I think this is more readable
-      if [ "$OS" == "debian" ]; then
-        if [ "$OS_VER_MAJOR" == "8" ] || [ "$OS_VER_MAJOR" == "9" ]; then
-          sed -i 's/ TLSv1.3//' file /etc/nginx/sites-available/pterodactyl.conf
-        fi
-      fi
+      # replace all <php_socket> places with correct socket "path"
+      sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" /etc/nginx/sites-available/pterodactyl.conf
+
+      # on debian 9, TLS v1.3 is not supported (see #76)
+      [ "$OS" == "debian" ] && [ "$OS_VER_MAJOR" == "9" ] && sed -i 's/ TLSv1.3//' /etc/nginx/sites-available/pterodactyl.conf
 
       # enable pterodactyl
       ln -s /etc/nginx/sites-available/pterodactyl.conf /etc/nginx/sites-enabled/pterodactyl.conf
@@ -823,7 +818,7 @@ main() {
   print_brake 72
   echo "* Database configuration."
   echo ""
-  echo "* This will be the credentials used for commuication between the MySQL"
+  echo "* This will be the credentials used for communication between the MySQL"
   echo "* database and the panel. You do not need to create the database"
   echo "* before running this script, the script will do that for you."
   echo ""
