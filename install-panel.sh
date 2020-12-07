@@ -96,6 +96,7 @@ get_latest_release() {
 }
 
 # pterodactyl version
+echo "* Retrieving release information.."
 PTERODACTYL_VERSION="$(get_latest_release "pterodactyl/panel")"
 
 #################################
@@ -647,7 +648,7 @@ firewall_ufw() {
   # pointing to /dev/null silences the command output
   ufw allow ssh > /dev/null
   ufw allow http > /dev/null
-  [ "$CONFIGURE_LETSENCRYPT" == true ] && ufw allow https > /dev/null
+  "$ASSUME_SSL" && ufw allow https > /dev/null
 
   ufw enable
   ufw status numbered | sed '/v6/d'
@@ -734,6 +735,10 @@ configure_nginx() {
 
       # enable pterodactyl
       ln -s /etc/nginx/sites-available/pterodactyl.conf /etc/nginx/sites-enabled/pterodactyl.conf
+  fi
+
+  if [ ! "$ASSUME_SSL" ]; then
+    systemctl restart nginx
   fi
 
   echo "* nginx configured!"
@@ -900,9 +905,6 @@ main() {
     print_error "Installation aborted."
     exit 1
   fi
-
-  # Run goodbye function
-  goodbye
 }
 
 summary() {
@@ -946,3 +948,5 @@ goodbye() {
 
 # run script
 main
+# Run goodbye function
+goodbye
