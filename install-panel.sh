@@ -136,35 +136,16 @@ required_input() {
 }
 
 password_input() {
-  local  __resultvar=$1
-  local  result=''
-
-  while [ -z "$result" ]; do
-    echo -n "* ${2}"
-
-    # modified from https://stackoverflow.com/a/22940001
-    while IFS= read -r -s -n1 char; do
-      [[ -z $char ]] && { printf '\n'; break; } # ENTER pressed; output \n and break.
-      if [[ $char == $'\x7f' ]]; then # backspace was pressed
-          # Only if variable is not empty
-          if [ -n "$result" ]; then
-            # Remove last char from output variable.
-            [[ -n $result ]] && result=${result%?}
-            # Erase '*' to the left.
-            printf '\b \b' 
-          fi
-      else
-        # Add typed char to output variable.
-        result+=$char
-        # Print '*' in its stead.
-        printf '*'
-      fi
+  local result=$1
+  echo -e "Please enter the password that is used throughout the install. (Use something strong)"
+  while [[ -z "$passOriginal" || ! $passOriginal == $passConfirm ]]
+    do
+      read -sp "Password: " passOriginal && echo
+      read -sp "Confirm Password: " passConfirm && echo
+      [[ -z "$passOriginal" ]] && echo -e "\nError: Password cannot be empty"
+      [[ ! $passOriginal == $passConfirm ]] && echo -e "Error: Password do not match\n"
     done
-
-    [ -z "$result" ] && print_error "${3}"
-  done
-
-  eval "$__resultvar="'$result'""
+   eval "$result="'$passOriginal'""
 }
 
 # other functions
@@ -904,7 +885,7 @@ function main {
   [ -z "$MYSQL_USER_INPUT" ] && MYSQL_USER="pterodactyl" || MYSQL_USER=$MYSQL_USER_INPUT
 
   # MySQL password input
-  password_input MYSQL_PASSWORD "Password (use something strong): " "MySQL password cannot be empty"
+  password_input MYSQL_PASSWORD
 
   valid_timezones="$(timedatectl list-timezones)"
   echo "* List of valid timezones here $(hyperlink "https://www.php.net/manual/en/timezones.php")"
@@ -925,7 +906,7 @@ function main {
   required_input user_username "Username for the initial admin account: " "Username cannot be empty"
   required_input user_firstname "First name for the initial admin account: " "Name cannot be empty"
   required_input user_lastname "Last name for the initial admin account: " "Name cannot be empty"
-  password_input user_password "Password for the initial admin account: " "Password cannot be empty"
+  password_input user_password
 
   print_brake 72
 
