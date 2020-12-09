@@ -138,14 +138,14 @@ required_input() {
 password_input() {
   local result=$1
   echo -e "Please enter the password that is used throughout the install. (Use something strong)"
-  while [[ -z "$passOriginal" || ! "$passOriginal" == "$passConfirm" ]]
+  while [[ -z "$password_main" || ! $password_main == $password_confirm ]]
     do
-      read -rsp "Password: " passOriginal && echo
-      read -rsp "Confirm Password: " passConfirm && echo
-      [[ -z "$passOriginal" ]] && echo -e "\nError: Password cannot be empty"
-      [[ ! "$passOriginal" == "$passConfirm" ]] && echo -e "Error: Password do not match\n"
+      read -sp "Password: " password_main && echo
+      read -sp "Confirm Password: " password_confirm && echo
+      [[ -z "$password_main" ]] && echo -e "\nError: Password cannot be empty"
+      [[ ! $password_main == $password_confirm ]] && echo -e "Error: Password do not match\n"
     done
-   eval "$result="'$passOriginal'""
+   eval "$result="'$password_main'""
 }
 
 # other functions
