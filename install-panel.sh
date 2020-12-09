@@ -140,8 +140,8 @@ password_input() {
   echo -en "* ${2}\n"
   while [[ -z "$password_main" || ! "$password_main" == "$password_confirm" ]]
     do
-      read -sp "Password: " password_main && echo
-      read -sp "Confirm Password: " password_confirm && echo
+      read -rsp "Password: " password_main && echo
+      read -rsp "Confirm Password: " password_confirm && echo
       [[ -z "$password_main" ]] && echo -e "\nError: Password cannot be empty"
       [[ ! "$password_main" == "$password_confirm" ]] && echo -e "Error: Password do not match\n"
     done
