@@ -137,7 +137,7 @@ required_input() {
 
 password_input() {
   local result=$1
-  echo -e "Please enter the password that is used throughout the install. (Use something strong)"
+  echo -n "* ${2}"
   while [[ -z "$password_main" || ! $password_main == $password_confirm ]]
     do
       read -sp "Password: " password_main && echo
@@ -885,7 +885,7 @@ function main {
   [ -z "$MYSQL_USER_INPUT" ] && MYSQL_USER="pterodactyl" || MYSQL_USER=$MYSQL_USER_INPUT
 
   # MySQL password input
-  password_input MYSQL_PASSWORD
+  password_input MYSQL_PASSWORD "Password (use something strong): "
 
   valid_timezones="$(timedatectl list-timezones)"
   echo "* List of valid timezones here $(hyperlink "https://www.php.net/manual/en/timezones.php")"
@@ -906,7 +906,7 @@ function main {
   required_input user_username "Username for the initial admin account: " "Username cannot be empty"
   required_input user_firstname "First name for the initial admin account: " "Name cannot be empty"
   required_input user_lastname "Last name for the initial admin account: " "Name cannot be empty"
-  password_input user_password
+  password_input user_password "Password for the initial admin account: "
 
   print_brake 72
 
