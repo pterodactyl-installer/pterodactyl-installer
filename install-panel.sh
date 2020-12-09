@@ -206,45 +206,17 @@ function detect_distro {
 }
 
 function check_os_comp {
-  if [ "$OS" == "ubuntu" ]; then
-    PHP_SOCKET="/run/php/php7.4-fpm.sock"
-    if [ "$OS_VER_MAJOR" == "18" ]; then
-      SUPPORTED=true
-    elif [ "$OS_VER_MAJOR" == "20" ]; then
-      SUPPORTED=true
-    else
-      SUPPORTED=false
-    fi
-  elif [ "$OS" == "debian" ]; then
-    PHP_SOCKET="/run/php/php7.4-fpm.sock"
-    if [ "$OS_VER_MAJOR" == "9" ]; then
-      SUPPORTED=true
-    elif [ "$OS_VER_MAJOR" == "10" ]; then
-      SUPPORTED=true
-    else
-      SUPPORTED=false
-    fi
-  elif [ "$OS" == "centos" ]; then
-    PHP_SOCKET="/var/run/php-fpm/pterodactyl.sock"
-    if [ "$OS_VER_MAJOR" == "7" ]; then
-      SUPPORTED=true
-    elif [ "$OS_VER_MAJOR" == "8" ]; then
-      SUPPORTED=true
-    else
-      SUPPORTED=false
-    fi
-  else
     SUPPORTED=false
-  fi
+    [[ "$OS" == "ubuntu" && "$OS_VER_MAJOR" == "18" ]] && PHP_SOCKET="/run/php/php7.4-fpm.sock" && SUPPORTED=true
+    [[ "$OS" == "ubuntu" && "$OS_VER_MAJOR" == "20" ]] && PHP_SOCKET="/run/php/php7.4-fpm.sock" && SUPPORTED=true
+    [[ "$OS" == "debian" && "$OS_VER_MAJOR" == "9" ]] && PHP_SOCKET="/run/php/php7.4-fpm.sock" && SUPPORTED=true
+    [[ "$OS" == "debian" && "$OS_VER_MAJOR" == "10" ]] && PHP_SOCKET="/run/php/php7.4-fpm.sock" && SUPPORTED=true
+    [[ "$OS" == "centos" && "$OS_VER_MAJOR" == "7" ]] && PHP_SOCKET="/var/run/php-fpm/pterodactyl.sock" && SUPPORTED=true
+    [[ "$OS" == "centos" && "$OS_VER_MAJOR" == "8" ]] && PHP_SOCKET="/var/run/php-fpm/pterodactyl.sock" && SUPPORTED=true
 
-  # exit if not supported
-  if [ "$SUPPORTED" == true ]; then
-    echo "* $OS $OS_VER is supported."
-  else
-    echo "* $OS $OS_VER is not supported"
-    print_error "Unsupported OS"
-    exit 1
-  fi
+    # exit if not supported
+    [[ "$SUPPORTED" == true ]] && echo "* $OS $OS_VER is supported."
+    [[ "$SUPPORTED" == false ]] && echo "* $OS $OS_VER is not supported" && print_error "Unsupported OS" && exit 1
 }
 
 #################################
