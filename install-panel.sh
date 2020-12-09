@@ -137,7 +137,7 @@ required_input() {
 
 password_input() {
   local result=$1
-  echo -n "* ${2}"
+  echo -en "* ${2}\n"
   while [[ -z "$password_main" || ! $password_main == $password_confirm ]]
     do
       read -sp "Password: " password_main && echo
