@@ -648,7 +648,7 @@ firewall_ufw() {
   # pointing to /dev/null silences the command output
   ufw allow ssh > /dev/null
   ufw allow http > /dev/null
-  "$ASSUME_SSL" && ufw allow https > /dev/null
+  ufw allow https > /dev/null
 
   ufw enable
   ufw status numbered | sed '/v6/d'
@@ -667,7 +667,7 @@ firewall_firewalld() {
 
   # Configure
   firewall-cmd --add-service=http --permanent -q # Port 80
-  [ "$CONFIGURE_LETSENCRYPT" == true ] && firewall-cmd --add-service=https --permanent -q # Port 443
+  firewall-cmd --add-service=https --permanent -q # Port 443
   firewall-cmd --add-service=ssh --permanent -q  # Port 22
   firewall-cmd --reload -q # Enable firewall
 
@@ -695,6 +695,17 @@ letsencrypt() {
   # Check if it succeded
   if [ ! -d "/etc/letsencrypt/live/$FQDN/" ] || [ "$FAILED" == true ]; then
     print_warning "The process of obtaining a Let's Encrypt certificate failed!"
+    echo -n "* Still assume SSL? (y/N): "
+    read -r CONFIGURE_SSL
+
+    if [[ "$CONFIGURE_SSL" =~ [Yy] ]]; then
+      ASSUME_SSL=true
+      CONFIGURE_LETSENCRYPT=false
+      configure_nginx
+    else
+      ASSUME_SSL=false
+      CONFIGURE_LETSENCRYPT=false
+    fi
   fi
 }
 
@@ -705,12 +716,18 @@ letsencrypt() {
 configure_nginx() {
   echo "* Configuring nginx .."
 
+  if [ "$ASSUME_SSL" ] && [ ! "$CONFIGURE_LETSENCRYPT" ]; then
+    DL_FILE="nginx_ssl.conf"
+  else
+    DL_FILE="nginx.conf"
+  fi
+
   if [ "$OS" == "centos" ]; then
       # remove default config
       rm -rf /etc/nginx/conf.d/default
 
       # download new config
-      curl -o /etc/nginx/conf.d/pterodactyl.conf $CONFIGS_URL/nginx.conf
+      curl -o /etc/nginx/conf.d/pterodactyl.conf $CONFIGS_URL/$DL_FILE
 
       # replace all <domain> places with the correct domain
       sed -i -e "s@<domain>@${FQDN}@g" /etc/nginx/conf.d/pterodactyl.conf
@@ -722,7 +739,7 @@ configure_nginx() {
       rm -rf /etc/nginx/sites-enabled/default
 
       # download new config
-      curl -o /etc/nginx/sites-available/pterodactyl.conf $CONFIGS_URL/nginx.conf
+      curl -o /etc/nginx/sites-available/pterodactyl.conf $CONFIGS_URL/$DL_FILE
 
       # replace all <domain> places with the correct domain
       sed -i -e "s@<domain>@${FQDN}@g" /etc/nginx/sites-available/pterodactyl.conf
@@ -737,7 +754,7 @@ configure_nginx() {
       ln -s /etc/nginx/sites-available/pterodactyl.conf /etc/nginx/sites-enabled/pterodactyl.conf
   fi
 
-  if [ ! "$ASSUME_SSL" ]; then
+  if [ ! "$ASSUME_SSL" ] && [ ! "$CONFIGURE_LETSENCRYPT" ]; then
     systemctl restart nginx
   fi
 
@@ -880,16 +897,14 @@ main() {
 
   # If it's already true, this should be a no-brainer
   if [ "$CONFIGURE_LETSENCRYPT" == false ]; then
-    echo "* Let's Encrypt is not going to be automatically configured by this script (either unsupported yet or user opted out)."
+    echo "* Let's Encrypt is not going to be automatically configured by this script (user opted out)."
     echo "* You can 'assume' Let's Encrypt, which means the script will download a nginx configuration that is configured to use a Let's Encrypt certificate but the script won't obtain the certificate for you."
     echo "* If you assume SSL and do not obtain the certificate, your installation will not work."
 
     echo -n "* Assume SSL or not? (y/N): "
     read -r ASSUME_SSL_INPUT
 
-    if [[ "$ASSUME_SSL_INPUT" =~ [Yy] ]]; then
-      ASSUME_SSL=true
-    fi
+    [[ "$ASSUME_SSL_INPUT" =~ [Yy] ]] && ASSUME_SSL=true
   fi
 
   # summary
