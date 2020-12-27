@@ -316,7 +316,7 @@ ptdl_dl() {
   chmod -R 755 storage/* bootstrap/cache/
 
   cp .env.example .env
-  composer install --no-dev --optimize-autoloader
+  COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader
 
   php artisan key:generate --force
   echo "* Downloaded pterodactyl panel files & installed composer dependencies!"
@@ -754,7 +754,7 @@ configure_nginx() {
       ln -s /etc/nginx/sites-available/pterodactyl.conf /etc/nginx/sites-enabled/pterodactyl.conf
   fi
 
-  if [ ! "$ASSUME_SSL" ] && [ ! "$CONFIGURE_LETSENCRYPT" ]; then
+  if [ "$ASSUME_SSL" ] && [ "$CONFIGURE_LETSENCRYPT" ]; then
     systemctl restart nginx
   fi
 
