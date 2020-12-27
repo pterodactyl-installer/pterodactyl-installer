@@ -148,8 +148,6 @@ check_os_comp() {
       [ "$OS_VER_MAJOR" == "7" ] && SUPPORTED=true
       [ "$OS_VER_MAJOR" == "8" ] && SUPPORTED=true
       ;;
-    *)
-      SUPPORTED=false ;;
   esac
 
   # exit if not supported
@@ -196,15 +194,23 @@ rm_cron(){
 }
 
 rm_database(){
-  mysql -u root -p -e "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT IN ('mysql','information_schema','performance_schema');"
+  valid_db=$(mysql -u root -p -e "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT IN ('information_schema','performance_schema');")
+  echo "$valid_db"
   warning "Be careful! This database will be deleted!"
-  echo -e -n  "* Choose the panel database: "
-  read -r DATABASE
+  while [ -z "$DATABASE" ] || [[ $valid_db != *"$database_input"* ]]; do
+    echo -n "* Choose the panel database: "
+    read -r database_input
+    DATABASE=$database_input
+  done
   mysql -u root -p -e "DROP $DATABASE"
-  mysql -u root -p -e "SELECT * FROM mysql.user;"
+  valid_users=$(mysql -u root -p -e "SELECT * FROM mysql.user;")
+  echo "$valid_users "
   warning "Be careful! This user will be deleted!"
-  echo -e -n  "* Choose the panel database user: "
-  read -r USER
+  while [ -z "$USER" ] || [[ $valid_users != *"$user_input"* ]]; do
+    echo -n "* Choose the panel database: "
+    read -r user_input
+    USER=$user_input
+  done
   mysql -u root -p -e "DROP USER '$USER'@'127.0.0.1'"
   mysql -u root -p -e "FLUSH PRIVILEGES;"
 }
@@ -221,6 +227,8 @@ perform_uninstall(){
 }
 
 main() {
+  rm_database
+  exit 1
   detect_distro
   print_brake 70
   output "Pterodactyl uninstallation script"
@@ -233,6 +241,7 @@ main() {
   output
   output "Running $OS version $OS_VER."
   print_brake 70
+  # check_os_comp
 
   if [ -d "/var/www/pterodactyl" ]; then
     output "Panel installation has been detected."
