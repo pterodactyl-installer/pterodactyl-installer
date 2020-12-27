@@ -465,8 +465,10 @@ enable_services_debian_based() {
 
 enable_services_centos_based() {
   systemctl enable mariadb
+  systemctl enable nginx
   systemctl enable redis
   systemctl start mariadb
+  systemctl start nginx
   systemctl start redis
 }
 
