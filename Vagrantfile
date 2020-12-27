@@ -13,6 +13,9 @@ Vagrant.configure("2") do |config|
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://vagrantcloud.com/search.
 
+  # "public" network so that we can access the panel interface
+  config.vm.network "public_network"
+
   # ubuntu
   config.vm.define "ubuntu_focal" do |ubuntu_focal|
     ubuntu_focal.vm.box = "ubuntu/focal64"
