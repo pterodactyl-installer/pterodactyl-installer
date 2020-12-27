@@ -963,5 +963,4 @@ goodbye() {
 
 # run script
 main
-# Run goodbye function
 goodbye
