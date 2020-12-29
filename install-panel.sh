@@ -718,7 +718,7 @@ letsencrypt() {
 configure_nginx() {
   echo "* Configuring nginx .."
 
-  if [ "$ASSUME_SSL" ] && [ ! "$CONFIGURE_LETSENCRYPT" ]; then
+  if "$ASSUME_SSL" && ! "$CONFIGURE_LETSENCRYPT"; then
     DL_FILE="nginx_ssl.conf"
   else
     DL_FILE="nginx.conf"
@@ -756,7 +756,7 @@ configure_nginx() {
       ln -s /etc/nginx/sites-available/pterodactyl.conf /etc/nginx/sites-enabled/pterodactyl.conf
   fi
 
-  if [ "$ASSUME_SSL" ] && [ "$CONFIGURE_LETSENCRYPT" ]; then
+  if "$ASSUME_SSL" && "$CONFIGURE_LETSENCRYPT"; then
     systemctl restart nginx
   fi
 
@@ -783,7 +783,7 @@ perform_install() {
         [ "$OS_VER_MAJOR" == "9" ] && debian_stretch_dep
         [ "$OS_VER_MAJOR" == "10" ] && debian_dep
       fi
-      ;;
+    ;;
 
     centos)
       [ "$OS_VER_MAJOR" == "7" ] && yum_update
@@ -795,7 +795,7 @@ perform_install() {
       [ "$OS_VER_MAJOR" == "8" ] && centos8_dep
     ;;
   esac
-
+  
   [ "$OS" == "centos" ] && centos_php
   install_composer
   ptdl_dl
@@ -805,7 +805,7 @@ perform_install() {
   insert_cronjob
   install_pteroq
   configure_nginx
-  [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
+  "$CONFIGURE_LETSENCRYPT" && letsencrypt
 }
 
 main() {
