@@ -13,7 +13,7 @@ This project is available at [GitHub](https://github.com/vilhelmprytz/pterodacty
 
 ## Features
 
-- Automatic installation of the Pterodactyl Panel (dependencies,  database, cronjob, nginx).
+- Automatic installation of the Pterodactyl Panel (dependencies, database, cronjob, nginx).
 - Automatic installation of the Pterodactyl Wings (Docker, NodeJS, systemd).
 - Panel: (optional) automatic configuration of Let's Encrypt.
 - Panel: (optional) automatic configuration of UFW (firewall for Ubuntu/Debian).
@@ -28,35 +28,35 @@ List of supported installation setups for panel and Wings (installations support
 
 ### Supported panel operating systems and webservers
 
-| Operating System  | Version | nginx support        | PHP Version |
-| ----------------- | ------- | -------------------- | ----------- |
-| Ubuntu            | 14.04   | :red_circle:         |             |
-|                   | 16.04   | :red_circle: *       |             |
-|                   | 18.04   | :white_check_mark:   | 7.4         |
-|                   | 20.04   | :white_check_mark:   | 7.4         |
-| Debian            | 8       | :red_circle: *       |             |
-|                   | 9       | :white_check_mark:   | 7.4         |
-|                   | 10      | :white_check_mark:   | 7.4         |
-| CentOS            | 6       | :red_circle:         |             |
-|                   | 7       | :white_check_mark:   | 7.4         |
-|                   | 8       | :white_check_mark:   | 7.4         |
+| Operating System | Version | nginx support      | PHP Version |
+| ---------------- | ------- | ------------------ | ----------- |
+| Ubuntu           | 14.04   | :red_circle:       |             |
+|                  | 16.04   | :red_circle: \*    |             |
+|                  | 18.04   | :white_check_mark: | 7.4         |
+|                  | 20.04   | :white_check_mark: | 7.4         |
+| Debian           | 8       | :red_circle: \*    |             |
+|                  | 9       | :white_check_mark: | 7.4         |
+|                  | 10      | :white_check_mark: | 7.4         |
+| CentOS           | 6       | :red_circle:       |             |
+|                  | 7       | :white_check_mark: | 7.4         |
+|                  | 8       | :white_check_mark: | 7.4         |
 
 ### Supported Wings operating systems
 
-| Operating System  | Version | Supported            |
-| ----------------- | ------- | -------------------- |
-| Ubuntu            | 14.04   | :red_circle:         |
-|                   | 16.04   | :red_circle: *       |
-|                   | 18.04   | :white_check_mark:   |
-|                   | 20.04   | :white_check_mark:   |
-| Debian            | 8       | :red_circle:         |
-|                   | 9       | :white_check_mark:   |
-|                   | 10      | :white_check_mark:   |
-| CentOS            | 6       | :red_circle:         |
-|                   | 7       | :white_check_mark:   |
-|                   | 8       | :white_check_mark:   |
+| Operating System | Version | Supported          |
+| ---------------- | ------- | ------------------ |
+| Ubuntu           | 14.04   | :red_circle:       |
+|                  | 16.04   | :red_circle: \*    |
+|                  | 18.04   | :white_check_mark: |
+|                  | 20.04   | :white_check_mark: |
+| Debian           | 8       | :red_circle:       |
+|                  | 9       | :white_check_mark: |
+|                  | 10      | :white_check_mark: |
+| CentOS           | 6       | :red_circle:       |
+|                  | 7       | :white_check_mark: |
+|                  | 8       | :white_check_mark: |
 
-_* Ubuntu 16 and Debian 8 no longer supported since Pterodactyl does not actively support it._
+_\* Ubuntu 16 and Debian 8 no longer supported since Pterodactyl does not actively support it._
 
 ## Using the installation scripts
 
@@ -66,82 +66,43 @@ To use the installation scripts, simply run this command as root. The script wil
 bash <(curl -s https://pterodactyl-installer.se)
 ```
 
-*Note: On some systems, it's required to be already logged in as root before executing the one-line command (where `sudo` is in front of the command does not work).*
+_Note: On some systems, it's required to be already logged in as root before executing the one-line command (where `sudo` is in front of the command does not work)._
 
 Here is a [YouTube video](https://www.youtube.com/watch?v=E8UJhyUFoHM) that illustrates the installation process.
 
 ## Firewall setup
 
-The installation scripts do not configure your firewall automatically.
+The installation scripts can install and configure a firewall for you. The script will ask whether you want this or not. It is highly recommended to opt-in for the automatic firewall setup.
 
-### Debian/Ubuntu
+## Development & Ops
 
-On Debian and Ubuntu, `ufw` can be used. Install it using `apt`.
+To test the script, we use [Vagrant](https://www.vagrantup.com). With Vagrant, you can quickly get a fresh machine up and running to test the script.
 
-```bash
-apt install -y ufw
-```
-
-#### Panel
-
-The script can automatically open the ports for SSH (22), HTTP (80) and HTTPS (443). The installer script should ask whether you'd like it to configure UFW automatically or not.
-
-#### Wings
-
-Allow 8080 and 2022.
+If you want to test the script on all supported installations in one go, just run the following.
 
 ```bash
-ufw allow 8080
-ufw allow 2022
+vagrant up
 ```
 
-#### Enable the firewall
-
-Make sure to also enable SSH (or allow SSH from your IP only, depending on your setup).
+If you only want to test a specific distribution, you can run the following.
 
 ```bash
-ufw allow ssh
+vagrant up <name>
 ```
 
-Enable the firewall.
+Replace name with one of the following (supported installations).
 
-```bash
-ufw enable
-```
+- `ubuntu_focal`
+- `ubuntu_bionic`
+- `debian_buster`
+- `debian_stretch`
+- `centos_8`
+- `centos_7`
 
-### CentOS
-
-On CentOS, `firewall-cmd` can be used.
-
-#### Panel
-
-Allow HTTP and HTTPS.
-
-```bash
-firewall-cmd --add-service=http --permanent
-firewall-cmd --add-service=https --permanent
-```
-
-#### Wings
-
-Allow 8080 and 2022.
-
-```bash
-firewall-cmd --add-port 8080/tcp --permanent
-firewall-cmd --add-port 2022/tcp --permanent
-firewall-cmd --permanent --zone=trusted --change-interface=docker0
-```
-
-#### Enable the firewall
-
-Reload the firewall to enable the changes.
-
-```bash
-firewall-cmd --reload
-```
+Then you can use `vagrant ssh <name of machine>` to SSH into the box. The project directory will be mounted in `/vagrant` so you can quickly modify the script locally and then test the changes by running the script from `/vagrant/install_panel.sh` and `/vagrant/install_wings` respectively.
 
 ## Contributors ✨
 
 Created and maintained by [Vilhelm Prytz](https://github.com/vilhelmprytz).
 
-Special thanks to [sam1370](https://github.com/sam1370) and [Linux123123](https://github.com/Linux123123) for helping on the Discord server!
+Special thanks to the Discord moderators [sam1370](https://github.com/sam1370) and [Linux123123](https://github.com/Linux123123) for helping on the Discord server!
