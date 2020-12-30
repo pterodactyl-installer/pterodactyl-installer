@@ -73,7 +73,7 @@ dep_install() {
 
 dns_verify() {
   output "Resolving DNS for $fqdn"
-  ip=$(curl -s https://checkip.pterodactyl-installer.se)
+  ip=$(curl -4 -s https://checkip.pterodactyl-installer.se)
   dns_record=$(dig +short ${fqdn})
   [ "${ip}" != "${dns_record}" ] && fail
   output "DNS verified!"
