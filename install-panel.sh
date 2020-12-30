@@ -194,7 +194,7 @@ ask_letsencrypt() {
 
   if [[ "$CONFIRM_SSL" =~ [Yy] ]]; then
     CONFIGURE_LETSENCRYPT=true
-    ASSUME_SSL=true
+    ASSUME_SSL=false
   fi
 }
 
