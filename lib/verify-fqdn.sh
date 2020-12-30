@@ -65,6 +65,12 @@ fail() {
   return 0
 }
 
+dep_install() {
+  [ "$os" == "centos" ] && yum install -y bind-utils
+  [ "$os" == "debian" ] && apt install -y dnsutils
+  [ "$os" == "ubuntu" ] && apt install -y dnsutils
+}
+
 dns_verify() {
   output "Resolving DNS for $fqdn"
   ip=$(curl -s https://checkip.pterodactyl-installer.se)
@@ -75,7 +81,9 @@ dns_verify() {
 
 main() {
   fqdn="$1"
+  os="$2"
+  dep_install
   dns_verify
 }
 
-main "$1"
+main "$1" "$2"

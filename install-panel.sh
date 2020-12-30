@@ -938,7 +938,7 @@ function main {
   done
 
   # verify FQDN
-  bash <(curl -s $GITHUB_BASE_URL/lib/verify-fqdn.sh) "$FQDN"
+  bash <(curl -s $GITHUB_BASE_URL/lib/verify-fqdn.sh) "$FQDN" "$OS"
 
   # UFW is available for Ubuntu/Debian
   # Let's Encrypt is available for Ubuntu/Debian
