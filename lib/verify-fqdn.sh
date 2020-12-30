@@ -28,8 +28,6 @@ set -e
 #                                                                           #
 #############################################################################
 
-WORKING_DIR="/tmp/pterodactyl-verify-fqdn"
-
 # exit with error status code if user is not root
 if [[ $EUID -ne 0 ]]; then
   echo "* This script must be executed with root privileges (sudo)." 1>&2
@@ -43,12 +41,9 @@ if ! [ -x "$(command -v curl)" ]; then
   exit 1
 fi
 
-# check for python
-if ! [ -x "$(command -v python3)" ]; then
-  echo "* python3 is required in order for this script to work."
-  echo "* install using apt (Debian and derivatives) or yum/dnf (CentOS)"
-  exit 1
-fi
+output() {
+   echo "* $1"
+}
 
 error() {
   COLOR_RED='\033[0;31m'
@@ -59,33 +54,28 @@ error() {
   echo ""
 }
 
-webserver() {
-    rm -rf "$WORKING_DIR"
-    mkdir "$WORKING_DIR"
-    cd "$WORKING_DIR"
+fail() {
+  output "The DNS record does not match your server IP. Please make sure the FQDN $fqdn is pointing to the IP of your server, $ip"
+  output "If you are using Cloudflare, please disable the proxy or opt out from Let's Ecnrypt."
 
-    echo "pterodactyl-installer-verify-fqdn" > index.html
+  echo -n "* Proceed anyways (your install will be broken if you do not know what you are doing)? (y/N): "
+  read -r override
 
-    python3 -m http.server "$1" &
+  [[ ! "$override" =~ [Yy] ]] && error "Invalid FQDN or DNS record" && exit 1
+  return 0
+}
 
-    sleep 1
-
-    if [ "$(curl http://"$2":"$1")" != "pterodactyl-installer-verify-fqdn" ]; then
-        error "FQDN is not valid. See error message above for more info"
-        exit 1
-    fi
-
-    kill "$(jobs -p)"
-
-    rm -rf "$WORKING_DIR"
+dns_verify() {
+  output "Resolving DNS for $fqdn"
+  ip=$(curl -s https://checkip.pterodactyl-installer.se)
+  dns_record=$(dig +short ${fqdn})
+  [ "${ip}" != "${dns_record}" ] && fail
+  output "DNS verified!"
 }
 
 main() {
-    echo "Trying http://$1:80"
-    webserver "80" "$1"
-
-    echo "Trying http://$1:443"
-    webserver "443" "$1"
+  fqdn="$1"
+  dns_verify
 }
 
 main "$1"
