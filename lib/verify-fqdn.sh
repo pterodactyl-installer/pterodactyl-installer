@@ -69,6 +69,7 @@ dep_install() {
   [ "$os" == "centos" ] && yum install -y bind-utils
   [ "$os" == "debian" ] && apt install -y dnsutils
   [ "$os" == "ubuntu" ] && apt install -y dnsutils
+  return 0
 }
 
 dns_verify() {
