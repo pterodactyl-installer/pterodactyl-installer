@@ -50,8 +50,8 @@ fi
 #################################
 
 # download URLs
-DL_URL="https://github.com/pterodactyl/wings/releases/latest/download/wings_linux_amd64"
-CONFIGS_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/configs"
+WINGS_DL_URL="https://github.com/pterodactyl/wings/releases/latest/download/wings_linux_amd64"
+GITHUB_BASE_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master"
 
 COLOR_RED='\033[0;31m'
 COLOR_NC='\033[0m'
@@ -327,7 +327,7 @@ ptdl_dl() {
   echo "* Installing Pterodactyl Wings .. "
 
   mkdir -p /etc/pterodactyl
-  curl -L -o /usr/local/bin/wings "$DL_URL"
+  curl -L -o /usr/local/bin/wings "$WINGS_DL_URL"
 
   chmod u+x /usr/local/bin/wings
 
@@ -336,7 +336,7 @@ ptdl_dl() {
 
 systemd_file() {
   echo "* Installing systemd service.."
-  curl -o /etc/systemd/system/wings.service $CONFIGS_URL/wings.service
+  curl -o /etc/systemd/system/wings.service $GITHUB_BASE_URL/configs/wings.service
   systemctl daemon-reload
   systemctl enable wings
   echo "* Installed systemd service!"
