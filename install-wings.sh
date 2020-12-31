@@ -29,8 +29,8 @@ set -e
 #############################################################################
 
 # versioning
-GITHUB_SOURCE="v0.1.0"
-SCRIPT_RELEASE="v0.1.0"
+GITHUB_SOURCE="master"
+SCRIPT_RELEASE="canary"
 
 #################################
 ######## General checks #########
