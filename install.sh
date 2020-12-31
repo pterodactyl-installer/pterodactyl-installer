@@ -6,7 +6,7 @@ set -e
 #                                                                           #
 # Project 'pterodactyl-installer'                                           #
 #                                                                           #
-# Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al.   #
+# Copyright (C) 2018 - 2021, Vilhelm Prytz, <vilhelm@prytznet.se>, et al.   #
 #                                                                           #
 #   This program is free software: you can redistribute it and/or modify    #
 #   it under the terms of the GNU General Public License as published by    #
@@ -60,7 +60,7 @@ done=false
 
 output "Pterodactyl installation script @ $SCRIPT_VERSION"
 output
-output "Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al."
+output "Copyright (C) 2018 - 2021, Vilhelm Prytz, <vilhelm@prytznet.se>, et al."
 output "https://github.com/vilhelmprytz/pterodactyl-installer"
 output
 output "Sponsoring/Donations: https://github.com/vilhelmprytz/pterodactyl-installer?sponsor=1"

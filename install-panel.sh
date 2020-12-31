@@ -6,7 +6,7 @@ set -e
 #                                                                           #
 # Project 'pterodactyl-installer' for panel                                 #
 #                                                                           #
-# Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al.   #
+# Copyright (C) 2018 - 2021, Vilhelm Prytz, <vilhelm@prytznet.se>, et al.   #
 #                                                                           #
 #   This program is free software: you can redistribute it and/or modify    #
 #   it under the terms of the GNU General Public License as published by    #
@@ -877,7 +877,7 @@ function main {
   print_brake 70
   echo "* Pterodactyl panel installation script @ $SCRIPT_RELEASE"
   echo "*"
-  echo "* Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al."
+  echo "* Copyright (C) 2018 - 2021, Vilhelm Prytz, <vilhelm@prytznet.se>, et al."
   echo "* https://github.com/vilhelmprytz/pterodactyl-installer"
   echo "*"
   echo "* This script is not associated with the official Pterodactyl Project."
