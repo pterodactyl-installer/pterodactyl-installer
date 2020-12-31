@@ -28,6 +28,10 @@ set -e
 #                                                                           #
 #############################################################################
 
+# versioning
+GITHUB_SOURCE="master"
+SCRIPT_RELEASE="canary"
+
 # exit with error status code if user is not root
 if [[ $EUID -ne 0 ]]; then
   echo "* This script must be executed with root privileges (sudo)." 1>&2
@@ -50,7 +54,7 @@ get_latest_release() {
 
 echo "* Retrieving release information.."
 PTERODACTYL_VERSION="$(get_latest_release "pterodactyl/panel")"
-echo "* Latest version is $PTERODACTYL_VERSION"
+echo "* pterodactyl/panel @ $PTERODACTYL_VERSION"
 
 # variables
 WEBSERVER="nginx"
@@ -77,7 +81,7 @@ CONFIGURE_LETSENCRYPT=false
 
 # download URLs
 PANEL_DL_URL="https://github.com/pterodactyl/panel/releases/latest/download/panel.tar.gz"
-GITHUB_BASE_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master"
+GITHUB_BASE_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/$GITHUB_SOURCE"
 
 # apt sources path
 SOURCES_PATH="/etc/apt/sources.list"
@@ -871,7 +875,7 @@ function main {
   detect_distro
 
   print_brake 70
-  echo "* Pterodactyl panel installation script"
+  echo "* Pterodactyl panel installation script @ $SCRIPT_RELEASE"
   echo "*"
   echo "* Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al."
   echo "* https://github.com/vilhelmprytz/pterodactyl-installer"
