@@ -49,6 +49,10 @@ fi
 ########## Variables ############
 #################################
 
+# versioning
+GITHUB_SOURCE="master"
+SCRIPT_RELEASE="canary"
+
 # No default FQDN
 FQDN=""
 
@@ -73,7 +77,7 @@ CONFIGURE_LETSENCRYPT=false
 
 # download URLs
 PANEL_DL_URL="https://github.com/pterodactyl/panel/releases/latest/download/panel.tar.gz"
-CONFIGS_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/configs"
+GITHUB_BASE_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/$GITHUB_SOURCE"
 
 # ufw firewall
 CONFIGURE_UFW=false
@@ -433,7 +437,7 @@ insert_cronjob() {
 install_pteroq() {
   echo "* Installing pteroq service.."
 
-  curl -o /etc/systemd/system/pteroq.service $CONFIGS_URL/pteroq.service
+  curl -o /etc/systemd/system/pteroq.service $GITHUB_BASE_URL/configs/pteroq.service
   systemctl enable pteroq.service
   systemctl start pteroq
 
@@ -635,7 +639,7 @@ centos8_dep() {
 #################################
 
 centos_php() {
-  curl -o /etc/php-fpm.d/www-pterodactyl.conf $CONFIGS_URL/www-pterodactyl.conf
+  curl -o /etc/php-fpm.d/www-pterodactyl.conf $GITHUB_BASE_URL/configs/www-pterodactyl.conf
 
   systemctl enable php-fpm
   systemctl start php-fpm
@@ -729,7 +733,7 @@ configure_nginx() {
       rm -rf /etc/nginx/conf.d/default
 
       # download new config
-      curl -o /etc/nginx/conf.d/pterodactyl.conf $CONFIGS_URL/$DL_FILE
+      curl -o /etc/nginx/conf.d/pterodactyl.conf $GITHUB_BASE_URL/configs/$DL_FILE
 
       # replace all <domain> places with the correct domain
       sed -i -e "s@<domain>@${FQDN}@g" /etc/nginx/conf.d/pterodactyl.conf
@@ -741,7 +745,7 @@ configure_nginx() {
       rm -rf /etc/nginx/sites-enabled/default
 
       # download new config
-      curl -o /etc/nginx/sites-available/pterodactyl.conf $CONFIGS_URL/$DL_FILE
+      curl -o /etc/nginx/sites-available/pterodactyl.conf $GITHUB_BASE_URL/configs/$DL_FILE
 
       # replace all <domain> places with the correct domain
       sed -i -e "s@<domain>@${FQDN}@g" /etc/nginx/sites-available/pterodactyl.conf
@@ -824,7 +828,7 @@ main() {
   detect_distro
 
   print_brake 70
-  echo "* Pterodactyl panel installation script"
+  echo "* Pterodactyl panel installation script @ $SCRIPT_RELEASE"
   echo "*"
   echo "* Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al."
   echo "* https://github.com/vilhelmprytz/pterodactyl-installer"
@@ -832,7 +836,7 @@ main() {
   echo "* This script is not associated with the official Pterodactyl Project."
   echo "*"
   echo "* Running $OS version $OS_VER."
-  echo "* Latest pterodactyl panel version is $PTERODACTYL_VERSION"
+  echo "* Latest pterodactyl/panel is $PTERODACTYL_VERSION"
   print_brake 70
 
   # checks if the system is compatible with this installation script
@@ -887,9 +891,11 @@ main() {
   while [ -z "$FQDN" ]; do
       echo -n "* Set the FQDN of this panel (panel.example.com): "
       read -r FQDN
-
       [ -z "$FQDN" ] && print_error "FQDN cannot be empty"
   done
+
+  # verify FQDN
+  bash <(curl -s $GITHUB_BASE_URL/lib/verify-fqdn.sh) "$FQDN" "$OS"
 
   # Ask if firewall is needed
   ask_firewall
