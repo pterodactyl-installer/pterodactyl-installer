@@ -28,6 +28,9 @@ set -e
 #                                                                           #
 #############################################################################
 
+CHECKIP_URL="https://checkip.pterodactyl-installer.se"
+DNS_SERVER="8.8.8.8"
+
 # exit with error status code if user is not root
 if [[ $EUID -ne 0 ]]; then
   echo "* This script must be executed with root privileges (sudo)." 1>&2
@@ -55,7 +58,7 @@ error() {
 }
 
 fail() {
-  output "The DNS record does not match your server IP. Please make sure the FQDN $fqdn is pointing to the IP of your server, $ip"
+  output "The DNS record ($dns_record) does not match your server IP. Please make sure the FQDN $fqdn is pointing to the IP of your server, $ip"
   output "If you are using Cloudflare, please disable the proxy or opt out from Let's Ecnrypt."
 
   echo -n "* Proceed anyways (your install will be broken if you do not know what you are doing)? (y/N): "
@@ -74,8 +77,8 @@ dep_install() {
 
 dns_verify() {
   output "Resolving DNS for $fqdn"
-  ip=$(curl -4 -s https://checkip.pterodactyl-installer.se)
-  dns_record=$(dig +short @8.8.8.8 ${fqdn})
+  ip=$(curl -4 -s $CHECKIP_URL)
+  dns_record=$(dig +short @$DNS_SERVER "$fqdn")
   [ "${ip}" != "${dns_record}" ] && fail
   output "DNS verified!"
 }
