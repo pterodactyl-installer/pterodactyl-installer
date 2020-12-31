@@ -28,6 +28,10 @@ set -e
 #                                                                           #
 #############################################################################
 
+# versioning
+GITHUB_SOURCE="master"
+SCRIPT_RELEASE="canary"
+
 #################################
 ######## General checks #########
 #################################
@@ -51,7 +55,7 @@ fi
 
 # download URLs
 WINGS_DL_URL="https://github.com/pterodactyl/wings/releases/latest/download/wings_linux_amd64"
-GITHUB_BASE_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master"
+GITHUB_BASE_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/$GITHUB_SOURCE"
 
 COLOR_RED='\033[0;31m'
 COLOR_NC='\033[0m'
@@ -488,7 +492,7 @@ main() {
   detect_distro
 
   print_brake 70
-  echo "* Pterodactyl Wings installation script"
+  echo "* Pterodactyl Wings installation script @ $SCRIPT_RELEASE"
   echo "*"
   echo "* Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al."
   echo "* https://github.com/vilhelmprytz/pterodactyl-installer"
@@ -496,7 +500,7 @@ main() {
   echo "* This script is not associated with the official Pterodactyl Project."
   echo "*"
   echo "* Running $OS version $OS_VER."
-  echo "* Latest pterodactyl wings version is $WINGS_VERSION"
+  echo "* Latest pterodactyl/wings is $WINGS_VERSION"
   print_brake 70
 
   # checks if the system is compatible with this installation script
