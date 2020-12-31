@@ -44,7 +44,7 @@ if ! [ -x "$(command -v curl)" ]; then
 fi
 
 output() {
-  echo "* ${1}"
+  echo -e "* ${1}"
 }
 
 error() {
@@ -95,20 +95,30 @@ canary_wings() {
 while [ "$done" == false ]; do
   options=(
     "Install the panel"
-    "Install the daemon (Wings)"
-    "Install both [1] and [2] on the same machine (wings script runs after panel)"
+    "Install Wings"
+    "Install both [0] and [1] on the same machine (wings script runs after panel)\n"
+
     "Install 0.7 version of panel (unsupported, no longer maintained!)"
     "Install 0.6 version of daemon (works with panel 0.7, no longer maintained!)"
-    "Install both [4] and [5] on the same machine (daemon script runs after panel)"
+    "Install both [3] and [4] on the same machine (daemon script runs after panel)\n"
+
+    "Install panel with canary version of the script (the versions that lives in master, may be broken!)"
+    "Install Wings with canary version of the script (the versions that lives in master, may be broken!)"
+    "Install both [5] and [6] on the same machine (wings script runs after panel)"
   )
 
   actions=(
     "panel"
     "wings"
     "panel; wings"
+
     "legacy_panel"
     "legacy_wings"
     "legacy_panel; legacy_wings"
+
+    "canary_panel"
+    "canary_wings"
+    "canary_panel; canary_wings"
   )
 
   output "What would you like to do?"
@@ -117,7 +127,7 @@ while [ "$done" == false ]; do
     output "[$i] ${options[$i]}"
   done
 
-  echo -n "* Input 1-${#actions[@]}: "
+  echo -n "* Input 0-$((${#actions[@]}-1)): "
   read -r action
 
   [ -z "$action" ] && error "Input is required" && continue
