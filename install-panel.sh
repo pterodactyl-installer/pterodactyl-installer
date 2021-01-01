@@ -941,9 +941,6 @@ function main {
       [ -z "$FQDN" ] && print_error "FQDN cannot be empty"
   done
 
-  # verify FQDN
-  bash <(curl -s $GITHUB_BASE_URL/lib/verify-fqdn.sh) "$FQDN" "$OS"
-
   # UFW is available for Ubuntu/Debian
   # Let's Encrypt is available for Ubuntu/Debian
   if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
@@ -998,6 +995,9 @@ function main {
       ASSUME_SSL=true
     fi
   fi
+
+  # verify FQDN if user has selected to assume SSL or configure Let's Encrypt
+  $CONFIGURE_LETSENCRYPT || $ASSUME_SSL && bash <(curl -s $GITHUB_BASE_URL/lib/verify-fqdn.sh) "$FQDN" "$OS"
 
   # summary
   summary
