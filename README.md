@@ -99,7 +99,7 @@ Replace name with one of the following (supported installations).
 - `centos_8`
 - `centos_7`
 
-Then you can use `vagrant ssh <name of machine>` to SSH into the box. The project directory will be mounted in `/vagrant` so you can quickly modify the script locally and then test the changes by running the script from `/vagrant/install_panel.sh` and `/vagrant/install_wings` respectively.
+Then you can use `vagrant ssh <name of machine>` to SSH into the box. The project directory will be mounted in `/vagrant` so you can quickly modify the script locally and then test the changes by running the script from `/vagrant/install_panel.sh` and `/vagrant/install_wings.sh` respectively.
 
 ## Contributors ✨
 
