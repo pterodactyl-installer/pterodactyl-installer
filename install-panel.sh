@@ -29,8 +29,8 @@ set -e
 #############################################################################
 
 # versioning
-GITHUB_SOURCE="master"
-SCRIPT_RELEASE="canary"
+GITHUB_SOURCE="v0.1.1"
+SCRIPT_RELEASE="v0.1.1"
 
 # exit with error status code if user is not root
 if [[ $EUID -ne 0 ]]; then

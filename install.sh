@@ -28,7 +28,7 @@ set -e
 #                                                                           #
 #############################################################################
 
-SCRIPT_VERSION="v0.1.0"
+SCRIPT_VERSION="v0.1.1"
 
 # exit with error status code if user is not root
 if [[ $EUID -ne 0 ]]; then
