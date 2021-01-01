@@ -79,7 +79,6 @@ dns_verify() {
   output "Resolving DNS for $fqdn"
   ip=$(curl -4 -s $CHECKIP_URL)
   dns_record=$(dig +short @$DNS_SERVER "$fqdn")
-  [ "${ip}" == "${fqdn}" ] && dns_record=$ip  # user is not using FQDN, only IP
   [ "${ip}" != "${dns_record}" ] && fail
   output "DNS verified!"
 }
