@@ -2,6 +2,12 @@
 
 This project follows the [semantic versioning](https://semver.org) convention. Changelog points should be divided into fixed, changed, or added.
 
+## next-release
+
+### Fixed
+
+- [#135](https://github.com/vilhelmprytz/pterodactyl-installer/issues/135) Fixed so that the automatic ufw firewall configuration no longer requires confirming for the enable operation (user interaction after initial configuration is not intended behavior).
+
 ## v0.1.1 (released on 2021-01-01)
 
 ### Fixed
