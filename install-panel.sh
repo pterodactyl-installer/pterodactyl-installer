@@ -894,9 +894,6 @@ main() {
       [ -z "$FQDN" ] && print_error "FQDN cannot be empty"
   done
 
-  # verify FQDN
-  bash <(curl -s $GITHUB_BASE_URL/lib/verify-fqdn.sh) "$FQDN" "$OS"
-
   # Ask if firewall is needed
   ask_firewall
 
@@ -914,6 +911,9 @@ main() {
 
     [[ "$ASSUME_SSL_INPUT" =~ [Yy] ]] && ASSUME_SSL=true
   fi
+
+  # verify FQDN if user has selected to assume SSL or configure Let's Encrypt
+  $CONFIGURE_LETSENCRYPT || $ASSUME_SSL && bash <(curl -s $GITHUB_BASE_URL/lib/verify-fqdn.sh) "$FQDN" "$OS"
 
   # summary
   summary
