@@ -663,7 +663,7 @@ firewall_ufw() {
 
 firewall_firewalld() {
   echo -e "\n* Enabling firewall_cmd (firewalld)"
-  echo "* Opening port 22 (SSH), 80 (HTTP) and (optionaly) 443 (HTTPS)"
+  echo "* Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
 
   # Install
   [ "$OS_VER_MAJOR" == "7" ] && yum -y -q install firewalld > /dev/null
