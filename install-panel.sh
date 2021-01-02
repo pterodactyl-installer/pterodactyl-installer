@@ -722,7 +722,7 @@ letsencrypt() {
 configure_nginx() {
   echo "* Configuring nginx .."
 
-  if "$ASSUME_SSL" && ! "$CONFIGURE_LETSENCRYPT"; then
+  if [ $ASSUME_SSL == true ] && [ $CONFIGURE_LETSENCRYPT == false ]; then
     DL_FILE="nginx_ssl.conf"
   else
     DL_FILE="nginx.conf"
