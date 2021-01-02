@@ -623,7 +623,8 @@ function firewall_ufw {
   ufw allow http > /dev/null
   ufw allow https > /dev/null
 
-  ufw enable
+  ufw --force enable
+  ufw --force reload
   ufw status numbered | sed '/v6/d'
 }
 
