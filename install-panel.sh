@@ -649,7 +649,7 @@ firewall_ufw() {
   apt install -y ufw
 
   echo -e "\n* Enabling Uncomplicated Firewall (UFW)"
-  echo "* Opening port 22 (SSH), 80 (HTTP) and (optionaly) 443 (HTTPS)"
+  echo "* Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
 
   # pointing to /dev/null silences the command output
   ufw allow ssh > /dev/null
