@@ -75,6 +75,17 @@ dep_install() {
   return 0
 }
 
+confirm() {
+  output "This script will perform a HTTPS request to the endpoint $CHECKIP_URL"
+  output "The official check-IP service for this script, https://checkip.pterodactyl-installer.se"
+  output "- will not log or share any IP-information with any third-party."
+  output "If you would like to use another service, feel free to modify the script."
+
+  echo -e -n "* I agree that this HTTPS request is performed (y/N): "
+  read -r confirm
+  [[ "$confirm" =~ [Yy] ]] || (error "User did not agree" && exit 1)
+}
+
 dns_verify() {
   output "Resolving DNS for $fqdn"
   ip=$(curl -4 -s $CHECKIP_URL)
@@ -87,6 +98,7 @@ main() {
   fqdn="$1"
   os="$2"
   dep_install
+  confirm
   dns_verify
 }
 
