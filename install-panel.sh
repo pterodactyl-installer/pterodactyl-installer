@@ -53,7 +53,6 @@ fi
 GITHUB_SOURCE="master"
 SCRIPT_RELEASE="canary"
 
-# No default FQDN
 FQDN=""
 
 # Default MySQL credentials
@@ -277,7 +276,6 @@ detect_distro() {
 }
 
 check_os_comp() {
-  SUPPORTED=false
   case "$OS" in
     ubuntu)
       PHP_SOCKET="/run/php/php7.4-fpm.sock"
@@ -385,7 +383,9 @@ create_database() {
 
 # Configure environment
 configure() {
-  [ "$ASSUME_SSL" == true ] && app_url="https://$FQDN" || app_url="http://$FQDN"
+  app_url="http://$FQDN"
+  [ "$ASSUME_SSL" == true ] && app_url="https://$FQDN"
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && app_url="https://$FQDN"
 
   # Fill in environment:setup automatically
   php artisan p:environment:setup \
@@ -771,7 +771,7 @@ configure_nginx() {
       ln -s /etc/nginx/sites-available/pterodactyl.conf /etc/nginx/sites-enabled/pterodactyl.conf
   fi
 
-  if "$ASSUME_SSL" && "$CONFIGURE_LETSENCRYPT"; then
+  if [ "$ASSUME_SSL" == false ] && [ "$CONFIGURE_LETSENCRYPT" == false ]; then
     systemctl restart nginx
   fi
 
@@ -820,7 +820,7 @@ perform_install() {
   insert_cronjob
   install_pteroq
   configure_nginx
-  "$CONFIGURE_LETSENCRYPT" && letsencrypt
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
 }
 
 main() {
@@ -915,7 +915,7 @@ main() {
   [ "$CONFIGURE_LETSENCRYPT" == false ] && ask_assume_ssl
 
   # verify FQDN if user has selected to assume SSL or configure Let's Encrypt
-  $CONFIGURE_LETSENCRYPT || $ASSUME_SSL && bash <(curl -s $GITHUB_BASE_URL/lib/verify-fqdn.sh) "$FQDN" "$OS"
+  [ "$CONFIGURE_LETSENCRYPT" == true ] || [ "$ASSUME_SSL" == true ] && bash <(curl -s $GITHUB_BASE_URL/lib/verify-fqdn.sh) "$FQDN" "$OS"
 
   # summary
   summary
