@@ -202,6 +202,16 @@ ask_letsencrypt() {
   fi
 }
 
+ask_assume_ssl() {
+  echo "* Let's Encrypt is not going to be automatically configured by this script (user opted out)."
+  echo "* You can 'assume' Let's Encrypt, which means the script will download a nginx configuration that is configured to use a Let's Encrypt certificate but the script won't obtain the certificate for you."
+  echo "* If you assume SSL and do not obtain the certificate, your installation will not work."
+  echo -n "* Assume SSL or not? (y/N): "
+  read -r ASSUME_SSL_INPUT
+
+  [[ "$ASSUME_SSL_INPUT" =~ [Yy] ]] && ASSUME_SSL=true
+}
+
 ask_firewall() {
   case "$OS" in
     ubuntu | debian)
@@ -904,16 +914,7 @@ main() {
   ask_letsencrypt
 
   # If it's already true, this should be a no-brainer
-  if [ "$CONFIGURE_LETSENCRYPT" == false ]; then
-    echo "* Let's Encrypt is not going to be automatically configured by this script (user opted out)."
-    echo "* You can 'assume' Let's Encrypt, which means the script will download a nginx configuration that is configured to use a Let's Encrypt certificate but the script won't obtain the certificate for you."
-    echo "* If you assume SSL and do not obtain the certificate, your installation will not work."
-
-    echo -n "* Assume SSL or not? (y/N): "
-    read -r ASSUME_SSL_INPUT
-
-    [[ "$ASSUME_SSL_INPUT" =~ [Yy] ]] && ASSUME_SSL=true
-  fi
+  [ "$CONFIGURE_LETSENCRYPT" == false ] && ask_assume_ssl
 
   # summary
   summary
