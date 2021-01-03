@@ -40,5 +40,18 @@ git commit -S -m "Release $RELEASE"
 git push
 
 output "Release $RELEASE pushed"
-output "Copy relevant changelog - https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/CHANGELOG.md"
-output "Create a new release, with changelog - https://github.com/vilhelmprytz/pterodactyl-installer/releases/new"
+
+output "Create a new release, with changelog below - https://github.com/vilhelmprytz/pterodactyl-installer/releases/new"
+output ""
+
+changelog=$(scripts/changelog_parse.py)
+
+cat << EOF
+# $RELEASE
+
+Put a message here describing the release.
+
+## Changelog
+
+$changelog
+EOF
