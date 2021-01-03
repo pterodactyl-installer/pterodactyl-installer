@@ -487,7 +487,7 @@ enable_services_centos_based() {
 }
 
 selinux_allow() {
-  setsebool -P httpd_can_network_connect 1 || true
+  setsebool -P httpd_can_network_connect 1 || true  # these commands can fail OK
   setsebool -P httpd_execmem 1 || true
   setsebool -P httpd_unified 1 || true
 }
@@ -659,20 +659,21 @@ firewall_ufw() {
   apt install -y ufw
 
   echo -e "\n* Enabling Uncomplicated Firewall (UFW)"
-  echo "* Opening port 22 (SSH), 80 (HTTP) and (optionaly) 443 (HTTPS)"
+  echo "* Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
 
   # pointing to /dev/null silences the command output
   ufw allow ssh > /dev/null
   ufw allow http > /dev/null
   ufw allow https > /dev/null
 
-  ufw enable
+  ufw --force enable
+  ufw --force reload
   ufw status numbered | sed '/v6/d'
 }
 
 firewall_firewalld() {
   echo -e "\n* Enabling firewall_cmd (firewalld)"
-  echo "* Opening port 22 (SSH), 80 (HTTP) and (optionaly) 443 (HTTPS)"
+  echo "* Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
 
   # Install
   [ "$OS_VER_MAJOR" == "7" ] && yum -y -q install firewalld > /dev/null
@@ -732,7 +733,7 @@ letsencrypt() {
 configure_nginx() {
   echo "* Configuring nginx .."
 
-  if "$ASSUME_SSL" && ! "$CONFIGURE_LETSENCRYPT"; then
+  if [ $ASSUME_SSL == true ] && [ $CONFIGURE_LETSENCRYPT == false ]; then
     DL_FILE="nginx_ssl.conf"
   else
     DL_FILE="nginx.conf"
@@ -904,9 +905,6 @@ main() {
       [ -z "$FQDN" ] && print_error "FQDN cannot be empty"
   done
 
-  # verify FQDN
-  bash <(curl -s $GITHUB_BASE_URL/lib/verify-fqdn.sh) "$FQDN" "$OS"
-
   # Ask if firewall is needed
   ask_firewall
 
@@ -915,6 +913,9 @@ main() {
 
   # If it's already true, this should be a no-brainer
   [ "$CONFIGURE_LETSENCRYPT" == false ] && ask_assume_ssl
+
+  # verify FQDN if user has selected to assume SSL or configure Let's Encrypt
+  $CONFIGURE_LETSENCRYPT || $ASSUME_SSL && bash <(curl -s $GITHUB_BASE_URL/lib/verify-fqdn.sh) "$FQDN" "$OS"
 
   # summary
   summary

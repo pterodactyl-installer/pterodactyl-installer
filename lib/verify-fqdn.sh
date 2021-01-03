@@ -69,10 +69,21 @@ fail() {
 }
 
 dep_install() {
-  [ "$os" == "centos" ] && yum install -y bind-utils
-  [ "$os" == "debian" ] && apt install -y dnsutils
-  [ "$os" == "ubuntu" ] && apt install -y dnsutils
+  [ "$os" == "centos" ] && yum install -q -y bind-utils
+  [ "$os" == "debian" ] && apt-get install -y dnsutils -qq
+  [ "$os" == "ubuntu" ] && apt-get install -y dnsutils -qq
   return 0
+}
+
+confirm() {
+  output "This script will perform a HTTPS request to the endpoint $CHECKIP_URL"
+  output "The official check-IP service for this script, https://checkip.pterodactyl-installer.se"
+  output "- will not log or share any IP-information with any third-party."
+  output "If you would like to use another service, feel free to modify the script."
+
+  echo -e -n "* I agree that this HTTPS request is performed (y/N): "
+  read -r confirm
+  [[ "$confirm" =~ [Yy] ]] || (error "User did not agree" && exit 1)
 }
 
 dns_verify() {
@@ -87,6 +98,7 @@ main() {
   fqdn="$1"
   os="$2"
   dep_install
+  confirm
   dns_verify
 }
 

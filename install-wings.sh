@@ -396,7 +396,8 @@ firewall_ufw() {
   [ "$CONFIGURE_LETSENCRYPT" == true ] && ufw allow http > /dev/null
   [ "$CONFIGURE_LETSENCRYPT" == true ] && ufw allow https > /dev/null
 
-  ufw enable
+  ufw --force enable
+  ufw --force reload
   ufw status numbered | sed '/v6/d'
 }
 
