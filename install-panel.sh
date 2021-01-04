@@ -482,7 +482,6 @@ enable_services_centos_based() {
   systemctl enable nginx
   systemctl enable redis
   systemctl start mariadb
-  systemctl start nginx
   systemctl start redis
 }
 
