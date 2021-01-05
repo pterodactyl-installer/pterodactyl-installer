@@ -28,9 +28,7 @@ set -e
 #                                                                           #
 #############################################################################
 
-#################################
 ######## General checks #########
-#################################
 
 # exit with error status code if user is not root
 if [[ $EUID -ne 0 ]]; then
@@ -45,9 +43,7 @@ if ! [ -x "$(command -v curl)" ]; then
   exit 1
 fi
 
-#################################
 ########## Variables ############
-#################################
 
 # versioning
 GITHUB_SOURCE="master"
@@ -87,9 +83,7 @@ CONFIGURE_FIREWALL_CMD=false
 # firewall status
 CONFIGURE_FIREWALL=false
 
-#################################
 ####### Version checking ########
-#################################
 
 # define version using information from GitHub
 get_latest_release() {
@@ -102,9 +96,7 @@ get_latest_release() {
 echo "* Retrieving release information.."
 PTERODACTYL_VERSION="$(get_latest_release "pterodactyl/panel")"
 
-#################################
 ####### Visual functions ########
-#################################
 
 print_error() {
   COLOR_RED='\033[0;31m'
@@ -135,9 +127,7 @@ hyperlink() {
   echo -e "\e]8;;${1}\a${1}\e]8;;\a"
 }
 
-#################################
 ##### User input functions ######
-#################################
 
 required_input() {
   local  __resultvar=$1
@@ -234,9 +224,7 @@ ask_firewall() {
   esac
 }
 
-#################################
 ####### OS check funtions #######
-#################################
 
 detect_distro() {
   if [ -f /etc/os-release ]; then
@@ -306,9 +294,7 @@ check_os_comp() {
   fi
 }
 
-#################################
-## Main installation functions ##
-#################################
+##### Main installation functions #####
 
 # Install composer
 install_composer() {
@@ -454,9 +440,7 @@ install_pteroq() {
   echo "* Installed pteroq!"
 }
 
-##################################
-# OS specific install functions ##
-##################################
+##### OS specific install functions #####
 
 apt_update() {
   apt update -q -y && apt upgrade -y
@@ -643,9 +627,7 @@ centos8_dep() {
   echo "* Dependencies for CentOS installed!"
 }
 
-#################################
-## OTHER OS SPECIFIC FUNCTIONS ##
-#################################
+##### OTHER OS SPECIFIC FUNCTIONS #####
 
 centos_php() {
   curl -o /etc/php-fpm.d/www-pterodactyl.conf $GITHUB_BASE_URL/configs/www-pterodactyl.conf
@@ -725,9 +707,7 @@ letsencrypt() {
   fi
 }
 
-#######################################
-## WEBSERVER CONFIGURATION FUNCTIONS ##
-#######################################
+##### WEBSERVER CONFIGURATION FUNCTIONS #####
 
 configure_nginx() {
   echo "* Configuring nginx .."
@@ -777,9 +757,7 @@ configure_nginx() {
   echo "* nginx configured!"
 }
 
-####################
-## MAIN FUNCTIONS ##
-####################
+##### MAIN FUNCTIONS #####
 
 perform_install() {
   echo "* Starting installation.. this might take a while!"
