@@ -465,13 +465,13 @@ perform_install() {
   [ "$OS" == "ubuntu" ] || [ "$OS" == "debian" ] && apt_update
   [ "$OS" == "centos" ] && [ "$OS_VER_MAJOR" == "7" ] && yum_update
   [ "$OS" == "centos" ] && [ "$OS_VER_MAJOR" == "8" ] && dnf_update
-  "$CONFIGURE_UFW" && firewall_ufw
-  "$CONFIGURE_FIREWALL_CMD" && firewall_firewalld
+  [ "$CONFIGURE_UFW" == true ] && firewall_ufw
+  [ "$CONFIGURE_FIREWALL_CMD" == true ] && firewall_firewalld
   install_docker
   ptdl_dl
   systemd_file
-  "$INSTALL_MARIADB" && install_mariadb
-  "$CONFIGURE_LETSENCRYPT" && letsencrypt
+  [ "$INSTALL_MARIADB" == true ] && install_mariadb
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
 
   # return true if script has made it this far
   return 0
