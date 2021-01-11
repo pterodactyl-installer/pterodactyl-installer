@@ -198,7 +198,7 @@ ask_assume_ssl() {
   echo -n "* Assume SSL or not? (y/N): "
   read -r ASSUME_SSL_INPUT
 
-  [[ "$ASSUME_SSL_INPUT" =~ [Yy] ]] && ASSUME_SSL=true
+  [[ "$ASSUME_SSL_INPUT" =~ [Yy] ]] && ASSUME_SSL=true || true
 }
 
 ask_firewall() {
