@@ -315,6 +315,7 @@ ptdl_dl() {
   chmod -R 755 storage/* bootstrap/cache/
 
   cp .env.example .env
+  [ "$OS" == "centos" ] && export PATH=/usr/local/bin:$PATH
   COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader
 
   php artisan key:generate --force
