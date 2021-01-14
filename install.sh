@@ -77,11 +77,11 @@ wings() {
 }
 
 legacy_panel() {
-  bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/legacy/panel_0.7.sh)
+  bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/$SCRIPT_VERSION/legacy/panel_0.7.sh)
 }
 
 legacy_wings() {
-  bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/legacy/daemon_0.6.sh)
+  bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/$SCRIPT_VERSION/legacy/daemon_0.6.sh)
 }
 
 canary_panel() {
