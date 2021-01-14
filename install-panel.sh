@@ -396,9 +396,6 @@ configure() {
     --username="$MYSQL_USER" \
     --password="$MYSQL_PASSWORD"
 
-  # Email credentials manually set by user
-  [[ "$mailneeded" =~ [Yy] ]] && php artisan p:environment:mail
-
   # configures database
   php artisan migrate --seed --force
 
@@ -865,9 +862,6 @@ main() {
   done
 
   required_input email "Provide the email address that will be used to configure Let's Encrypt and Pterodactyl: " "Email cannot be empty"
-
-  echo -n "* Would you like to set up email credentials so that Pterodactyl can send emails to users (usually not required)? (y/N): "
-  read -r mailneeded
 
   # Initial admin account
   required_input user_email "Email address for the initial admin account: " "Email cannot be empty"
