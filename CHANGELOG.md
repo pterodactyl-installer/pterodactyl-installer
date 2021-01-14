@@ -8,6 +8,11 @@ This project follows the [semantic versioning](https://semver.org) convention. C
 
 - [#135](https://github.com/vilhelmprytz/pterodactyl-installer/issues/135) Fixed so that the automatic ufw firewall configuration no longer requires confirming for the enable operation (user interaction after initial configuration is not intended behavior).
 
+### Changed
+
+- [#88](https://github.com/vilhelmprytz/pterodactyl-installer/issues/88) Changed so that certbot now uses `certbot --nginx` over `certbot certonly` which makes it easier to perform certificate renewals later on (thanks [@Linux123123](https://github.com/Linux123123)).
+- Refactor several different functions in panel script, removal of redundant variables and functions and general cleanup/restructure (thanks [@Linux123123](https://github.com/Linux123123)).
+
 ### Added
 
 - Add a prompt in `verify-fqdn` that requires user consent before performing HTTPS request against [https://checkip.pterodactyl-installer.se](https://checkip.pterodactyl-installer.se).
