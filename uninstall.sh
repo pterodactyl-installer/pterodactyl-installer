@@ -28,9 +28,7 @@ set -e
 #                                                                           #
 #############################################################################
 
-#################################
 ######## General checks #########
-#################################
 
 # exit with error status code if user is not root
 if [[ $EUID -ne 0 ]]; then
@@ -45,16 +43,12 @@ if ! [ -x "$(command -v curl)" ]; then
   exit 1
 fi
 
-#################################
 ########## Variables ############
-#################################
 
 RM_PANEL=false
 RM_WINGS=false
 
-#################################
 ####### Visual functions ########
-#################################
 
 print_brake() {
   for ((n=0;n<$1;n++));
@@ -92,9 +86,7 @@ summary() {
   print_brake 30
 }
 
-#################################
 ####### OS check funtions #######
-#################################
 
 detect_distro() {
   if [ -f /etc/os-release ]; then
@@ -160,9 +152,7 @@ check_os_comp() {
   fi
 }
 
-#####################################
 ### Main uninstallation functions ###
-#####################################
 
 rm_files(){
   if [ "$RM_PANEL" ]; then
@@ -176,16 +166,19 @@ rm_files(){
 }
 
 rm_services(){
+  systemctl disable --now mariadb
+  systemctl disable --now pteroq
+  rm -rf /etc/systemd/system/pteroq.service
   case "$OS" in
     debian | ubuntu)
-      systemctl disable --now mariadb
       systemctl disable --now redis-server
       ;;
     centos)
-      systemctl disable --now mariadb
       systemctl disable --now redis
+      systemctl disable --now php-fpm
+      rm -rf /etc/php-fpm.d/www-pterodactyl.conf
       ;;
-  esac
+  esac 
 }
 
 rm_cron(){
@@ -194,20 +187,33 @@ rm_cron(){
 }
 
 rm_database(){
-  valid_db=$(mysql -u root -p -e "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT IN ('information_schema','performance_schema');")
-  echo "$valid_db"
+  valid_db=$(mysql -u root -p -e "SELECT schema_name FROM information_schema.schemata;" | grep -v -E -- 'schema_name|information_schema|performance_schema')
   warning "Be careful! This database will be deleted!"
+  if [[ "$valid_db" == *"panel"* ]]; then
+    echo -n "* Database called panel has been detected. Is it the pterodactyl database? (y/N): "
+    read -r is_panel
+    [[ "$is_panel" =~ [Yy] ]] && DATABASE=panel || echo "$valid_db"
+  else
+    echo "$valid_db"
+  fi
   while [ -z "$DATABASE" ] || [[ $valid_db != *"$database_input"* ]]; do
     echo -n "* Choose the panel database: "
     read -r database_input
     DATABASE=$database_input
   done
   mysql -u root -p -e "DROP $DATABASE"
-  valid_users=$(mysql -u root -p -e "SELECT * FROM mysql.user;")
-  echo "$valid_users "
+  # Exclude usernames User and root (Hope no one uses username User)
+  valid_users=$(mysql -u root -p -e "SELECT user FROM mysql.user;" | grep -v -E -- 'User|root')
   warning "Be careful! This user will be deleted!"
+  if [[ "$valid_users" == *"pteroactyl"* ]]; then
+    echo -n "* User called pterodactyl has been detected. Is it the pterodactyl user? (y/N): "
+    read -r is_user
+    [[ "$is_user" =~ [Yy] ]] && USER=pterodactyl || echo "$valid_users"
+  else
+    echo "$valid_users"
+  fi
   while [ -z "$USER" ] || [[ $valid_users != *"$user_input"* ]]; do
-    echo -n "* Choose the panel database: "
+    echo -n "* Choose the panel user: "
     read -r user_input
     USER=$user_input
   done
@@ -215,9 +221,7 @@ rm_database(){
   mysql -u root -p -e "FLUSH PRIVILEGES;"
 }
 
-####################
 ## MAIN FUNCTIONS ##
-####################
 
 perform_uninstall(){
   rm_files
@@ -283,3 +287,4 @@ goodbye() {
 }
 
 main
+goodbye
