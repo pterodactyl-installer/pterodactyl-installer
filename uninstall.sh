@@ -197,11 +197,11 @@ rm_database(){
     echo "$valid_db"
   fi
   while [ -z "$DATABASE" ] || [[ $valid_db != *"$database_input"* ]]; do
-    echo -n "* Choose the panel database: "
+    echo -n "* Choose the panel database(to skip type none): "
     read -r database_input
     DATABASE=$database_input
   done
-  mysql -u root -p -e "DROP $DATABASE"
+  [[ "$DATABASE" != "none" ]] && mysql -u root -p -e "DROP $DATABASE"
   # Exclude usernames User and root (Hope no one uses username User)
   valid_users=$(mysql -u root -p -e "SELECT user FROM mysql.user;" | grep -v -E -- 'User|root')
   warning "Be careful! This user will be deleted!"
@@ -213,11 +213,11 @@ rm_database(){
     echo "$valid_users"
   fi
   while [ -z "$USER" ] || [[ $valid_users != *"$user_input"* ]]; do
-    echo -n "* Choose the panel user: "
+    echo -n "* Choose the panel user(to skip type none): "
     read -r user_input
     USER=$user_input
   done
-  mysql -u root -p -e "DROP USER '$USER'@'127.0.0.1'"
+  [[ "$USER" != "none" ]] && mysql -u root -p -e "DROP USER '$USER'@'127.0.0.1'"
   mysql -u root -p -e "FLUSH PRIVILEGES;"
 }
 
