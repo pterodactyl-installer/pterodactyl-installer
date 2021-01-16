@@ -155,14 +155,14 @@ check_os_comp() {
 ### Main uninstallation functions ###
 
 rm_files(){
-  if [ "$RM_PANEL" ]; then
+  if [ "$RM_PANEL" == true ]; then
     rm -rf /var/www/pterodactyl
     [ "$OS" != "centos" ] && unlink /etc/nginx/sites-enabled/pterodactyl.conf
     [ "$OS" != "centos" ] && rm -f /etc/nginx/sites-available/pterodactyl.conf
     [ "$OS" == "centos" ] && rm -f /etc/nginx/conf.d/pterodactyl.conf
   fi
 
-  "$RM_WINGS" && rm -rf /etc/pterodactyl /usr/local/bin/wings
+  [ "$RM_WINGS" == true ] && rm -rf /etc/pterodactyl /usr/local/bin/wings
 }
 
 rm_services(){
@@ -225,9 +225,9 @@ rm_database(){
 
 perform_uninstall(){
   rm_files
-  "$RM_PANEL" && rm_services
-  "$RM_PANEL" && rm_cron
-  "$RM_PANEL" && rm_database
+  [ "$RM_PANEL" == true ] && rm_services
+  [ "$RM_PANEL" == true ] && rm_cron
+  [ "$RM_PANEL" == true ] && rm_database
 }
 
 main() {
@@ -261,7 +261,7 @@ main() {
     [[ "$RM_WINGS_INPUT" =~ [Yy] ]] && RM_WINGS=true
   fi
 
-  if [ ! "$RM_PANEL" ] && [ ! "$RM_WINGS" ]; then 
+  if [ "$RM_PANEL" == false ] && [ "$RM_WINGS" == false ]; then 
     error "Nothing to uninstall"
     exit 1
   fi
