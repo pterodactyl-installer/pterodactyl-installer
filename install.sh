@@ -6,7 +6,7 @@ set -e
 #                                                                           #
 # Project 'pterodactyl-installer'                                           #
 #                                                                           #
-# Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al.   #
+# Copyright (C) 2018 - 2021, Vilhelm Prytz, <vilhelm@prytznet.se>, et al.   #
 #                                                                           #
 #   This program is free software: you can redistribute it and/or modify    #
 #   it under the terms of the GNU General Public License as published by    #
@@ -28,6 +28,8 @@ set -e
 #                                                                           #
 #############################################################################
 
+SCRIPT_VERSION="v0.1.1"
+
 # exit with error status code if user is not root
 if [[ $EUID -ne 0 ]]; then
   echo "* This script must be executed with root privileges (sudo)." 1>&2
@@ -42,7 +44,7 @@ if ! [ -x "$(command -v curl)" ]; then
 fi
 
 output() {
-  echo "* ${1}"
+  echo -e "* ${1}"
 }
 
 error() {
@@ -56,9 +58,9 @@ error() {
 
 done=false
 
-output "Pterodactyl installation script"
+output "Pterodactyl installation script @ $SCRIPT_VERSION"
 output
-output "Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al."
+output "Copyright (C) 2018 - 2021, Vilhelm Prytz, <vilhelm@prytznet.se>, et al."
 output "https://github.com/vilhelmprytz/pterodactyl-installer"
 output
 output "Sponsoring/Donations: https://github.com/vilhelmprytz/pterodactyl-installer?sponsor=1"
@@ -67,52 +69,70 @@ output "This script is not associated with the official Pterodactyl Project."
 output
 
 panel() {
-  bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install-panel.sh)
+  bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/$SCRIPT_VERSION/install-panel.sh)
 }
 
 wings() {
-  bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install-wings.sh)
+  bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/$SCRIPT_VERSION/install-wings.sh)
 }
 
 legacy_panel() {
-  bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/legacy/panel_0.7.sh)
+  bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/$SCRIPT_VERSION/legacy/panel_0.7.sh)
 }
 
 legacy_wings() {
-  bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/legacy/daemon_0.6.sh)
+  bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/$SCRIPT_VERSION/legacy/daemon_0.6.sh)
+}
+
+canary_panel() {
+  bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install-panel.sh)
+}
+
+canary_wings() {
+  bash <(curl -s https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/install-wings.sh)
 }
 
 while [ "$done" == false ]; do
-  done=true
+  options=(
+    "Install the panel"
+    "Install Wings"
+    "Install both [0] and [1] on the same machine (wings script runs after panel)\n"
+
+    "Install 0.7 version of panel (unsupported, no longer maintained!)"
+    "Install 0.6 version of daemon (works with panel 0.7, no longer maintained!)"
+    "Install both [3] and [4] on the same machine (daemon script runs after panel)\n"
+
+    "Install panel with canary version of the script (the versions that lives in master, may be broken!)"
+    "Install Wings with canary version of the script (the versions that lives in master, may be broken!)"
+    "Install both [5] and [6] on the same machine (wings script runs after panel)"
+  )
+
+  actions=(
+    "panel"
+    "wings"
+    "panel; wings"
+
+    "legacy_panel"
+    "legacy_wings"
+    "legacy_panel; legacy_wings"
+
+    "canary_panel"
+    "canary_wings"
+    "canary_panel; canary_wings"
+  )
 
   output "What would you like to do?"
-  output "[1] Install the panel"
-  output "[2] Install the daemon (Wings)"
-  output "[3] Install both on the same machine, i.e. [1] and [2]"
-  output "[4] Install 0.7 version of panel (no longer maintained)"
-  output "[5] Install 0.6 version of daemon (works with panel 0.7, no longer maintained)"
-  output "[6] Install both [4] and [5] on the same machine (daemon script runs after panel)"
 
-  echo -n "* Input 1-6: "
+  for i in "${!options[@]}"; do
+    output "[$i] ${options[$i]}"
+  done
+
+  echo -n "* Input 0-$((${#actions[@]}-1)): "
   read -r action
 
-  case $action in
-      1 )
-          panel ;;
-      2 )
-          wings ;;
-      3 )
-          panel
-          wings ;;
-      4 )
-          legacy_panel ;;
-      5 )
-          legacy_wings ;;
-      6 )
-          legacy_panel
-          legacy_wings ;;          
-      * )
-          error "Invalid option"
-          done=false ;;
-  esac
+  [ -z "$action" ] && error "Input is required" && continue
+
+  valid_input=("$(for ((i=0;i<=${#actions[@]}-1;i+=1)); do echo "${i}"; done)")
+  [[ ! " ${valid_input[*]} " =~ ${action} ]] && error "Invalid option"
+  [[ " ${valid_input[*]} " =~ ${action} ]] && done=true && eval "${actions[$action]}"
 done

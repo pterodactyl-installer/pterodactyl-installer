@@ -28,7 +28,8 @@ set -e
 #                                                                           #
 #############################################################################
 
-SCRIPT_PATH="/tmp/panel_install_0.7.sh"
+CHECKIP_URL="https://checkip.pterodactyl-installer.se"
+DNS_SERVER="8.8.8.8"
 
 # exit with error status code if user is not root
 if [[ $EUID -ne 0 ]]; then
@@ -43,25 +44,62 @@ if ! [ -x "$(command -v curl)" ]; then
   exit 1
 fi
 
-dl_script() {
-    rm -rf "$SCRIPT_PATH"
-    curl -o "$SCRIPT_PATH" https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/b8e298003fe3120edccb02fabc5d7e86daef22e6/install-panel.sh
-    chmod +x "$SCRIPT_PATH"
+output() {
+   echo "* $1"
 }
 
-replace() {
-    sed -i 's/master/b8e298003fe3120edccb02fabc5d7e86daef22e6/g' "$SCRIPT_PATH"
-    sed -i '/PTERODACTYL_VERSION=/c\PTERODACTYL_VERSION="v0.7.19"' "$SCRIPT_PATH"
-    sed -i 's*https://github.com/pterodactyl/panel/releases/latest/download/panel.tar.gz*https://github.com/pterodactyl/panel/releases/download/v0.7.19/panel.tar.gz*g' "$SCRIPT_PATH"
+error() {
+  COLOR_RED='\033[0;31m'
+  COLOR_NC='\033[0m'
 
-    # an older version of composer is required for 0.7
-    sed -i 's/--filename=composer/--filename=composer --version=1.10.17/g' "$SCRIPT_PATH"
+  echo ""
+  echo -e "* ${COLOR_RED}ERROR${COLOR_NC}: $1"
+  echo ""
+}
+
+fail() {
+  output "The DNS record ($dns_record) does not match your server IP. Please make sure the FQDN $fqdn is pointing to the IP of your server, $ip"
+  output "If you are using Cloudflare, please disable the proxy or opt out from Let's Ecnrypt."
+
+  echo -n "* Proceed anyways (your install will be broken if you do not know what you are doing)? (y/N): "
+  read -r override
+
+  [[ ! "$override" =~ [Yy] ]] && error "Invalid FQDN or DNS record" && exit 1
+  return 0
+}
+
+dep_install() {
+  [ "$os" == "centos" ] && yum install -q -y bind-utils
+  [ "$os" == "debian" ] && apt-get install -y dnsutils -qq
+  [ "$os" == "ubuntu" ] && apt-get install -y dnsutils -qq
+  return 0
+}
+
+confirm() {
+  output "This script will perform a HTTPS request to the endpoint $CHECKIP_URL"
+  output "The official check-IP service for this script, https://checkip.pterodactyl-installer.se"
+  output "- will not log or share any IP-information with any third-party."
+  output "If you would like to use another service, feel free to modify the script."
+
+  echo -e -n "* I agree that this HTTPS request is performed (y/N): "
+  read -r confirm
+  [[ "$confirm" =~ [Yy] ]] || (error "User did not agree" && exit 1)
+}
+
+dns_verify() {
+  output "Resolving DNS for $fqdn"
+  ip=$(curl -4 -s $CHECKIP_URL)
+  dns_record=$(dig +short @$DNS_SERVER "$fqdn")
+  [ "${ip}" != "${dns_record}" ] && fail
+  output "DNS verified!"
 }
 
 main() {
-    dl_script
-    replace
-    bash "$SCRIPT_PATH"
+  fqdn="$1"
+  os="$2"
+  dep_install
+  confirm
+  dns_verify
 }
 
-main
+main "$1" "$2"
