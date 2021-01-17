@@ -9,8 +9,6 @@ Unofficial scripts for installing Pterodactyl Panel & Wings. Works with the late
 
 Read more about [Pterodactyl](https://pterodactyl.io/) here. This script is not associated with the official Pterodactyl Project.
 
-This project is available at [GitHub](https://github.com/vilhelmprytz/pterodactyl-installer) with read-only forks available at [GitLab](https://gitlab.com/vilhelm/pterodactyl-installer) and [Bitbucket](https://bitbucket.org/prytz/pterodactyl-installer/src/master/).
-
 ## Features
 
 - Automatic installation of the Pterodactyl Panel (dependencies, database, cronjob, nginx).
