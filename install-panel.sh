@@ -28,9 +28,7 @@ set -e
 #                                                                           #
 #############################################################################
 
-# versioning
-GITHUB_SOURCE="master"
-SCRIPT_RELEASE="canary"
+######## General checks #########
 
 # exit with error status code if user is not root
 if [[ $EUID -ne 0 ]]; then
@@ -45,27 +43,20 @@ if ! [ -x "$(command -v curl)" ]; then
   exit 1
 fi
 
-# define version using information from GitHub
-get_latest_release() {
-  curl --silent "https://api.github.com/repos/$1/releases/latest" | # Get latest release from GitHub api
-  grep '"tag_name":' |                                              # Get tag line
-  sed -E 's/.*"([^"]+)".*/\1/'                                      # Pluck JSON value
-}
+########## Variables ############
 
-echo "* Retrieving release information.."
-PTERODACTYL_VERSION="$(get_latest_release "pterodactyl/panel")"
-echo "* pterodactyl/panel @ $PTERODACTYL_VERSION"
+# versioning
+GITHUB_SOURCE="master"
+SCRIPT_RELEASE="canary"
 
-# variables
-WEBSERVER="nginx"
 FQDN=""
 
-# default MySQL credentials
+# Default MySQL credentials
 MYSQL_DB="pterodactyl"
 MYSQL_USER="pterodactyl"
 MYSQL_PASSWORD=""
 
-# environment
+# Environment
 email=""
 
 # Initial admin account
@@ -75,16 +66,13 @@ user_firstname=""
 user_lastname=""
 user_password=""
 
-# assume SSL, will fetch different config if true
+# Assume SSL, will fetch different config if true
 ASSUME_SSL=false
 CONFIGURE_LETSENCRYPT=false
 
 # download URLs
 PANEL_DL_URL="https://github.com/pterodactyl/panel/releases/latest/download/panel.tar.gz"
 GITHUB_BASE_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/$GITHUB_SOURCE"
-
-# apt sources path
-SOURCES_PATH="/etc/apt/sources.list"
 
 # ufw firewall
 CONFIGURE_UFW=false
@@ -95,8 +83,22 @@ CONFIGURE_FIREWALL_CMD=false
 # firewall status
 CONFIGURE_FIREWALL=false
 
-# visual functions
-function print_error {
+####### Version checking ########
+
+# define version using information from GitHub
+get_latest_release() {
+  curl --silent "https://api.github.com/repos/$1/releases/latest" | # Get latest release from GitHub api
+  grep '"tag_name":' |                                              # Get tag line
+  sed -E 's/.*"([^"]+)".*/\1/'                                      # Pluck JSON value
+}
+
+# pterodactyl version
+echo "* Retrieving release information.."
+PTERODACTYL_VERSION="$(get_latest_release "pterodactyl/panel")"
+
+####### Visual functions ########
+
+print_error() {
   COLOR_RED='\033[0;31m'
   COLOR_NC='\033[0m'
 
@@ -105,7 +107,7 @@ function print_error {
   echo ""
 }
 
-function print_warning {
+print_warning() {
   COLOR_YELLOW='\033[1;33m'
   COLOR_NC='\033[0m'
   echo ""
@@ -113,7 +115,7 @@ function print_warning {
   echo ""
 }
 
-function print_brake {
+print_brake() {
   for ((n=0;n<$1;n++));
     do
       echo -n "#"
@@ -124,6 +126,8 @@ function print_brake {
 hyperlink() {
   echo -e "\e]8;;${1}\a${1}\e]8;;\a"
 }
+
+##### User input functions ######
 
 required_input() {
   local  __resultvar=$1
@@ -171,8 +175,59 @@ password_input() {
   eval "$__resultvar="'$result'""
 }
 
-# other functions
-function detect_distro {
+ask_letsencrypt() {
+  if [ "$CONFIGURE_UFW" == false ] && [ "$CONFIGURE_FIREWALL_CMD" == false ]; then
+    print_warning "Let's Encrypt requires port 80/443 to be opened! You have opted out of the automatic firewall configuration; use this at your own risk (if port 80/443 is closed, the script will fail)!"
+  fi
+
+  print_warning "You cannot use Let's Encrypt with your hostname as an IP address! It must be a FQDN (e.g. panel.example.org)."
+
+  echo -e -n "* Do you want to automatically configure HTTPS using Let's Encrypt? (y/N): "
+  read -r CONFIRM_SSL
+
+  if [[ "$CONFIRM_SSL" =~ [Yy] ]]; then
+    CONFIGURE_LETSENCRYPT=true
+    ASSUME_SSL=false
+  fi
+}
+
+ask_assume_ssl() {
+  echo "* Let's Encrypt is not going to be automatically configured by this script (user opted out)."
+  echo "* You can 'assume' Let's Encrypt, which means the script will download a nginx configuration that is configured to use a Let's Encrypt certificate but the script won't obtain the certificate for you."
+  echo "* If you assume SSL and do not obtain the certificate, your installation will not work."
+  echo -n "* Assume SSL or not? (y/N): "
+  read -r ASSUME_SSL_INPUT
+
+  [[ "$ASSUME_SSL_INPUT" =~ [Yy] ]] && ASSUME_SSL=true
+  true
+}
+
+ask_firewall() {
+  case "$OS" in
+    ubuntu | debian)
+      echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
+      read -r CONFIRM_UFW
+
+      if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
+        CONFIGURE_UFW=true
+        CONFIGURE_FIREWALL=true
+      fi
+      ;;
+    centos)
+      echo -e -n "* Do you want to automatically configure firewall-cmd (firewall)? (y/N): "
+      read -r CONFIRM_FIREWALL_CMD
+
+      if [[ "$CONFIRM_FIREWALL_CMD" =~ [Yy] ]]; then
+        CONFIGURE_FIREWALL_CMD=true
+        CONFIGURE_FIREWALL=true
+      fi
+      ;;
+  esac
+}
+
+####### OS check funtions #######
+
+detect_distro() {
   if [ -f /etc/os-release ]; then
     # freedesktop.org and systemd
     . /etc/os-release
@@ -209,37 +264,26 @@ function detect_distro {
   OS_VER_MAJOR=$(echo "$OS_VER" | cut -d. -f1)
 }
 
-function check_os_comp {
-  if [ "$OS" == "ubuntu" ]; then
-    PHP_SOCKET="/run/php/php7.4-fpm.sock"
-    if [ "$OS_VER_MAJOR" == "18" ]; then
-      SUPPORTED=true
-    elif [ "$OS_VER_MAJOR" == "20" ]; then
-      SUPPORTED=true
-    else
-      SUPPORTED=false
-    fi
-  elif [ "$OS" == "debian" ]; then
-    PHP_SOCKET="/run/php/php7.4-fpm.sock"
-    if [ "$OS_VER_MAJOR" == "9" ]; then
-      SUPPORTED=true
-    elif [ "$OS_VER_MAJOR" == "10" ]; then
-      SUPPORTED=true
-    else
-      SUPPORTED=false
-    fi
-  elif [ "$OS" == "centos" ]; then
-    PHP_SOCKET="/var/run/php-fpm/pterodactyl.sock"
-    if [ "$OS_VER_MAJOR" == "7" ]; then
-      SUPPORTED=true
-    elif [ "$OS_VER_MAJOR" == "8" ]; then
-      SUPPORTED=true
-    else
-      SUPPORTED=false
-    fi
-  else
-    SUPPORTED=false
-  fi
+check_os_comp() {
+  case "$OS" in
+    ubuntu)
+      PHP_SOCKET="/run/php/php7.4-fpm.sock"
+      [ "$OS_VER_MAJOR" == "18" ] && SUPPORTED=true
+      [ "$OS_VER_MAJOR" == "20" ] && SUPPORTED=true
+      ;;
+    debian)
+      PHP_SOCKET="/run/php/php7.4-fpm.sock"
+      [ "$OS_VER_MAJOR" == "9" ] && SUPPORTED=true
+      [ "$OS_VER_MAJOR" == "10" ] && SUPPORTED=true
+      ;;
+    centos)
+      PHP_SOCKET="/var/run/php-fpm/pterodactyl.sock"
+      [ "$OS_VER_MAJOR" == "7" ] && SUPPORTED=true
+      [ "$OS_VER_MAJOR" == "8" ] && SUPPORTED=true
+      ;;
+    *)
+      SUPPORTED=false ;;
+  esac
 
   # exit if not supported
   if [ "$SUPPORTED" == true ]; then
@@ -251,17 +295,17 @@ function check_os_comp {
   fi
 }
 
-#################################
-## main installation functions ##
-#################################
+##### Main installation functions #####
 
-function install_composer {
+# Install composer
+install_composer() {
   echo "* Installing composer.."
   curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
   echo "* Composer installed!"
 }
 
-function ptdl_dl {
+# Download pterodactyl files
+ptdl_dl() {
   echo "* Downloading pterodactyl panel files .. "
   mkdir -p /var/www/pterodactyl
   cd /var/www/pterodactyl || exit
@@ -271,90 +315,15 @@ function ptdl_dl {
   chmod -R 755 storage/* bootstrap/cache/
 
   cp .env.example .env
+  [ "$OS" == "centos" ] && export PATH=/usr/local/bin:$PATH
   COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader
 
   php artisan key:generate --force
   echo "* Downloaded pterodactyl panel files & installed composer dependencies!"
 }
 
-function configure {
-  [ "$ASSUME_SSL" == true ] && app_url=https://$FQDN || app_url=http://$FQDN
-
-  # Fill in environment:setup automatically
-  php artisan p:environment:setup \
-    --author="$email" \
-    --url="$app_url" \
-    --timezone="$timezone" \
-    --cache="redis" \
-    --session="redis" \
-    --queue="redis" \
-    --redis-host="localhost" \
-    --redis-pass="null" \
-    --redis-port="6379" \
-    --settings-ui="yes"
-
-  # Fill in environment:database credentials automatically
-  php artisan p:environment:database \
-    --host="127.0.0.1" \
-    --port="3306" \
-    --database="$MYSQL_DB" \
-    --username="$MYSQL_USER" \
-    --password="$MYSQL_PASSWORD"
-
-  # Email credentials manually set by user
-  if [[ "$mailneeded" =~ [Yy] ]]; then
-    php artisan p:environment:mail
-  fi
-
-  # configures database
-  php artisan migrate --seed --force
-
-  # Create user account
-  php artisan p:user:make \
-    --email="$user_email" \
-    --username="$user_username" \
-    --name-first="$user_firstname" \
-    --name-last="$user_lastname" \
-    --password="$user_password" \
-    --admin=1
-
-  # set folder permissions now
-  set_folder_permissions
-}
-
-# set the correct folder permissions depending on OS and webserver
-function set_folder_permissions {
-  # if os is ubuntu or debian, we do this
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
-    chown -R www-data:www-data ./*
-  elif [ "$OS" == "centos" ] && [ "$WEBSERVER" == "nginx" ]; then
-    chown -R nginx:nginx ./*
-  else
-    print_error "Invalid webserver and OS setup."
-    exit 1
-  fi
-}
-
-# insert cronjob
-function insert_cronjob {
-  echo "* Installing cronjob.. "
-
-  crontab -l | { cat; echo "* * * * * php /var/www/pterodactyl/artisan schedule:run >> /dev/null 2>&1"; } | crontab -
-
-  echo "* Cronjob installed!"
-}
-
-function install_pteroq {
-  echo "* Installing pteroq service.."
-
-  curl -o /etc/systemd/system/pteroq.service $GITHUB_BASE_URL/configs/pteroq.service
-  systemctl enable pteroq.service
-  systemctl start pteroq
-
-  echo "* Installed pteroq!"
-}
-
-function create_database {
+# Create a databse with user
+create_database() {
   if [ "$OS" == "centos" ]; then
     # secure MariaDB
     echo "* MariaDB secure installation. The following are safe defaults."
@@ -400,40 +369,137 @@ function create_database {
   fi
 }
 
-##################################
-# OS specific install functions ##
-##################################
+# Configure environment
+configure() {
+  app_url="http://$FQDN"
+  [ "$ASSUME_SSL" == true ] && app_url="https://$FQDN"
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && app_url="https://$FQDN"
 
-function apt_update {
-  apt update -y && apt upgrade -y
+  # Fill in environment:setup automatically
+  php artisan p:environment:setup \
+    --author="$email" \
+    --url="$app_url" \
+    --timezone="$timezone" \
+    --cache="redis" \
+    --session="redis" \
+    --queue="redis" \
+    --redis-host="localhost" \
+    --redis-pass="null" \
+    --redis-port="6379" \
+    --settings-ui="yes"
+
+  # Fill in environment:database credentials automatically
+  php artisan p:environment:database \
+    --host="127.0.0.1" \
+    --port="3306" \
+    --database="$MYSQL_DB" \
+    --username="$MYSQL_USER" \
+    --password="$MYSQL_PASSWORD"
+
+  # configures database
+  php artisan migrate --seed --force
+
+  # Create user account
+  php artisan p:user:make \
+    --email="$user_email" \
+    --username="$user_username" \
+    --name-first="$user_firstname" \
+    --name-last="$user_lastname" \
+    --password="$user_password" \
+    --admin=1
 }
 
-function ubuntu20_dep {
+# set the correct folder permissions depending on OS and webserver
+set_folder_permissions() {
+  # if os is ubuntu or debian, we do this
+  case "$OS" in
+    debian | ubuntu)
+      chown -R www-data:www-data ./* ;;
+    centos)
+      chown -R nginx:nginx ./* ;;
+  esac
+}
+
+# insert cronjob
+insert_cronjob() {
+  echo "* Installing cronjob.. "
+
+  crontab -l | { cat; echo "* * * * * php /var/www/pterodactyl/artisan schedule:run >> /dev/null 2>&1"; } | crontab -
+
+  echo "* Cronjob installed!"
+}
+
+install_pteroq() {
+  echo "* Installing pteroq service.."
+
+  curl -o /etc/systemd/system/pteroq.service $GITHUB_BASE_URL/configs/pteroq.service
+  systemctl enable pteroq.service
+  systemctl start pteroq
+
+  echo "* Installed pteroq!"
+}
+
+##### OS specific install functions #####
+
+apt_update() {
+  apt update -q -y && apt upgrade -y
+}
+
+yum_update() {
+  yum -y update
+}
+
+dnf_update() {
+  dnf -y upgrade
+}
+
+enable_services_debian_based() {
+  systemctl enable mariadb
+  systemctl enable redis-server
+  systemctl start mariadb
+  systemctl start redis-server
+}
+
+enable_services_centos_based() {
+  systemctl enable mariadb
+  systemctl enable nginx
+  systemctl enable redis
+  systemctl start mariadb
+  systemctl start redis
+}
+
+selinux_allow() {
+  setsebool -P httpd_can_network_connect 1 || true  # these commands can fail OK
+  setsebool -P httpd_execmem 1 || true
+  setsebool -P httpd_unified 1 || true
+}
+
+ubuntu20_dep() {
   echo "* Installing dependencies for Ubuntu 20.."
 
   # Add "add-apt-repository" command
   apt -y install software-properties-common curl apt-transport-https ca-certificates gnupg
 
-  # Update repositories list
-  apt update
+  # Ubuntu universe repo
+  add-apt-repository universe
 
   # Install Dependencies
   apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis cron
 
-  # enable services
-  systemctl start mariadb
-  systemctl enable mariadb
-  systemctl start redis-server
-  systemctl enable redis-server
+  # Enable services
+  enable_services_debian_based
 
   echo "* Dependencies for Ubuntu installed!"
 }
 
-function ubuntu18_dep {
+ubuntu18_dep() {
   echo "* Installing dependencies for Ubuntu 18.."
 
   # Add "add-apt-repository" command
   apt -y install software-properties-common curl apt-transport-https ca-certificates gnupg
+
+  # Ubuntu universe repo
+  add-apt-repository universe
 
   # Add PPA for PHP (we need 7.3+ and bionic only has 7.2)
   LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php
@@ -442,21 +508,18 @@ function ubuntu18_dep {
   curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
 
   # Update repositories list
-  apt update
+  apt_update
 
   # Install Dependencies
   apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis cron
 
-  # enable services
-  systemctl start mariadb
-  systemctl enable mariadb
-  systemctl start redis-server
-  systemctl enable redis-server
+  # Enable services
+  enable_services_debian_based
 
   echo "* Dependencies for Ubuntu installed!"
 }
 
-function debian_stretch_dep {
+debian_stretch_dep() {
   echo "* Installing dependencies for Debian 8/9.."
 
   # MariaDB need dirmngr
@@ -472,21 +535,18 @@ function debian_stretch_dep {
   curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
 
   # Update repositories list
-  apt update
+  apt_update
 
   # Install Dependencies
   apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server cron
 
-  # enable services
-  systemctl start mariadb
-  systemctl enable mariadb
-  systemctl start redis-server
-  systemctl enable redis-server
+  # Enable services
+  enable_services_debian_based
 
   echo "* Dependencies for Debian 8/9 installed!"
 }
 
-function debian_dep {
+debian_dep() {
   echo "* Installing dependencies for Debian 10.."
 
   # MariaDB need dirmngr
@@ -499,61 +559,47 @@ function debian_dep {
   echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/php.list
 
   # Update repositories list
-  apt update
+  apt_update
 
   # install dependencies
   apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server cron
 
-  # enable services
-  systemctl start mariadb
-  systemctl enable mariadb
-  systemctl start redis-server
-  systemctl enable redis-server
+  # Enable services
+  enable_services_debian_based
 
   echo "* Dependencies for Debian 10 installed!"
 }
 
-function centos7_dep {
+centos7_dep() {
   echo "* Installing dependencies for CentOS 7.."
-
-  # update first
-  yum update -y
 
   # SELinux tools
   yum install -y policycoreutils policycoreutils-python selinux-policy selinux-policy-targeted libselinux-utils setroubleshoot-server setools setools-console mcstrans
 
-  # add remi repo (php7.4)
+  # Add remi repo (php7.4)
   yum install -y epel-release http://rpms.remirepo.net/enterprise/remi-release-7.rpm
   yum install -y yum-utils
   yum-config-manager -y --disable remi-php54
   yum-config-manager -y --enable remi-php74
-  yum update -y
+  yum_update
 
   # Install MariaDB
   curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
 
-  # install dependencies
+  # Install dependencies
   yum -y install php php-common php-tokenizer php-curl php-fpm php-cli php-json php-mysqlnd php-mcrypt php-gd php-mbstring php-pdo php-zip php-bcmath php-dom php-opcache mariadb-server nginx curl tar zip unzip git redis
 
-  # enable services
-  systemctl enable mariadb
-  systemctl enable redis
-  systemctl start mariadb
-  systemctl start redis
+  # Enable services
+  enable_services_centos_based
 
   # SELinux (allow nginx and redis)
-  setsebool -P httpd_can_network_connect 1 || true  # these commands can fail OK
-  setsebool -P httpd_execmem 1 || true
-  setsebool -P httpd_unified 1 || true
+  selinux_allow
 
   echo "* Dependencies for CentOS installed!"
 }
 
-function centos8_dep {
+centos8_dep() {
   echo "* Installing dependencies for CentOS 8.."
-
-  # update first
-  dnf update -y
 
   # SELinux tools
   dnf install -y policycoreutils selinux-policy selinux-policy-targeted setroubleshoot-server setools setools-console mcstrans
@@ -561,7 +607,7 @@ function centos8_dep {
   # add remi repo (php7.4)
   dnf install -y epel-release http://rpms.remirepo.net/enterprise/remi-release-8.rpm
   dnf module enable -y php:remi-7.4
-  dnf update -y
+  dnf_update
 
   dnf install -y php php-common php-fpm php-cli php-json php-mysqlnd php-gd php-mbstring php-pdo php-zip php-bcmath php-dom php-opcache
 
@@ -571,49 +617,26 @@ function centos8_dep {
   # Other dependencies
   dnf install -y nginx curl tar zip unzip git redis
 
-  # enable services
-  systemctl enable mariadb
-  systemctl enable redis
-  systemctl start mariadb
-  systemctl start redis
+  # Enable services
+  enable_services_centos_based
 
   # SELinux (allow nginx and redis)
-  setsebool -P httpd_can_network_connect 1 || true  # these commands can fail OK
-  setsebool -P httpd_execmem 1 || true
-  setsebool -P httpd_unified 1 || true
+  selinux_allow
 
   echo "* Dependencies for CentOS installed!"
 }
 
-#################################
-## OTHER OS SPECIFIC FUNCTIONS ##
-#################################
+##### OTHER OS SPECIFIC FUNCTIONS #####
 
-function ubuntu_universedep {
-  # Probably should change this, this is more of a bandaid fix for this
-  # This function is ran before software-properties-common is installed
-  apt update -y
-  apt install software-properties-common -y
-
-  if grep -q universe "$SOURCES_PATH"; then
-    # even if it detects it as already existent, we'll still run the apt command to make sure
-    add-apt-repository universe
-    echo "* Ubuntu universe repo already exists."
-  else
-    add-apt-repository universe
-  fi
-}
-
-function centos_php {
+centos_php() {
   curl -o /etc/php-fpm.d/www-pterodactyl.conf $GITHUB_BASE_URL/configs/www-pterodactyl.conf
 
   systemctl enable php-fpm
   systemctl start php-fpm
 }
 
-function firewall_ufw {
-  apt update
-  apt install ufw -y
+firewall_ufw() {
+  apt install -y ufw
 
   echo -e "\n* Enabling Uncomplicated Firewall (UFW)"
   echo "* Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
@@ -628,63 +651,43 @@ function firewall_ufw {
   ufw status numbered | sed '/v6/d'
 }
 
-function firewall_firewalld {
+firewall_firewalld() {
   echo -e "\n* Enabling firewall_cmd (firewalld)"
   echo "* Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
 
-  if [ "$OS_VER_MAJOR" == "7" ]; then
-    # pointing to /dev/null silences the command output
-    echo "* Installing firewall"
-    yum -y -q update > /dev/null
-    yum -y -q install firewalld > /dev/null
+  # Install
+  [ "$OS_VER_MAJOR" == "7" ] && yum -y -q install firewalld > /dev/null
+  [ "$OS_VER_MAJOR" == "8" ] && dnf -y -q install firewalld > /dev/null
 
-    systemctl --now enable firewalld > /dev/null # Start and enable
-    firewall-cmd --add-service=http --permanent -q # Port 80
-    firewall-cmd --add-service=https --permanent -q # Port 443
-    firewall-cmd --add-service=ssh --permanent -q  # Port 22
-    firewall-cmd --reload -q # Enable firewall
+  # Enable
+  systemctl --now enable firewalld > /dev/null # Enable and start
 
-  elif [ "$OS_VER_MAJOR" == "8" ]; then
-    # pointing to /dev/null silences the command output
-    echo "* Installing firewall"
-    dnf -y -q update > /dev/null
-    dnf -y -q install firewalld > /dev/null
-
-    systemctl --now enable firewalld > /dev/null # Start and enable
-    firewall-cmd --add-service=http --permanent -q # Port 80
-    firewall-cmd --add-service=https --permanent -q # Port 443
-    firewall-cmd --add-service=ssh --permanent -q  # Port 22
-    firewall-cmd --reload -q # Enable firewall
-
-  else
-    print_error "Unsupported OS"
-    exit 1
-  fi
+  # Configure
+  firewall-cmd --add-service=http --permanent -q # Port 80
+  firewall-cmd --add-service=https --permanent -q # Port 443
+  firewall-cmd --add-service=ssh --permanent -q  # Port 22
+  firewall-cmd --reload -q # Enable firewall
 
   echo "* Firewall-cmd installed"
   print_brake 70
 }
 
-function letsencrypt {
+letsencrypt() {
   FAILED=false
 
   # Install certbot
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
-    apt-get install certbot -y
-  elif [ "$OS" == "centos" ]; then
-    [ "$OS_VER_MAJOR" == "7" ] && yum install certbot
-    [ "$OS_VER_MAJOR" == "8" ] && dnf install certbot
-  else
-    # exit
-    print_error "OS not supported."
-    exit 1
-  fi
-
-  # Stop nginx
-  systemctl stop nginx
+  case "$OS" in
+    debian | ubuntu)
+      apt-get -y install certbot python3-certbot-nginx
+      ;;
+    centos)
+      [ "$OS_VER_MAJOR" == "7" ] && yum -y -q install certbot python-certbot-nginx
+      [ "$OS_VER_MAJOR" == "8" ] && dnf -y -q install certbot python3-certbot-nginx
+      ;;
+  esac
 
   # Obtain certificate
-  certbot certonly --no-eff-email --email "$email" --standalone -d "$FQDN" || FAILED=true
+  certbot --nginx --redirect --no-eff-email --email "$email" -d "$FQDN" || FAILED=true
 
   # Check if it succeded
   if [ ! -d "/etc/letsencrypt/live/$FQDN/" ] || [ "$FAILED" == true ]; then
@@ -695,23 +698,20 @@ function letsencrypt {
     if [[ "$CONFIGURE_SSL" =~ [Yy] ]]; then
       ASSUME_SSL=true
       CONFIGURE_LETSENCRYPT=false
+      configure_nginx
     else
       ASSUME_SSL=false
       CONFIGURE_LETSENCRYPT=false
     fi
-  else 
-    systemctl restart nginx
   fi
 }
 
-#######################################
-## WEBSERVER CONFIGURATION FUNCTIONS ##
-#######################################
+##### WEBSERVER CONFIGURATION FUNCTIONS #####
 
-function configure_nginx {
+configure_nginx() {
   echo "* Configuring nginx .."
 
-  if [ "$ASSUME_SSL" == true ]; then
+  if [ $ASSUME_SSL == true ] && [ $CONFIGURE_LETSENCRYPT == false ]; then
     DL_FILE="nginx_ssl.conf"
   else
     DL_FILE="nginx.conf"
@@ -749,118 +749,58 @@ function configure_nginx {
       ln -s /etc/nginx/sites-available/pterodactyl.conf /etc/nginx/sites-enabled/pterodactyl.conf
   fi
 
-  # restart nginx
-  if [ "$CONFIGURE_LETSENCRYPT" == true ] || { [ "$CONFIGURE_LETSENCRYPT" == false ] && [ "$ASSUME_SSL" == false ]; }; then
+  if [ "$ASSUME_SSL" == false ] && [ "$CONFIGURE_LETSENCRYPT" == false ]; then
     systemctl restart nginx
   fi
+
   echo "* nginx configured!"
 }
 
-####################
-## MAIN FUNCTIONS ##
-####################
+##### MAIN FUNCTIONS #####
 
-function perform_install {
+perform_install() {
   echo "* Starting installation.. this might take a while!"
 
-  [ "$CONFIGURE_UFW" == true ] && firewall_ufw
+  case "$OS" in
+    debian | ubuntu)
+      apt_update
 
-  [ "$CONFIGURE_FIREWALL_CMD" == true ] && firewall_firewalld
+      [ "$CONFIGURE_UFW" == true ] && firewall_ufw
 
-  # do different things depending on OS
-  if [ "$OS" == "ubuntu" ]; then
-    ubuntu_universedep
-    apt_update
-    # different dependencies depending on if it's 20, 18 or 16
-    if [ "$OS_VER_MAJOR" == "20" ]; then
-      ubuntu20_dep
-    elif [ "$OS_VER_MAJOR" == "18" ]; then
-      ubuntu18_dep
-    else
-      print_error "Unsupported version of Ubuntu."
-      exit 1
-    fi
-    install_composer
-    ptdl_dl
-    create_database
-    configure
-    insert_cronjob
-    install_pteroq
-
-    if [ "$OS_VER_MAJOR" == "18" ] || [ "$OS_VER_MAJOR" == "20" ]; then
-      if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
-        letsencrypt
+      if [ "$OS" == "ubuntu" ]; then
+        [ "$OS_VER_MAJOR" == "20" ] && ubuntu20_dep
+        [ "$OS_VER_MAJOR" == "18" ] && ubuntu18_dep
+      elif [ "$OS" == "debian" ]; then
+        [ "$OS_VER_MAJOR" == "9" ] && debian_stretch_dep
+        [ "$OS_VER_MAJOR" == "10" ] && debian_dep
       fi
-    fi
-  elif [ "$OS" == "debian" ]; then
-    apt_update
-    if [ "$OS_VER_MAJOR" == "9" ]; then
-      debian_stretch_dep
-    elif [ "$OS_VER_MAJOR" == "10" ]; then
-      debian_dep
-    fi
-    install_composer
-    ptdl_dl
-    create_database
-    configure
-    insert_cronjob
-    install_pteroq
+    ;;
 
-    if [ "$OS_VER_MAJOR" == "9" ] || [ "$OS_VER_MAJOR" == "10" ]; then
-      if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
-        letsencrypt
-      fi
-    fi
-  elif [ "$OS" == "centos" ]; then
-    if [ "$OS_VER_MAJOR" == "7" ]; then
-      centos7_dep
-    elif [ "$OS_VER_MAJOR" == "8" ]; then
-      centos8_dep
-    fi
-    centos_php
-    install_composer
-    ptdl_dl
-    create_database
-    configure
-    insert_cronjob
-    install_pteroq
-    if [ "$OS_VER_MAJOR" == "7" ] || [ "$OS_VER_MAJOR" == "8" ]; then
-      if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
-        letsencrypt
-      fi
-    fi
-  else
-    # exit
-    print_error "OS not supported."
-    exit 1
-  fi
+    centos)
+      [ "$OS_VER_MAJOR" == "7" ] && yum_update
+      [ "$OS_VER_MAJOR" == "8" ] && dnf_update
 
-  # perform webserver configuration
-  if [ "$WEBSERVER" == "nginx" ]; then
-    configure_nginx
-  else
-    print_error "Invalid webserver."
-    exit 1
-  fi
+      [ "$CONFIGURE_FIREWALL_CMD" == true ] && firewall_firewalld
+
+      [ "$OS_VER_MAJOR" == "7" ] && centos7_dep
+      [ "$OS_VER_MAJOR" == "8" ] && centos8_dep
+    ;;
+  esac
+  
+  [ "$OS" == "centos" ] && centos_php
+  install_composer
+  ptdl_dl
+  create_database
+  configure
+  set_folder_permissions
+  insert_cronjob
+  install_pteroq
+  configure_nginx
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
+  true
 }
 
-function ask_letsencrypt {
-  if [ "$CONFIGURE_UFW" == false ] && [ "$CONFIGURE_FIREWALL_CMD" == false ]; then
-    print_warning "Let's Encrypt requires port 80/443 to be opened! You have opted out of the automatic firewall configuration; use this at your own risk (if port 80/443 is closed, the script will fail)!"
-  fi
-
-  print_warning "You cannot use Let's Encrypt with your hostname as an IP address! It must be a FQDN (e.g. panel.example.org)."
-
-  echo -e -n "* Do you want to automatically configure HTTPS using Let's Encrypt? (y/N): "
-  read -r CONFIRM_SSL
-
-  if [[ "$CONFIRM_SSL" =~ [Yy] ]]; then
-    CONFIGURE_LETSENCRYPT=true
-    ASSUME_SSL=true
-  fi
-}
-
-function main {
+main() {
   # check if we can detect an already existing installation
   if [ -d "/var/www/pterodactyl" ]; then
     print_warning "The script has detected that you already have Pterodactyl panel on your system! You cannot run the script multiple times, it will fail!"
@@ -884,6 +824,7 @@ function main {
   echo "* This script is not associated with the official Pterodactyl Project."
   echo "*"
   echo "* Running $OS version $OS_VER."
+  echo "* Latest pterodactyl/panel is $PTERODACTYL_VERSION"
   print_brake 70
 
   # checks if the system is compatible with this installation script
@@ -922,9 +863,6 @@ function main {
 
   required_input email "Provide the email address that will be used to configure Let's Encrypt and Pterodactyl: " "Email cannot be empty"
 
-  echo -n "* Would you like to set up email credentials so that Pterodactyl can send emails to users (usually not required)? (y/N): "
-  read -r mailneeded
-
   # Initial admin account
   required_input user_email "Email address for the initial admin account: " "Email cannot be empty"
   required_input user_username "Username for the initial admin account: " "Username cannot be empty"
@@ -938,67 +876,20 @@ function main {
   while [ -z "$FQDN" ]; do
       echo -n "* Set the FQDN of this panel (panel.example.com): "
       read -r FQDN
-
       [ -z "$FQDN" ] && print_error "FQDN cannot be empty"
   done
 
-  # UFW is available for Ubuntu/Debian
-  # Let's Encrypt is available for Ubuntu/Debian
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
-    echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
-    read -r CONFIRM_UFW
+  # Ask if firewall is needed
+  ask_firewall
 
-    if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
-      CONFIGURE_UFW=true
-      CONFIGURE_FIREWALL=true
-    fi
-
-    # Available for Debian 9/10
-    if [ "$OS" == "debian" ]; then
-      if [ "$OS_VER_MAJOR" == "9" ] || [ "$OS_VER_MAJOR" == "10" ]; then
-        ask_letsencrypt
-      fi
-    fi
-
-    # Available for Ubuntu 18/20
-    if [ "$OS" == "ubuntu" ]; then
-      if [ "$OS_VER_MAJOR" == "18" ] || [ "$OS_VER_MAJOR" == "20" ]; then
-        ask_letsencrypt
-      fi
-    fi
-  fi
-
-
-  # Firewall-cmd is available for CentOS
-  # Let's Encrypt is available for CentOS
-  if [ "$OS" == "centos" ]; then
-    echo -e -n "* Do you want to automatically configure firewall-cmd (firewall)? (y/N): "
-    read -r CONFIRM_FIREWALL_CMD
-
-    if [[ "$CONFIRM_FIREWALL_CMD" =~ [Yy] ]]; then
-      CONFIGURE_FIREWALL_CMD=true
-      CONFIGURE_FIREWALL=true
-    fi
-
-    ask_letsencrypt
-  fi
+  # Ask if letsencrypt is needed
+  ask_letsencrypt
 
   # If it's already true, this should be a no-brainer
-  if [ "$CONFIGURE_LETSENCRYPT" == false ]; then
-    echo "* Let's Encrypt is not going to be automatically configured by this script (either unsupported yet or user opted out)."
-    echo "* You can 'assume' Let's Encrypt, which means the script will download a nginx configuration that is configured to use a Let's Encrypt certificate but the script won't obtain the certificate for you."
-    echo "* If you assume SSL and do not obtain the certificate, your installation will not work."
-
-    echo -n "* Assume SSL or not? (y/N): "
-    read -r ASSUME_SSL_INPUT
-
-    if [[ "$ASSUME_SSL_INPUT" =~ [Yy] ]]; then
-      ASSUME_SSL=true
-    fi
-  fi
+  [ "$CONFIGURE_LETSENCRYPT" == false ] && ask_assume_ssl
 
   # verify FQDN if user has selected to assume SSL or configure Let's Encrypt
-  $CONFIGURE_LETSENCRYPT || $ASSUME_SSL && bash <(curl -s $GITHUB_BASE_URL/lib/verify-fqdn.sh) "$FQDN" "$OS"
+  [ "$CONFIGURE_LETSENCRYPT" == true ] || [ "$ASSUME_SSL" == true ] && bash <(curl -s $GITHUB_BASE_URL/lib/verify-fqdn.sh) "$FQDN" "$OS"
 
   # summary
   summary
@@ -1015,9 +906,9 @@ function main {
   fi
 }
 
-function summary {
+summary() {
   print_brake 62
-  echo "* Pterodactyl panel $PTERODACTYL_VERSION with $WEBSERVER on $OS"
+  echo "* Pterodactyl panel $PTERODACTYL_VERSION with nginx on $OS"
   echo "* Database name: $MYSQL_DB"
   echo "* Database user: $MYSQL_USER"
   echo "* Database password: (censored)"
@@ -1035,7 +926,7 @@ function summary {
   print_brake 62
 }
 
-function goodbye {
+goodbye() {
   print_brake 62
   echo "* Panel installation completed"
   echo "*"
@@ -1048,7 +939,7 @@ function goodbye {
   echo "* Unofficial add-ons and tips"
   echo "* - Third-party themes, $(hyperlink 'https://github.com/TheFonix/Pterodactyl-Themes')"
   echo "*"
-  echo "* Installation is using $WEBSERVER on $OS"
+  echo "* Installation is using nginx on $OS"
   echo "* Thank you for using this script."
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you haven't configured the firewall: 80/443 (HTTP/HTTPS) is required to be open!"
   print_brake 62
