@@ -96,6 +96,15 @@ get_latest_release() {
 echo "* Retrieving release information.."
 PTERODACTYL_VERSION="$(get_latest_release "pterodactyl/panel")"
 
+####### lib func #######
+
+array_contains_element () {
+  local e match="$1"
+  shift
+  for e; do [[ "$e" == "$match" ]] && return 0; done
+  return 1
+}
+
 ####### Visual functions ########
 
 print_error() {
@@ -854,13 +863,15 @@ main() {
   rand_pw=$(tr -dc 'A-Za-z0-9!"#$%&'\''()*+,-./:;<=>?@[\]^_`{|}~' </dev/urandom | head -c 64  ; echo)
   password_input MYSQL_PASSWORD "Password (press enter to use randomly generated password): " "MySQL password cannot be empty" "$rand_pw"
 
-  valid_timezones="$(timedatectl list-timezones)"
+  readarray -t valid_timezones <<< "$(curl -s $GITHUB_BASE_URL/configs/valid_timezones.txt)"
   echo "* List of valid timezones here $(hyperlink "https://www.php.net/manual/en/timezones.php")"
 
-  while [ -z "$timezone" ] || [[ ${valid_timezones} != *"$timezone_input"* ]]; do
+  while [ -z "$timezone" ]; do
     echo -n "* Select timezone [Europe/Stockholm]: "
     read -r timezone_input
-    [ -z "$timezone_input" ] && timezone="Europe/Stockholm" || timezone=$timezone_input # because köttbullar!
+  
+    array_contains_element "$timezone_input" "${valid_timezones[@]}" && timezone="$timezone_input"
+    [ -z "$timezone_input" ] && timezone="Europe/Stockholm" # because köttbullar!
   done
 
   required_input email "Provide the email address that will be used to configure Let's Encrypt and Pterodactyl: " "Email cannot be empty"
