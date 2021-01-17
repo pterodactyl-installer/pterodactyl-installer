@@ -14,7 +14,7 @@ This project is available at [GitHub](https://github.com/vilhelmprytz/pterodacty
 ## Features
 
 - Automatic installation of the Pterodactyl Panel (dependencies, database, cronjob, nginx).
-- Automatic installation of the Pterodactyl Wings (Docker, NodeJS, systemd).
+- Automatic installation of the Pterodactyl Wings (Docker, systemd).
 - Panel: (optional) automatic configuration of Let's Encrypt.
 - Panel: (optional) automatic configuration of UFW (firewall for Ubuntu/Debian).
 
