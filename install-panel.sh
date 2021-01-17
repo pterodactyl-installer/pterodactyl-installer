@@ -155,6 +155,7 @@ required_input() {
 password_input() {
   local  __resultvar=$1
   local  result=''
+  local default="$4"
 
   while [ -z "$result" ]; do
     echo -n "* ${2}"
@@ -177,7 +178,7 @@ password_input() {
         printf '*'
       fi
     done
-
+    [ -z "$result" ] && [ -n "$default" ] && result="$default"
     [ -z "$result" ] && print_error "${3}"
   done
 
@@ -859,7 +860,8 @@ main() {
   [ -z "$MYSQL_USER_INPUT" ] && MYSQL_USER="pterodactyl" || MYSQL_USER=$MYSQL_USER_INPUT
 
   # MySQL password input
-  password_input MYSQL_PASSWORD "Password (use something strong): " "MySQL password cannot be empty"
+  rand_pw=$(tr -dc 'A-Za-z0-9!"#$%&'\''()*+,-./:;<=>?@[\]^_`{|}~' </dev/urandom | head -c 64  ; echo)
+  password_input MYSQL_PASSWORD "Password (press enter to use randomly generated password): " "MySQL password cannot be empty" "$rand_pw"
 
   readarray -t valid_timezones <<< "$(curl -s $GITHUB_BASE_URL/configs/valid_timezones.txt)"
   echo "* List of valid timezones here $(hyperlink "https://www.php.net/manual/en/timezones.php")"
