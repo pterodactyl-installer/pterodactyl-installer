@@ -861,7 +861,7 @@ main() {
   # MySQL password input
   password_input MYSQL_PASSWORD "Password (use something strong): " "MySQL password cannot be empty"
 
-  readarray -t valid_timezones < "$(curl -s $GITHUB_BASE_URL/configs/valid_timezones.txt)"
+  readarray -t valid_timezones <<< "$(curl -s $GITHUB_BASE_URL/configs/valid_timezones.txt)"
   echo "* List of valid timezones here $(hyperlink "https://www.php.net/manual/en/timezones.php")"
 
   while [ -z "$timezone" ]; do
