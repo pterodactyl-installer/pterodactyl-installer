@@ -60,7 +60,7 @@ done=false
 
 output "Pterodactyl installation script @ $SCRIPT_VERSION"
 output
-output "Copyright (C) 2018 - 2021, Vilhelm Prytz, <vilhelm@prytznet.se>, et al."
+output "Copyright (C) 2018 - 2021, Vilhelm Prytz, <vilhelm@prytznet.se>"
 output "https://github.com/vilhelmprytz/pterodactyl-installer"
 output
 output "Sponsoring/Donations: https://github.com/vilhelmprytz/pterodactyl-installer?sponsor=1"
