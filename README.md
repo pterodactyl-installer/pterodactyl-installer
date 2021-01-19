@@ -109,6 +109,8 @@ When the release is published, push another commit which revers the changes you 
 
 ## Contributors ✨
 
+Copyright (C) 2018 - 2021, Vilhelm Prytz, <vilhelm@prytznet.se>
+
 Created and maintained by [Vilhelm Prytz](https://github.com/vilhelmprytz).
 
 Special thanks to the Discord moderators [sam1370](https://github.com/sam1370) and [Linux123123](https://github.com/Linux123123) for helping on the Discord server!
