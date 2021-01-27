@@ -419,7 +419,7 @@ firewall_firewalld() {
   [ "$CONFIGURE_LETSENCRYPT" == true ] && firewall-cmd --add-service=http --permanent -q # Port 80
   [ "$CONFIGURE_LETSENCRYPT" == true ] && firewall-cmd --add-service=https --permanent -q # Port 443
 
-  firewall-cmd --permanent --zone=trusted --change-interface=pterodactyl0 -q
+  firewall-cmd --permanent --zone=trusted --change-interface=docker0
   firewall-cmd --zone=trusted --add-masquerade --permanent
   firewall-cmd --reload -q # Enable firewall
 
