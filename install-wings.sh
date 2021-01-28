@@ -62,10 +62,9 @@ COLOR_NC='\033[0m'
 
 INSTALL_MARIADB=false
 
-# ufw firewall
+# firewall
+CONFIGURE_FIREWALL=false
 CONFIGURE_UFW=false
-
-# firewall_cmd firewall
 CONFIGURE_FIREWALL_CMD=false
 
 # SSL (Let's Encrypt)
@@ -531,6 +530,7 @@ main() {
 
     if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
       CONFIGURE_UFW=true
+      CONFIGURE_FIREWALL=true
     fi
   fi
 
@@ -541,6 +541,7 @@ main() {
 
     if [[ "$CONFIRM_FIREWALL_CMD" =~ [Yy] ]]; then
       CONFIGURE_FIREWALL_CMD=true
+      CONFIGURE_FIREWALL=true
     fi
   fi
 
@@ -594,18 +595,20 @@ function goodbye {
   echo "*"
   echo "* To continue, you need to configure Wings to run with your panel"
   echo "* Please refer to the official guide, $(hyperlink 'https://pterodactyl.io/wings/1.0/installing.html#configure-daemon')"
-  echo "*"
-  echo "* Once the configuration has been created (usually in '/etc/pterodactyl/config.yml')"
-  echo "* you can then start Wings manually to verify that it's working"
+  echo "* "
+  echo "* You can either copy the configuration file from the panel manually to /etc/pterodactyl/config.yml"
+  echo "* or, you can use the \"auto deploy\" button from the panel and simply paste the command in this terminal"
+  echo "* "
+  echo "* You can then start Wings manually to verify that it's working"
   echo "*"
   echo "* sudo wings"
   echo "*"
-  echo "* Once you have verified that it is working, you can then start it as a service (runs in the background)"
+  echo "* Once you have verified that it is working, use CTRL+C and then start Wings as a service (runs in the background)"
   echo "*"
   echo "* systemctl start wings"
   echo "*"
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: It is recommended to enable swap (for Docker, read more about it in official documentation)."
-  echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you haven't configured your firewall, ports 8080 and 2022 needs to be open."
+  [ "$CONFIGURE_FIREWALL" == false ] && echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you haven't configured your firewall, ports 8080 and 2022 needs to be open."
   print_brake 70
   echo ""
 }

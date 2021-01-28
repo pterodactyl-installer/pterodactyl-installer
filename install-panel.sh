@@ -949,12 +949,9 @@ goodbye() {
   [ "$ASSUME_SSL" == false ] && [ "$CONFIGURE_LETSENCRYPT" == false ] && echo "* Your panel should be accessible from $(hyperlink "$app_url")"
 
   echo "*"
-  echo "* Unofficial add-ons and tips"
-  echo "* - Third-party themes, $(hyperlink 'https://github.com/TheFonix/Pterodactyl-Themes')"
-  echo "*"
   echo "* Installation is using nginx on $OS"
   echo "* Thank you for using this script."
-  echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you haven't configured the firewall: 80/443 (HTTP/HTTPS) is required to be open!"
+  [ "$CONFIGURE_FIREWALL" == false ] && echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you haven't configured the firewall: 80/443 (HTTP/HTTPS) is required to be open!"
   print_brake 62
 }
 
