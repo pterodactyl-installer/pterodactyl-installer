@@ -8,6 +8,12 @@ This project follows the [semantic versioning](https://semver.org) convention. C
 
 - [#151](https://github.com/vilhelmprytz/pterodactyl-installer/issues/151) panel: `APP_ENVIRONMENT_ONLY` was set to `true` when it should be `false`. This caused the panel to prohibit modifying the settings from the web interface, which is not intended behavior.
 
+### Changed
+
+- [#129](https://github.com/vilhelmprytz/pterodactyl-installer/issues/129) wings: Clarify how to connect new Wings installation with the panel (using auto deploy).
+- [#153](https://github.com/vilhelmprytz/pterodactyl-installer/pull/153) panel/wings: Changed so that the script will no longer tell you to open firewall ports if you have enabled automatic firewall configuration.
+- [#153](https://github.com/vilhelmprytz/pterodactyl-installer/pull/153) panel: Remove deprecated third-party suggestions.
+
 ### Added
 
 - [#148](https://github.com/vilhelmprytz/pterodactyl-installer/issues/148) wings: Added so that the Wings installation script will now verify FQDN using `lib/verify-fqdn` if the user chooses to configure Let's Encrypt automatically.
