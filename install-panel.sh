@@ -96,13 +96,17 @@ get_latest_release() {
 echo "* Retrieving release information.."
 PTERODACTYL_VERSION="$(get_latest_release "pterodactyl/panel")"
 
-####### lib func #######
+####### Other library functions ########
 
 array_contains_element () {
   local e match="$1"
   shift
   for e; do [[ "$e" == "$match" ]] && return 0; done
   return 1
+}
+
+valid_email () {
+  [[ $1 =~ [[:alnum:]._%+-]+@[[:alnum:].-]+\.[[:alpha:].]{2,4}$ ]]
 }
 
 ####### Visual functions ########
@@ -147,6 +151,20 @@ required_input() {
       read -r result
 
       [ -z "$result" ] && print_error "${3}"
+  done
+
+  eval "$__resultvar="'$result'""
+}
+
+email_input() {
+  local  __resultvar=$1
+  local  result=''
+
+  while ! valid_email "$result"; do
+      echo -n "* ${2}"
+      read -r result
+
+      valid_email "$result" || print_error "${3}"
   done
 
   eval "$__resultvar="'$result'""
@@ -874,10 +892,12 @@ main() {
     [ -z "$timezone_input" ] && timezone="Europe/Stockholm" # because köttbullar!
   done
 
-  required_input email "Provide the email address that will be used to configure Let's Encrypt and Pterodactyl: " "Email cannot be empty"
+  email_input email "Provide the email address that will be used to configure Let's Encrypt and Pterodactyl: " "Email empty or not valid"
 
   # Initial admin account
-  required_input user_email "Email address for the initial admin account: " "Email cannot be empty"
+  email_input user_email "Email address for the initial admin account: " "Email empty or not valid"
+
+  echo "$email $user_email"
   required_input user_username "Username for the initial admin account: " "Username cannot be empty"
   required_input user_firstname "First name for the initial admin account: " "Name cannot be empty"
   required_input user_lastname "Last name for the initial admin account: " "Name cannot be empty"

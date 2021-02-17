@@ -85,6 +85,12 @@ get_latest_release() {
 echo "* Retrieving release information.."
 WINGS_VERSION="$(get_latest_release "pterodactyl/wings")"
 
+####### Other library functions ########
+
+valid_email () {
+  [[ $1 =~ [[:alnum:]._%+-]+@[[:alnum:].-]+\.[[:alpha:].]{2,4}$ ]]
+}
+
 #################################
 ####### Visual functions ########
 #################################
@@ -571,11 +577,11 @@ main() {
 
   if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
     # set EMAIL
-    while [ -z "$EMAIL" ]; do
+    while ! valid_email "$EMAIL"; do
         echo -n "* Enter email address for Let's Encrypt: "
         read -r EMAIL
 
-        [ -z "$EMAIL" ] && print_error "Email cannot be empty"
+        valid_email "$EMAIL" || print_error "Email empty or email not valid"
     done
   fi
 
