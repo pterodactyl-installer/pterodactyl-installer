@@ -443,6 +443,14 @@ install_pteroq() {
   echo "* Installing pteroq service.."
 
   curl -o /etc/systemd/system/pteroq.service $GITHUB_BASE_URL/configs/pteroq.service
+
+  case "$OS" in
+    debian | ubuntu)
+      sed -i -e "s@<user>@www-data@g" /etc/systemd/system/pteroq.service ;;
+    centos)
+      sed -i -e "s@<user>@nginx@g" /etc/systemd/system/pteroq.service ;;
+  esac
+
   systemctl enable pteroq.service
   systemctl start pteroq
 
