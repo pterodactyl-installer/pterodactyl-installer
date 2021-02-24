@@ -7,6 +7,7 @@ This project follows the [semantic versioning](https://semver.org) convention. C
 ### Fixed
 
 - [#151](https://github.com/vilhelmprytz/pterodactyl-installer/issues/151) panel: `APP_ENVIRONMENT_ONLY` was set to `true` when it should be `false`. This caused the panel to prohibit modifying the settings from the web interface, which is not intended behavior.
+- [#165](https://github.com/vilhelmprytz/pterodactyl-installer/issues/165) panel: Fix so that the `pteroq` service uses the correct user on CentOS (thanks [@PipeItToDevNull](https://github.com/PipeItToDevNull) for reporting!).
 
 ### Changed
 
