@@ -501,6 +501,12 @@ ubuntu20_dep() {
   # Ubuntu universe repo
   add-apt-repository universe
 
+  # Add PPA for PHP (we need 8.0 and focal only has 7.4)
+  LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php
+
+  # Update repositories list
+  apt_update
+
   # Install Dependencies
   apt -y install php8.0 php8.0-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis cron
 
