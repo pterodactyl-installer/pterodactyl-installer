@@ -596,8 +596,8 @@ centos7_dep() {
   # Add remi repo (php8.0)
   yum install -y epel-release http://rpms.remirepo.net/enterprise/remi-release-7.rpm
   yum install -y yum-utils
-  yum-config-manager -y --disable remi-php80
-  yum-config-manager -y --enable remi-php74
+  yum-config-manager -y --disable remi-php54
+  yum-config-manager -y --enable remi-php80
   yum_update
 
   # Install MariaDB
