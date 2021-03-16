@@ -277,12 +277,12 @@ detect_distro() {
 check_os_comp() {
   case "$OS" in
     ubuntu)
-      PHP_SOCKET="/run/php/php7.4-fpm.sock"
+      PHP_SOCKET="/run/php/php8.0-fpm.sock"
       [ "$OS_VER_MAJOR" == "18" ] && SUPPORTED=true
       [ "$OS_VER_MAJOR" == "20" ] && SUPPORTED=true
       ;;
     debian)
-      PHP_SOCKET="/run/php/php7.4-fpm.sock"
+      PHP_SOCKET="/run/php/php8.0-fpm.sock"
       [ "$OS_VER_MAJOR" == "9" ] && SUPPORTED=true
       [ "$OS_VER_MAJOR" == "10" ] && SUPPORTED=true
       ;;
@@ -501,8 +501,14 @@ ubuntu20_dep() {
   # Ubuntu universe repo
   add-apt-repository universe
 
+  # Add PPA for PHP (we need 8.0 and focal only has 7.4)
+  LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php
+
+  # Update repositories list
+  apt_update
+
   # Install Dependencies
-  apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis cron
+  apt -y install php8.0 php8.0-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis cron
 
   # Enable services
   enable_services_debian_based
@@ -519,7 +525,7 @@ ubuntu18_dep() {
   # Ubuntu universe repo
   add-apt-repository universe
 
-  # Add PPA for PHP (we need 7.3+ and bionic only has 7.2)
+  # Add PPA for PHP (we need 8.0 and bionic only has 7.2)
   LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php
 
   # Add the MariaDB repo (bionic has mariadb version 10.1 and we need newer than that)
@@ -529,7 +535,7 @@ ubuntu18_dep() {
   apt_update
 
   # Install Dependencies
-  apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis cron
+  apt -y install php8.0 php8.0-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis cron
 
   # Enable services
   enable_services_debian_based
@@ -543,8 +549,7 @@ debian_stretch_dep() {
   # MariaDB need dirmngr
   apt -y install dirmngr
 
-  # install PHP 7.4 using sury's repo instead of PPA
-  # this guide shows how: https://vilhelmprytz.se/2018/08/22/install-php72-on-Debian-8-and-9.html
+  # install PHP 8.0 using sury's repo instead of PPA
   apt install ca-certificates apt-transport-https lsb-release -y
   wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
   echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/php.list
@@ -556,7 +561,7 @@ debian_stretch_dep() {
   apt_update
 
   # Install Dependencies
-  apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server cron
+  apt -y install php8.0 php8.0-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server cron
 
   # Enable services
   enable_services_debian_based
@@ -570,7 +575,7 @@ debian_dep() {
   # MariaDB need dirmngr
   apt -y install dirmngr
 
-  # install PHP 7.4 using sury's repo instead of default 7.2 package (in buster repo)
+  # install PHP 8.0 using sury's repo instead of default 7.2 package (in buster repo)
   # this guide shows how: https://vilhelmprytz.se/2018/08/22/install-php72-on-Debian-8-and-9.html
   apt install ca-certificates apt-transport-https lsb-release -y
   wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
@@ -580,7 +585,7 @@ debian_dep() {
   apt_update
 
   # install dependencies
-  apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server cron
+  apt -y install php8.0 php8.0-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server cron
 
   # Enable services
   enable_services_debian_based
@@ -594,11 +599,11 @@ centos7_dep() {
   # SELinux tools
   yum install -y policycoreutils policycoreutils-python selinux-policy selinux-policy-targeted libselinux-utils setroubleshoot-server setools setools-console mcstrans
 
-  # Add remi repo (php7.4)
+  # Add remi repo (php8.0)
   yum install -y epel-release http://rpms.remirepo.net/enterprise/remi-release-7.rpm
   yum install -y yum-utils
   yum-config-manager -y --disable remi-php54
-  yum-config-manager -y --enable remi-php74
+  yum-config-manager -y --enable remi-php80
   yum_update
 
   # Install MariaDB
@@ -622,9 +627,9 @@ centos8_dep() {
   # SELinux tools
   dnf install -y policycoreutils selinux-policy selinux-policy-targeted setroubleshoot-server setools setools-console mcstrans
 
-  # add remi repo (php7.4)
+  # add remi repo (php8.0)
   dnf install -y epel-release http://rpms.remirepo.net/enterprise/remi-release-8.rpm
-  dnf module enable -y php:remi-7.4
+  dnf module enable -y php:remi-8.0
   dnf_update
 
   dnf install -y php php-common php-fpm php-cli php-json php-mysqlnd php-gd php-mbstring php-pdo php-zip php-bcmath php-dom php-opcache

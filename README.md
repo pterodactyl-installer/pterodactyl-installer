@@ -30,14 +30,14 @@ List of supported installation setups for panel and Wings (installations support
 | ---------------- | ------- | ------------------ | ----------- |
 | Ubuntu           | 14.04   | :red_circle:       |             |
 |                  | 16.04   | :red_circle: \*    |             |
-|                  | 18.04   | :white_check_mark: | 7.4         |
-|                  | 20.04   | :white_check_mark: | 7.4         |
+|                  | 18.04   | :white_check_mark: | 8.0         |
+|                  | 20.04   | :white_check_mark: | 8.0         |
 | Debian           | 8       | :red_circle: \*    |             |
-|                  | 9       | :white_check_mark: | 7.4         |
-|                  | 10      | :white_check_mark: | 7.4         |
+|                  | 9       | :white_check_mark: | 8.0         |
+|                  | 10      | :white_check_mark: | 8.0         |
 | CentOS           | 6       | :red_circle:       |             |
-|                  | 7       | :white_check_mark: | 7.4         |
-|                  | 8       | :white_check_mark: | 7.4         |
+|                  | 7       | :white_check_mark: | 8.0         |
+|                  | 8       | :white_check_mark: | 8.0         |
 
 ### Supported Wings operating systems
 
