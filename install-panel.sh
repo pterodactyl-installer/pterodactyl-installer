@@ -6,7 +6,7 @@ set -e
 #                                                                           #
 # Project 'pterodactyl-installer' for panel                                 #
 #                                                                           #
-# Copyright (C) 2018 - 2021, Vilhelm Prytz, <vilhelm@prytznet.se>, et al.   #
+# Copyright (C) 2018 - 2021, Vilhelm Prytz, <vilhelm@prytznet.se>           #
 #                                                                           #
 #   This program is free software: you can redistribute it and/or modify    #
 #   it under the terms of the GNU General Public License as published by    #
@@ -96,6 +96,15 @@ get_latest_release() {
 echo "* Retrieving release information.."
 PTERODACTYL_VERSION="$(get_latest_release "pterodactyl/panel")"
 
+####### lib func #######
+
+array_contains_element () {
+  local e match="$1"
+  shift
+  for e; do [[ "$e" == "$match" ]] && return 0; done
+  return 1
+}
+
 ####### Visual functions ########
 
 print_error() {
@@ -146,6 +155,7 @@ required_input() {
 password_input() {
   local  __resultvar=$1
   local  result=''
+  local default="$4"
 
   while [ -z "$result" ]; do
     echo -n "* ${2}"
@@ -168,7 +178,7 @@ password_input() {
         printf '*'
       fi
     done
-
+    [ -z "$result" ] && [ -n "$default" ] && result="$default"
     [ -z "$result" ] && print_error "${3}"
   done
 
@@ -267,12 +277,12 @@ detect_distro() {
 check_os_comp() {
   case "$OS" in
     ubuntu)
-      PHP_SOCKET="/run/php/php7.4-fpm.sock"
+      PHP_SOCKET="/run/php/php8.0-fpm.sock"
       [ "$OS_VER_MAJOR" == "18" ] && SUPPORTED=true
       [ "$OS_VER_MAJOR" == "20" ] && SUPPORTED=true
       ;;
     debian)
-      PHP_SOCKET="/run/php/php7.4-fpm.sock"
+      PHP_SOCKET="/run/php/php8.0-fpm.sock"
       [ "$OS_VER_MAJOR" == "9" ] && SUPPORTED=true
       [ "$OS_VER_MAJOR" == "10" ] && SUPPORTED=true
       ;;
@@ -386,7 +396,7 @@ configure() {
     --redis-host="localhost" \
     --redis-pass="null" \
     --redis-port="6379" \
-    --settings-ui="yes"
+    --settings-ui=true
 
   # Fill in environment:database credentials automatically
   php artisan p:environment:database \
@@ -433,6 +443,14 @@ install_pteroq() {
   echo "* Installing pteroq service.."
 
   curl -o /etc/systemd/system/pteroq.service $GITHUB_BASE_URL/configs/pteroq.service
+
+  case "$OS" in
+    debian | ubuntu)
+      sed -i -e "s@<user>@www-data@g" /etc/systemd/system/pteroq.service ;;
+    centos)
+      sed -i -e "s@<user>@nginx@g" /etc/systemd/system/pteroq.service ;;
+  esac
+
   systemctl enable pteroq.service
   systemctl start pteroq
 
@@ -483,8 +501,14 @@ ubuntu20_dep() {
   # Ubuntu universe repo
   add-apt-repository universe
 
+  # Add PPA for PHP (we need 8.0 and focal only has 7.4)
+  LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php
+
+  # Update repositories list
+  apt_update
+
   # Install Dependencies
-  apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis cron
+  apt -y install php8.0 php8.0-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis cron
 
   # Enable services
   enable_services_debian_based
@@ -501,7 +525,7 @@ ubuntu18_dep() {
   # Ubuntu universe repo
   add-apt-repository universe
 
-  # Add PPA for PHP (we need 7.3+ and bionic only has 7.2)
+  # Add PPA for PHP (we need 8.0 and bionic only has 7.2)
   LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php
 
   # Add the MariaDB repo (bionic has mariadb version 10.1 and we need newer than that)
@@ -511,7 +535,7 @@ ubuntu18_dep() {
   apt_update
 
   # Install Dependencies
-  apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis cron
+  apt -y install php8.0 php8.0-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis cron
 
   # Enable services
   enable_services_debian_based
@@ -525,8 +549,7 @@ debian_stretch_dep() {
   # MariaDB need dirmngr
   apt -y install dirmngr
 
-  # install PHP 7.4 using sury's repo instead of PPA
-  # this guide shows how: https://vilhelmprytz.se/2018/08/22/install-php72-on-Debian-8-and-9.html
+  # install PHP 8.0 using sury's repo instead of PPA
   apt install ca-certificates apt-transport-https lsb-release -y
   wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
   echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/php.list
@@ -538,7 +561,7 @@ debian_stretch_dep() {
   apt_update
 
   # Install Dependencies
-  apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server cron
+  apt -y install php8.0 php8.0-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server cron
 
   # Enable services
   enable_services_debian_based
@@ -552,7 +575,7 @@ debian_dep() {
   # MariaDB need dirmngr
   apt -y install dirmngr
 
-  # install PHP 7.4 using sury's repo instead of default 7.2 package (in buster repo)
+  # install PHP 8.0 using sury's repo instead of default 7.2 package (in buster repo)
   # this guide shows how: https://vilhelmprytz.se/2018/08/22/install-php72-on-Debian-8-and-9.html
   apt install ca-certificates apt-transport-https lsb-release -y
   wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
@@ -562,7 +585,7 @@ debian_dep() {
   apt_update
 
   # install dependencies
-  apt -y install php7.4 php7.4-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server cron
+  apt -y install php8.0 php8.0-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server cron
 
   # Enable services
   enable_services_debian_based
@@ -576,11 +599,11 @@ centos7_dep() {
   # SELinux tools
   yum install -y policycoreutils policycoreutils-python selinux-policy selinux-policy-targeted libselinux-utils setroubleshoot-server setools setools-console mcstrans
 
-  # Add remi repo (php7.4)
+  # Add remi repo (php8.0)
   yum install -y epel-release http://rpms.remirepo.net/enterprise/remi-release-7.rpm
   yum install -y yum-utils
   yum-config-manager -y --disable remi-php54
-  yum-config-manager -y --enable remi-php74
+  yum-config-manager -y --enable remi-php80
   yum_update
 
   # Install MariaDB
@@ -604,9 +627,9 @@ centos8_dep() {
   # SELinux tools
   dnf install -y policycoreutils selinux-policy selinux-policy-targeted setroubleshoot-server setools setools-console mcstrans
 
-  # add remi repo (php7.4)
+  # add remi repo (php8.0)
   dnf install -y epel-release http://rpms.remirepo.net/enterprise/remi-release-8.rpm
-  dnf module enable -y php:remi-7.4
+  dnf module enable -y php:remi-8.0
   dnf_update
 
   dnf install -y php php-common php-fpm php-cli php-json php-mysqlnd php-gd php-mbstring php-pdo php-zip php-bcmath php-dom php-opcache
@@ -818,7 +841,7 @@ main() {
   print_brake 70
   echo "* Pterodactyl panel installation script @ $SCRIPT_RELEASE"
   echo "*"
-  echo "* Copyright (C) 2018 - 2021, Vilhelm Prytz, <vilhelm@prytznet.se>, et al."
+  echo "* Copyright (C) 2018 - 2021, Vilhelm Prytz, <vilhelm@prytznet.se>"
   echo "* https://github.com/vilhelmprytz/pterodactyl-installer"
   echo "*"
   echo "* This script is not associated with the official Pterodactyl Project."
@@ -850,15 +873,18 @@ main() {
   [ -z "$MYSQL_USER_INPUT" ] && MYSQL_USER="pterodactyl" || MYSQL_USER=$MYSQL_USER_INPUT
 
   # MySQL password input
-  password_input MYSQL_PASSWORD "Password (use something strong): " "MySQL password cannot be empty"
+  rand_pw=$(tr -dc 'A-Za-z0-9!"#$%&()*+,-./:;<=>?@[\]^_`{|}~' </dev/urandom | head -c 64  ; echo)
+  password_input MYSQL_PASSWORD "Password (press enter to use randomly generated password): " "MySQL password cannot be empty" "$rand_pw"
 
-  valid_timezones="$(timedatectl list-timezones)"
+  readarray -t valid_timezones <<< "$(curl -s $GITHUB_BASE_URL/configs/valid_timezones.txt)"
   echo "* List of valid timezones here $(hyperlink "https://www.php.net/manual/en/timezones.php")"
 
-  while [ -z "$timezone" ] || [[ ${valid_timezones} != *"$timezone_input"* ]]; do
+  while [ -z "$timezone" ]; do
     echo -n "* Select timezone [Europe/Stockholm]: "
     read -r timezone_input
-    [ -z "$timezone_input" ] && timezone="Europe/Stockholm" || timezone=$timezone_input # because köttbullar!
+  
+    array_contains_element "$timezone_input" "${valid_timezones[@]}" && timezone="$timezone_input"
+    [ -z "$timezone_input" ] && timezone="Europe/Stockholm" # because köttbullar!
   done
 
   required_input email "Provide the email address that will be used to configure Let's Encrypt and Pterodactyl: " "Email cannot be empty"
@@ -936,12 +962,9 @@ goodbye() {
   [ "$ASSUME_SSL" == false ] && [ "$CONFIGURE_LETSENCRYPT" == false ] && echo "* Your panel should be accessible from $(hyperlink "$app_url")"
 
   echo "*"
-  echo "* Unofficial add-ons and tips"
-  echo "* - Third-party themes, $(hyperlink 'https://github.com/TheFonix/Pterodactyl-Themes')"
-  echo "*"
   echo "* Installation is using nginx on $OS"
   echo "* Thank you for using this script."
-  echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you haven't configured the firewall: 80/443 (HTTP/HTTPS) is required to be open!"
+  [ "$CONFIGURE_FIREWALL" == false ] && echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you haven't configured the firewall: 80/443 (HTTP/HTTPS) is required to be open!"
   print_brake 62
 }
 

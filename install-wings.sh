@@ -6,7 +6,7 @@ set -e
 #                                                                           #
 # Project 'pterodactyl-installer' for wings                                 #
 #                                                                           #
-# Copyright (C) 2018 - 2021, Vilhelm Prytz, <vilhelm@prytznet.se>, et al.   #
+# Copyright (C) 2018 - 2021, Vilhelm Prytz, <vilhelm@prytznet.se>           #
 #                                                                           #
 #   This program is free software: you can redistribute it and/or modify    #
 #   it under the terms of the GNU General Public License as published by    #
@@ -62,10 +62,9 @@ COLOR_NC='\033[0m'
 
 INSTALL_MARIADB=false
 
-# ufw firewall
+# firewall
+CONFIGURE_FIREWALL=false
 CONFIGURE_UFW=false
-
-# firewall_cmd firewall
 CONFIGURE_FIREWALL_CMD=false
 
 # SSL (Let's Encrypt)
@@ -465,13 +464,13 @@ perform_install() {
   [ "$OS" == "ubuntu" ] || [ "$OS" == "debian" ] && apt_update
   [ "$OS" == "centos" ] && [ "$OS_VER_MAJOR" == "7" ] && yum_update
   [ "$OS" == "centos" ] && [ "$OS_VER_MAJOR" == "8" ] && dnf_update
-  "$CONFIGURE_UFW" && firewall_ufw
-  "$CONFIGURE_FIREWALL_CMD" && firewall_firewalld
+  [ "$CONFIGURE_UFW" == true ] && firewall_ufw
+  [ "$CONFIGURE_FIREWALL_CMD" == true ] && firewall_firewalld
   install_docker
   ptdl_dl
   systemd_file
-  "$INSTALL_MARIADB" && install_mariadb
-  "$CONFIGURE_LETSENCRYPT" && letsencrypt
+  [ "$INSTALL_MARIADB" == true ] && install_mariadb
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
 
   # return true if script has made it this far
   return 0
@@ -495,7 +494,7 @@ main() {
   print_brake 70
   echo "* Pterodactyl Wings installation script @ $SCRIPT_RELEASE"
   echo "*"
-  echo "* Copyright (C) 2018 - 2021, Vilhelm Prytz, <vilhelm@prytznet.se>, et al."
+  echo "* Copyright (C) 2018 - 2021, Vilhelm Prytz, <vilhelm@prytznet.se>"
   echo "* https://github.com/vilhelmprytz/pterodactyl-installer"
   echo "*"
   echo "* This script is not associated with the official Pterodactyl Project."
@@ -531,6 +530,7 @@ main() {
 
     if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
       CONFIGURE_UFW=true
+      CONFIGURE_FIREWALL=true
     fi
   fi
 
@@ -541,6 +541,7 @@ main() {
 
     if [[ "$CONFIRM_FIREWALL_CMD" =~ [Yy] ]]; then
       CONFIGURE_FIREWALL_CMD=true
+      CONFIGURE_FIREWALL=true
     fi
   fi
 
@@ -553,9 +554,11 @@ main() {
 
         ASK=false
 
-        [ -z "$FQDN" ] && print_error "FQDN cannot be empty"
-        [ -d "/etc/letsencrypt/live/$FQDN/" ] && print_error "A certificate with this FQDN already exists!" && FQDN="" && ASK=true
+        [ -z "$FQDN" ] && print_error "FQDN cannot be empty" # check if FQDN is empty
+        bash <(curl -s $GITHUB_BASE_URL/lib/verify-fqdn.sh) "$FQDN" "$OS" || ASK=true # check if FQDN is valid
+        [ -d "/etc/letsencrypt/live/$FQDN/" ] && print_error "A certificate with this FQDN already exists!" && ASK=true # check if cert exists
 
+        [ "$ASK" == true ] && FQDN=""
         [ "$ASK" == true ] && echo -e -n "* Do you still want to automatically configure HTTPS using Let's Encrypt? (y/N): "
         [ "$ASK" == true ] && read -r CONFIRM_SSL
 
@@ -592,18 +595,20 @@ function goodbye {
   echo "*"
   echo "* To continue, you need to configure Wings to run with your panel"
   echo "* Please refer to the official guide, $(hyperlink 'https://pterodactyl.io/wings/1.0/installing.html#configure-daemon')"
-  echo "*"
-  echo "* Once the configuration has been created (usually in '/etc/pterodactyl/config.yml')"
-  echo "* you can then start Wings manually to verify that it's working"
+  echo "* "
+  echo "* You can either copy the configuration file from the panel manually to /etc/pterodactyl/config.yml"
+  echo "* or, you can use the \"auto deploy\" button from the panel and simply paste the command in this terminal"
+  echo "* "
+  echo "* You can then start Wings manually to verify that it's working"
   echo "*"
   echo "* sudo wings"
   echo "*"
-  echo "* Once you have verified that it is working, you can then start it as a service (runs in the background)"
+  echo "* Once you have verified that it is working, use CTRL+C and then start Wings as a service (runs in the background)"
   echo "*"
   echo "* systemctl start wings"
   echo "*"
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: It is recommended to enable swap (for Docker, read more about it in official documentation)."
-  echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you haven't configured your firewall, ports 8080 and 2022 needs to be open."
+  [ "$CONFIGURE_FIREWALL" == false ] && echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you haven't configured your firewall, ports 8080 and 2022 needs to be open."
   print_brake 70
   echo ""
 }
