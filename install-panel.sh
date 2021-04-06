@@ -275,6 +275,20 @@ detect_distro() {
 }
 
 check_os_comp() {
+  MACHINE_TYPE=$(uname -m)
+  if [ "${MACHINE_TYPE}" != "x86_64" ]; then # check the architecture
+    print_warning "Detected architecture $MACHINE_TYPE"
+    print_warning "Using any other architecture than 64 bit (x86_64) will cause problems."
+
+    echo -e -n  "* Are you sure you want to proceed? (y/N):"
+    read -r choice
+
+    if [[ ! "$choice" =~ [Yy] ]]; then
+      print_error "Installation aborted!"
+      exit 1
+    fi
+  fi
+
   case "$OS" in
     ubuntu)
       PHP_SOCKET="/run/php/php8.0-fpm.sock"
