@@ -276,7 +276,7 @@ detect_distro() {
 
 check_os_comp() {
   CPU_ARCHITECTURE=$(uname -m)
-  if [ "${MACHINE_TYPE}" != "x86_64" ]; then # check the architecture
+  if [ "${CPU_ARCHITECTURE}" != "x86_64" ]; then # check the architecture
     print_warning "Detected architecture $MACHINE_TYPE"
     print_warning "Using any other architecture than 64 bit (x86_64) will cause problems."
 
