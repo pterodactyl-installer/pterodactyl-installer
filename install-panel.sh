@@ -277,7 +277,7 @@ detect_distro() {
 check_os_comp() {
   CPU_ARCHITECTURE=$(uname -m)
   if [ "${CPU_ARCHITECTURE}" != "x86_64" ]; then # check the architecture
-    print_warning "Detected architecture $MACHINE_TYPE"
+    print_warning "Detected CPU architecture $CPU_ARCHITECTURE"
     print_warning "Using any other architecture than 64 bit (x86_64) will cause problems."
 
     echo -e -n  "* Are you sure you want to proceed? (y/N):"
