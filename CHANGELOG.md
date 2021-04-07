@@ -2,6 +2,12 @@
 
 This project follows the [semantic versioning](https://semver.org) convention. Changelog points should be divided into fixed, changed, or added.
 
+## next-release
+
+### Fixed
+
+- [#158](https://github.com/vilhelmprytz/pterodactyl-installer/issues/158) panel: Fixed a bug that would let users run the panel script on other CPU architectures than `x86_64`, script now prints a warning if the user is using anything but `x86_64` (thanks [@Linux123123](https://github.com/Linux123123) for contributing!).
+
 ## v0.4.0 (released on 2021-03-16)
 
 ### Changed
