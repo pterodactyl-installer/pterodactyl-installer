@@ -44,21 +44,21 @@ if ! [ -x "$(command -v curl)" ]; then
 fi
 
 dl_script() {
-    rm -rf "$SCRIPT_PATH"
-    curl -o "$SCRIPT_PATH" https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/b8e298003fe3120edccb02fabc5d7e86daef22e6/install-daemon.sh
-    chmod +x "$SCRIPT_PATH"
+  rm -rf "$SCRIPT_PATH"
+  curl -o "$SCRIPT_PATH" https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/b8e298003fe3120edccb02fabc5d7e86daef22e6/install-daemon.sh
+  chmod +x "$SCRIPT_PATH"
 }
 
 replace() {
-    sed -i 's/master/b8e298003fe3120edccb02fabc5d7e86daef22e6/g' "$SCRIPT_PATH"
-    sed -i '/VERSION=/c\VERSION="v0.6.13"' "$SCRIPT_PATH"
-    sed -i 's*https://github.com/pterodactyl/daemon/releases/latest/download/daemon.tar.gz*https://github.com/pterodactyl/daemon/releases/download/v0.6.13/daemon.tar.gz*g' "$SCRIPT_PATH"
+  sed -i 's/master/b8e298003fe3120edccb02fabc5d7e86daef22e6/g' "$SCRIPT_PATH"
+  sed -i '/VERSION=/c\VERSION="v0.6.13"' "$SCRIPT_PATH"
+  sed -i 's*https://github.com/pterodactyl/daemon/releases/latest/download/daemon.tar.gz*https://github.com/pterodactyl/daemon/releases/download/v0.6.13/daemon.tar.gz*g' "$SCRIPT_PATH"
 }
 
 main() {
-    dl_script
-    replace
-    bash "$SCRIPT_PATH"
+  dl_script
+  replace
+  bash "$SCRIPT_PATH"
 }
 
 main

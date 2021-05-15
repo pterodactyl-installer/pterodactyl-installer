@@ -45,7 +45,7 @@ if ! [ -x "$(command -v curl)" ]; then
 fi
 
 output() {
-   echo "* $1"
+  echo "* $1"
 }
 
 error() {
