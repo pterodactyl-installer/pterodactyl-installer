@@ -233,8 +233,12 @@ check_os_comp() {
   case "$virt_serv" in
     openvz | lxc)
       print_warning "Unsupported type of virtualization detected. Please consult with your hosting provider whether your server can run Docker or not. Proceed at your own risk."
-      print_error "Installation aborted!"
-      exit 1
+      echo -e -n "* Are you sure you want to proceed? (y/N): "
+      read -r CONFIRM_PROCEED
+      if [[ ! "$CONFIRM_PROCEED" =~ [Yy] ]]; then
+        print_error "Installation aborted!"
+        exit 1
+      fi
       ;;
     *)
       [ "$virt_serv" != "" ] && print_warning "Virtualization: $virt_serv detected."
