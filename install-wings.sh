@@ -584,7 +584,7 @@ main() {
 
   if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
     # set EMAIL
-    while [ ! valid_email "$EMAIL" ]; do
+    while ! valid_email "$EMAIL"; do
       echo -n "* Enter email address for Let's Encrypt: "
       read -r EMAIL
 
