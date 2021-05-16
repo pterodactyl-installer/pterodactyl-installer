@@ -90,7 +90,7 @@ WINGS_VERSION="$(get_latest_release "pterodactyl/wings")"
 
 ####### Other library functions ########
 
-valid_email () {
+valid_email() {
   [[ $1 =~ ${regex} ]]
 }
 

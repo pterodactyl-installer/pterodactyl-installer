@@ -108,7 +108,7 @@ array_contains_element() {
   return 1
 }
 
-valid_email () {
+valid_email() {
   [[ $1 =~ ${regex} ]]
 }
 
@@ -159,14 +159,14 @@ required_input() {
 }
 
 email_input() {
-  local  __resultvar=$1
-  local  result=''
+  local __resultvar=$1
+  local result=''
 
   while ! valid_email "$result"; do
-      echo -n "* ${2}"
-      read -r result
+    echo -n "* ${2}"
+    read -r result
 
-      valid_email "$result" || print_error "${3}"
+    valid_email "$result" || print_error "${3}"
   done
 
   eval "$__resultvar="'$result'""
