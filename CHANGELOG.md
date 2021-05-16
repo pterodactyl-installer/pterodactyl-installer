@@ -2,6 +2,12 @@
 
 This project follows the [semantic versioning](https://semver.org) convention. Changelog points should be divided into fixed, changed, or added.
 
+## next-release
+
+### Added
+
+- [#157](https://github.com/vilhelmprytz/pterodactyl-installer/issues/157) panel/wings: Added email validation. Emails are now validated using a regex before accepted as values.
+
 ## v0.5.0 (released on 2021-05-15)
 
 ### Fixed
