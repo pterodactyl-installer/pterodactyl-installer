@@ -72,6 +72,9 @@ CONFIGURE_LETSENCRYPT=false
 FQDN=""
 EMAIL=""
 
+# regex for email input
+regex="^(([A-Za-z0-9]+((\.|\-|\_|\+)?[A-Za-z0-9]?)*[A-Za-z0-9]+)|[A-Za-z0-9]+)@(([A-Za-z0-9]+)+((\.|\-|\_)?([A-Za-z0-9]+)+)*)+\.([A-Za-z]{2,})+$"
+
 #################################
 ####### Version checking ########
 #################################
@@ -84,6 +87,12 @@ get_latest_release() {
 
 echo "* Retrieving release information.."
 WINGS_VERSION="$(get_latest_release "pterodactyl/wings")"
+
+####### Other library functions ########
+
+valid_email () {
+  [[ $1 =~ ${regex} ]]
+}
 
 #################################
 ####### Visual functions ########
@@ -575,11 +584,11 @@ main() {
 
   if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
     # set EMAIL
-    while [ -z "$EMAIL" ]; do
+    while [ ! valid_email "$EMAIL" ]; do
       echo -n "* Enter email address for Let's Encrypt: "
       read -r EMAIL
 
-      [ -z "$EMAIL" ] && print_error "Email cannot be empty"
+      valid_email "$EMAIL" || print_error "Email empty or invalid"
     done
   fi
 

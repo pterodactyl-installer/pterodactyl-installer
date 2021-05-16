@@ -83,6 +83,9 @@ CONFIGURE_FIREWALL_CMD=false
 # firewall status
 CONFIGURE_FIREWALL=false
 
+# regex for email input
+regex="^(([A-Za-z0-9]+((\.|\-|\_|\+)?[A-Za-z0-9]?)*[A-Za-z0-9]+)|[A-Za-z0-9]+)@(([A-Za-z0-9]+)+((\.|\-|\_)?([A-Za-z0-9]+)+)*)+\.([A-Za-z]{2,})+$"
+
 ####### Version checking ########
 
 # define version using information from GitHub
@@ -103,6 +106,10 @@ array_contains_element() {
   shift
   for e; do [[ "$e" == "$match" ]] && return 0; done
   return 1
+}
+
+valid_email () {
+  [[ $1 =~ ${regex} ]]
 }
 
 ####### Visual functions ########
@@ -146,6 +153,20 @@ required_input() {
     read -r result
 
     [ -z "$result" ] && print_error "${3}"
+  done
+
+  eval "$__resultvar="'$result'""
+}
+
+email_input() {
+  local  __resultvar=$1
+  local  result=''
+
+  while ! valid_email "$result"; do
+      echo -n "* ${2}"
+      read -r result
+
+      valid_email "$result" || print_error "${3}"
   done
 
   eval "$__resultvar="'$result'""
@@ -914,10 +935,10 @@ main() {
     [ -z "$timezone_input" ] && timezone="Europe/Stockholm" # because köttbullar!
   done
 
-  required_input email "Provide the email address that will be used to configure Let's Encrypt and Pterodactyl: " "Email cannot be empty"
+  email_input email "Provide the email address that will be used to configure Let's Encrypt and Pterodactyl: " "Email empty or invalid"
 
   # Initial admin account
-  required_input user_email "Email address for the initial admin account: " "Email cannot be empty"
+  email_input user_email "Email address for the initial admin account: " "Email empty or invalid"
   required_input user_username "Username for the initial admin account: " "Username cannot be empty"
   required_input user_firstname "First name for the initial admin account: " "Name cannot be empty"
   required_input user_lastname "Last name for the initial admin account: " "Name cannot be empty"
