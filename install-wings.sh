@@ -588,7 +588,7 @@ main() {
       echo -n "* Enter email address for Let's Encrypt: "
       read -r EMAIL
 
-      valid_email "$EMAIL" || print_error "Email empty or invalid"
+      valid_email "$EMAIL" || print_error "Email cannot be empty or invalid"
     done
   fi
 
