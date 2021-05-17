@@ -4,7 +4,7 @@ RELEASE=$1
 DATE=$(date +%F)
 
 output() {
-    echo "- $1"
+  echo "- $1"
 }
 
 error() {
@@ -46,7 +46,7 @@ output ""
 
 changelog=$(scripts/changelog_parse.py)
 
-cat << EOF
+cat <<EOF
 # $RELEASE
 
 Put a message here describing the release.

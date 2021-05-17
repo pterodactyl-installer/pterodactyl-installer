@@ -72,6 +72,9 @@ CONFIGURE_LETSENCRYPT=false
 FQDN=""
 EMAIL=""
 
+# regex for email input
+regex="^(([A-Za-z0-9]+((\.|\-|\_|\+)?[A-Za-z0-9]?)*[A-Za-z0-9]+)|[A-Za-z0-9]+)@(([A-Za-z0-9]+)+((\.|\-|\_)?([A-Za-z0-9]+)+)*)+\.([A-Za-z]{2,})+$"
+
 #################################
 ####### Version checking ########
 #################################
@@ -84,6 +87,12 @@ get_latest_release() {
 
 echo "* Retrieving release information.."
 WINGS_VERSION="$(get_latest_release "pterodactyl/wings")"
+
+####### Other library functions ########
+
+valid_email() {
+  [[ $1 =~ ${regex} ]]
+}
 
 #################################
 ####### Visual functions ########
@@ -104,11 +113,10 @@ print_warning() {
 }
 
 print_brake() {
-  for ((n=0;n<$1;n++));
-    do
-      echo -n "#"
-    done
-    echo ""
+  for ((n = 0; n < $1; n++)); do
+    echo -n "#"
+  done
+  echo ""
 }
 
 hyperlink() {
@@ -164,7 +172,7 @@ check_os_comp() {
     print_warning "Detected architecture $MACHINE_TYPE"
     print_warning "Using any other architecture than 64 bit (x86_64) will cause problems."
 
-    echo -e -n  "* Are you sure you want to proceed? (y/N):"
+    echo -e -n "* Are you sure you want to proceed? (y/N):"
     read -r choice
 
     if [[ ! "$choice" =~ [Yy] ]]; then
@@ -174,20 +182,21 @@ check_os_comp() {
   fi
 
   case "$OS" in
-    ubuntu)
-      [ "$OS_VER_MAJOR" == "18" ] && SUPPORTED=true
-      [ "$OS_VER_MAJOR" == "20" ] && SUPPORTED=true
-      ;;
-    debian)
-      [ "$OS_VER_MAJOR" == "9" ] && SUPPORTED=true
-      [ "$OS_VER_MAJOR" == "10" ] && SUPPORTED=true
-      ;;
-    centos)
-      [ "$OS_VER_MAJOR" == "7" ] && SUPPORTED=true
-      [ "$OS_VER_MAJOR" == "8" ] && SUPPORTED=true
-      ;;
-    *)
-      SUPPORTED=false ;;
+  ubuntu)
+    [ "$OS_VER_MAJOR" == "18" ] && SUPPORTED=true
+    [ "$OS_VER_MAJOR" == "20" ] && SUPPORTED=true
+    ;;
+  debian)
+    [ "$OS_VER_MAJOR" == "9" ] && SUPPORTED=true
+    [ "$OS_VER_MAJOR" == "10" ] && SUPPORTED=true
+    ;;
+  centos)
+    [ "$OS_VER_MAJOR" == "7" ] && SUPPORTED=true
+    [ "$OS_VER_MAJOR" == "8" ] && SUPPORTED=true
+    ;;
+  *)
+    SUPPORTED=false
+    ;;
   esac
 
   # exit if not supported
@@ -200,7 +209,7 @@ check_os_comp() {
   fi
 
   # check virtualization
-  echo -e  "* Installing virt-what..."
+  echo -e "* Installing virt-what..."
   if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
     # silence dpkg output
     export DEBIAN_FRONTEND=noninteractive
@@ -231,14 +240,18 @@ check_os_comp() {
   virt_serv=$(virt-what)
 
   case "$virt_serv" in
-    openvz | lxc)
-      print_warning "Unsupported type of virtualization detected. Please consult with your hosting provider whether your server can run Docker or not. Proceed at your own risk."
+  openvz | lxc)
+    print_warning "Unsupported type of virtualization detected. Please consult with your hosting provider whether your server can run Docker or not. Proceed at your own risk."
+    echo -e -n "* Are you sure you want to proceed? (y/N): "
+    read -r CONFIRM_PROCEED
+    if [[ ! "$CONFIRM_PROCEED" =~ [Yy] ]]; then
       print_error "Installation aborted!"
       exit 1
-      ;;
-    *)
-      [ "$virt_serv" != "" ] && print_warning "Virtualization: $virt_serv detected."
-      ;;
+    fi
+    ;;
+  *)
+    [ "$virt_serv" != "" ] && print_warning "Virtualization: $virt_serv detected."
+    ;;
   esac
 
   if uname -r | grep -q "xxxx"; then
@@ -263,7 +276,7 @@ dnf_update() {
   dnf -y upgrade
 }
 
-enable_docker(){
+enable_docker() {
   systemctl start docker
   systemctl enable docker
 }
@@ -286,7 +299,7 @@ install_docker() {
 
     # Add docker repo
     add-apt-repository \
-    "deb [arch=amd64] https://download.docker.com/linux/$OS \
+      "deb [arch=amd64] https://download.docker.com/linux/$OS \
     $(lsb_release -cs) \
     stable"
 
@@ -347,15 +360,15 @@ systemd_file() {
 
 install_mariadb() {
   case "$OS" in
-    ubuntu | debian)
-      curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
-      apt update && apt install mariadb-server -y
-      ;;
-    centos)
-      [ "$OS_VER_MAJOR" == "7" ] && curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
-      [ "$OS_VER_MAJOR" == "7" ] && yum -y install mariadb-server
-      [ "$OS_VER_MAJOR" == "8" ] && dnf install -y mariadb mariadb-server
-      ;;
+  ubuntu | debian)
+    curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
+    apt update && apt install mariadb-server -y
+    ;;
+  centos)
+    [ "$OS_VER_MAJOR" == "7" ] && curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
+    [ "$OS_VER_MAJOR" == "7" ] && yum -y install mariadb-server
+    [ "$OS_VER_MAJOR" == "8" ] && dnf install -y mariadb mariadb-server
+    ;;
   esac
 
   systemctl enable mariadb
@@ -388,12 +401,12 @@ firewall_ufw() {
   echo "* Opening port 22 (SSH), 8080 (Daemon Port), 2022 (Daemon SFTP Port)"
 
   # pointing to /dev/null silences the command output
-  ufw allow ssh > /dev/null
-  ufw allow 8080 > /dev/null
-  ufw allow 2022 > /dev/null
+  ufw allow ssh >/dev/null
+  ufw allow 8080 >/dev/null
+  ufw allow 2022 >/dev/null
 
-  [ "$CONFIGURE_LETSENCRYPT" == true ] && ufw allow http > /dev/null
-  [ "$CONFIGURE_LETSENCRYPT" == true ] && ufw allow https > /dev/null
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && ufw allow http >/dev/null
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && ufw allow https >/dev/null
 
   ufw --force enable
   ufw --force reload
@@ -405,17 +418,17 @@ firewall_firewalld() {
   echo "* Opening port 22 (SSH), 8080 (Daemon Port), 2022 (Daemon SFTP Port)"
 
   # Install
-  [ "$OS_VER_MAJOR" == "7" ] && yum -y -q install firewalld > /dev/null
-  [ "$OS_VER_MAJOR" == "8" ] && dnf -y -q install firewalld > /dev/null
+  [ "$OS_VER_MAJOR" == "7" ] && yum -y -q install firewalld >/dev/null
+  [ "$OS_VER_MAJOR" == "8" ] && dnf -y -q install firewalld >/dev/null
 
   # Enable
-  systemctl --now enable firewalld > /dev/null # Enable and start
+  systemctl --now enable firewalld >/dev/null # Enable and start
 
   # Configure
-  firewall-cmd --add-service=ssh --permanent -q # Port 22
-  firewall-cmd --add-port 8080/tcp --permanent -q # Port 8080
-  firewall-cmd --add-port 2022/tcp --permanent -q # Port 2022
-  [ "$CONFIGURE_LETSENCRYPT" == true ] && firewall-cmd --add-service=http --permanent -q # Port 80
+  firewall-cmd --add-service=ssh --permanent -q                                           # Port 22
+  firewall-cmd --add-port 8080/tcp --permanent -q                                         # Port 8080
+  firewall-cmd --add-port 2022/tcp --permanent -q                                         # Port 2022
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && firewall-cmd --add-service=http --permanent -q  # Port 80
   [ "$CONFIGURE_LETSENCRYPT" == true ] && firewall-cmd --add-service=https --permanent -q # Port 443
 
   firewall-cmd --permanent --zone=trusted --change-interface=pterodactyl0 -q
@@ -511,7 +524,7 @@ main() {
   echo "* as well as Wings itself. But it's still required to create the node"
   echo "* on the panel and then place the configuration file on the node manually after"
   echo "* the installation has finished. Read more about this process on the"
-  echo "* official documentation: $(hyperlink 'https://pterodactyl.io/wings/1.0/installing.html#configure-daemon')"
+  echo "* official documentation: $(hyperlink 'https://pterodactyl.io/wings/1.0/installing.html#configure')"
   echo "* "
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: this script will not start Wings automatically (will install systemd service, not start it)."
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: this script will not enable swap (for docker)."
@@ -549,33 +562,33 @@ main() {
 
   if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
     while [ -z "$FQDN" ]; do
-        echo -n "* Set the FQDN to use for Let's Encrypt (node.example.com): "
-        read -r FQDN
+      echo -n "* Set the FQDN to use for Let's Encrypt (node.example.com): "
+      read -r FQDN
 
-        ASK=false
+      ASK=false
 
-        [ -z "$FQDN" ] && print_error "FQDN cannot be empty" # check if FQDN is empty
-        bash <(curl -s $GITHUB_BASE_URL/lib/verify-fqdn.sh) "$FQDN" "$OS" || ASK=true # check if FQDN is valid
-        [ -d "/etc/letsencrypt/live/$FQDN/" ] && print_error "A certificate with this FQDN already exists!" && ASK=true # check if cert exists
+      [ -z "$FQDN" ] && print_error "FQDN cannot be empty"                                                            # check if FQDN is empty
+      bash <(curl -s $GITHUB_BASE_URL/lib/verify-fqdn.sh) "$FQDN" "$OS" || ASK=true                                   # check if FQDN is valid
+      [ -d "/etc/letsencrypt/live/$FQDN/" ] && print_error "A certificate with this FQDN already exists!" && ASK=true # check if cert exists
 
-        [ "$ASK" == true ] && FQDN=""
-        [ "$ASK" == true ] && echo -e -n "* Do you still want to automatically configure HTTPS using Let's Encrypt? (y/N): "
-        [ "$ASK" == true ] && read -r CONFIRM_SSL
+      [ "$ASK" == true ] && FQDN=""
+      [ "$ASK" == true ] && echo -e -n "* Do you still want to automatically configure HTTPS using Let's Encrypt? (y/N): "
+      [ "$ASK" == true ] && read -r CONFIRM_SSL
 
-        if [[ ! "$CONFIRM_SSL" =~ [Yy] ]] && [ "$ASK" == true ]; then
-          CONFIGURE_LETSENCRYPT=false
-          FQDN="none"
-        fi
+      if [[ ! "$CONFIRM_SSL" =~ [Yy] ]] && [ "$ASK" == true ]; then
+        CONFIGURE_LETSENCRYPT=false
+        FQDN="none"
+      fi
     done
   fi
 
   if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
     # set EMAIL
-    while [ -z "$EMAIL" ]; do
-        echo -n "* Enter email address for Let's Encrypt: "
-        read -r EMAIL
+    while ! valid_email "$EMAIL"; do
+      echo -n "* Enter email address for Let's Encrypt: "
+      read -r EMAIL
 
-        [ -z "$EMAIL" ] && print_error "Email cannot be empty"
+      valid_email "$EMAIL" || print_error "Email cannot be empty or invalid"
     done
   fi
 
@@ -594,7 +607,7 @@ function goodbye {
   echo "* Wings installation completed"
   echo "*"
   echo "* To continue, you need to configure Wings to run with your panel"
-  echo "* Please refer to the official guide, $(hyperlink 'https://pterodactyl.io/wings/1.0/installing.html#configure-daemon')"
+  echo "* Please refer to the official guide, $(hyperlink 'https://pterodactyl.io/wings/1.0/installing.html#configure')"
   echo "* "
   echo "* You can either copy the configuration file from the panel manually to /etc/pterodactyl/config.yml"
   echo "* or, you can use the \"auto deploy\" button from the panel and simply paste the command in this terminal"

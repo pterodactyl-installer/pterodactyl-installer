@@ -83,13 +83,16 @@ CONFIGURE_FIREWALL_CMD=false
 # firewall status
 CONFIGURE_FIREWALL=false
 
+# regex for email input
+regex="^(([A-Za-z0-9]+((\.|\-|\_|\+)?[A-Za-z0-9]?)*[A-Za-z0-9]+)|[A-Za-z0-9]+)@(([A-Za-z0-9]+)+((\.|\-|\_)?([A-Za-z0-9]+)+)*)+\.([A-Za-z]{2,})+$"
+
 ####### Version checking ########
 
 # define version using information from GitHub
 get_latest_release() {
   curl --silent "https://api.github.com/repos/$1/releases/latest" | # Get latest release from GitHub api
-  grep '"tag_name":' |                                              # Get tag line
-  sed -E 's/.*"([^"]+)".*/\1/'                                      # Pluck JSON value
+    grep '"tag_name":' |                                            # Get tag line
+    sed -E 's/.*"([^"]+)".*/\1/'                                    # Pluck JSON value
 }
 
 # pterodactyl version
@@ -98,11 +101,15 @@ PTERODACTYL_VERSION="$(get_latest_release "pterodactyl/panel")"
 
 ####### lib func #######
 
-array_contains_element () {
+array_contains_element() {
   local e match="$1"
   shift
   for e; do [[ "$e" == "$match" ]] && return 0; done
   return 1
+}
+
+valid_email() {
+  [[ $1 =~ ${regex} ]]
 }
 
 ####### Visual functions ########
@@ -125,11 +132,10 @@ print_warning() {
 }
 
 print_brake() {
-  for ((n=0;n<$1;n++));
-    do
-      echo -n "#"
-    done
-    echo ""
+  for ((n = 0; n < $1; n++)); do
+    echo -n "#"
+  done
+  echo ""
 }
 
 hyperlink() {
@@ -139,22 +145,36 @@ hyperlink() {
 ##### User input functions ######
 
 required_input() {
-  local  __resultvar=$1
-  local  result=''
+  local __resultvar=$1
+  local result=''
 
   while [ -z "$result" ]; do
-      echo -n "* ${2}"
-      read -r result
+    echo -n "* ${2}"
+    read -r result
 
-      [ -z "$result" ] && print_error "${3}"
+    [ -z "$result" ] && print_error "${3}"
+  done
+
+  eval "$__resultvar="'$result'""
+}
+
+email_input() {
+  local __resultvar=$1
+  local result=''
+
+  while ! valid_email "$result"; do
+    echo -n "* ${2}"
+    read -r result
+
+    valid_email "$result" || print_error "${3}"
   done
 
   eval "$__resultvar="'$result'""
 }
 
 password_input() {
-  local  __resultvar=$1
-  local  result=''
+  local __resultvar=$1
+  local result=''
   local default="$4"
 
   while [ -z "$result" ]; do
@@ -162,15 +182,18 @@ password_input() {
 
     # modified from https://stackoverflow.com/a/22940001
     while IFS= read -r -s -n1 char; do
-      [[ -z $char ]] && { printf '\n'; break; } # ENTER pressed; output \n and break.
+      [[ -z $char ]] && {
+        printf '\n'
+        break
+      }                               # ENTER pressed; output \n and break.
       if [[ $char == $'\x7f' ]]; then # backspace was pressed
-          # Only if variable is not empty
-          if [ -n "$result" ]; then
-            # Remove last char from output variable.
-            [[ -n $result ]] && result=${result%?}
-            # Erase '*' to the left.
-            printf '\b \b' 
-          fi
+        # Only if variable is not empty
+        if [ -n "$result" ]; then
+          # Remove last char from output variable.
+          [[ -n $result ]] && result=${result%?}
+          # Erase '*' to the left.
+          printf '\b \b'
+        fi
       else
         # Add typed char to output variable.
         result+=$char
@@ -214,24 +237,24 @@ ask_assume_ssl() {
 
 ask_firewall() {
   case "$OS" in
-    ubuntu | debian)
-      echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
-      read -r CONFIRM_UFW
+  ubuntu | debian)
+    echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
+    read -r CONFIRM_UFW
 
-      if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
-        CONFIGURE_UFW=true
-        CONFIGURE_FIREWALL=true
-      fi
-      ;;
-    centos)
-      echo -e -n "* Do you want to automatically configure firewall-cmd (firewall)? (y/N): "
-      read -r CONFIRM_FIREWALL_CMD
+    if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
+      CONFIGURE_UFW=true
+      CONFIGURE_FIREWALL=true
+    fi
+    ;;
+  centos)
+    echo -e -n "* Do you want to automatically configure firewall-cmd (firewall)? (y/N): "
+    read -r CONFIRM_FIREWALL_CMD
 
-      if [[ "$CONFIRM_FIREWALL_CMD" =~ [Yy] ]]; then
-        CONFIGURE_FIREWALL_CMD=true
-        CONFIGURE_FIREWALL=true
-      fi
-      ;;
+    if [[ "$CONFIRM_FIREWALL_CMD" =~ [Yy] ]]; then
+      CONFIGURE_FIREWALL_CMD=true
+      CONFIGURE_FIREWALL=true
+    fi
+    ;;
   esac
 }
 
@@ -275,24 +298,39 @@ detect_distro() {
 }
 
 check_os_comp() {
+  CPU_ARCHITECTURE=$(uname -m)
+  if [ "${CPU_ARCHITECTURE}" != "x86_64" ]; then # check the architecture
+    print_warning "Detected CPU architecture $CPU_ARCHITECTURE"
+    print_warning "Using any other architecture than 64 bit (x86_64) will cause problems."
+
+    echo -e -n "* Are you sure you want to proceed? (y/N):"
+    read -r choice
+
+    if [[ ! "$choice" =~ [Yy] ]]; then
+      print_error "Installation aborted!"
+      exit 1
+    fi
+  fi
+
   case "$OS" in
-    ubuntu)
-      PHP_SOCKET="/run/php/php8.0-fpm.sock"
-      [ "$OS_VER_MAJOR" == "18" ] && SUPPORTED=true
-      [ "$OS_VER_MAJOR" == "20" ] && SUPPORTED=true
-      ;;
-    debian)
-      PHP_SOCKET="/run/php/php8.0-fpm.sock"
-      [ "$OS_VER_MAJOR" == "9" ] && SUPPORTED=true
-      [ "$OS_VER_MAJOR" == "10" ] && SUPPORTED=true
-      ;;
-    centos)
-      PHP_SOCKET="/var/run/php-fpm/pterodactyl.sock"
-      [ "$OS_VER_MAJOR" == "7" ] && SUPPORTED=true
-      [ "$OS_VER_MAJOR" == "8" ] && SUPPORTED=true
-      ;;
-    *)
-      SUPPORTED=false ;;
+  ubuntu)
+    PHP_SOCKET="/run/php/php8.0-fpm.sock"
+    [ "$OS_VER_MAJOR" == "18" ] && SUPPORTED=true
+    [ "$OS_VER_MAJOR" == "20" ] && SUPPORTED=true
+    ;;
+  debian)
+    PHP_SOCKET="/run/php/php8.0-fpm.sock"
+    [ "$OS_VER_MAJOR" == "9" ] && SUPPORTED=true
+    [ "$OS_VER_MAJOR" == "10" ] && SUPPORTED=true
+    ;;
+  centos)
+    PHP_SOCKET="/var/run/php-fpm/pterodactyl.sock"
+    [ "$OS_VER_MAJOR" == "7" ] && SUPPORTED=true
+    [ "$OS_VER_MAJOR" == "8" ] && SUPPORTED=true
+    ;;
+  *)
+    SUPPORTED=false
+    ;;
   esac
 
   # exit if not supported
@@ -423,10 +461,12 @@ configure() {
 set_folder_permissions() {
   # if os is ubuntu or debian, we do this
   case "$OS" in
-    debian | ubuntu)
-      chown -R www-data:www-data ./* ;;
-    centos)
-      chown -R nginx:nginx ./* ;;
+  debian | ubuntu)
+    chown -R www-data:www-data ./*
+    ;;
+  centos)
+    chown -R nginx:nginx ./*
+    ;;
   esac
 }
 
@@ -434,7 +474,10 @@ set_folder_permissions() {
 insert_cronjob() {
   echo "* Installing cronjob.. "
 
-  crontab -l | { cat; echo "* * * * * php /var/www/pterodactyl/artisan schedule:run >> /dev/null 2>&1"; } | crontab -
+  crontab -l | {
+    cat
+    echo "* * * * * php /var/www/pterodactyl/artisan schedule:run >> /dev/null 2>&1"
+  } | crontab -
 
   echo "* Cronjob installed!"
 }
@@ -445,10 +488,12 @@ install_pteroq() {
   curl -o /etc/systemd/system/pteroq.service $GITHUB_BASE_URL/configs/pteroq.service
 
   case "$OS" in
-    debian | ubuntu)
-      sed -i -e "s@<user>@www-data@g" /etc/systemd/system/pteroq.service ;;
-    centos)
-      sed -i -e "s@<user>@nginx@g" /etc/systemd/system/pteroq.service ;;
+  debian | ubuntu)
+    sed -i -e "s@<user>@www-data@g" /etc/systemd/system/pteroq.service
+    ;;
+  centos)
+    sed -i -e "s@<user>@nginx@g" /etc/systemd/system/pteroq.service
+    ;;
   esac
 
   systemctl enable pteroq.service
@@ -487,7 +532,7 @@ enable_services_centos_based() {
 }
 
 selinux_allow() {
-  setsebool -P httpd_can_network_connect 1 || true  # these commands can fail OK
+  setsebool -P httpd_can_network_connect 1 || true # these commands can fail OK
   setsebool -P httpd_execmem 1 || true
   setsebool -P httpd_unified 1 || true
 }
@@ -553,7 +598,7 @@ debian_stretch_dep() {
   apt install ca-certificates apt-transport-https lsb-release -y
   wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
   echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/php.list
- 
+
   # Add the MariaDB repo (oldstable has mariadb version 10.1 and we need newer than that)
   curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
 
@@ -665,9 +710,9 @@ firewall_ufw() {
   echo "* Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
 
   # pointing to /dev/null silences the command output
-  ufw allow ssh > /dev/null
-  ufw allow http > /dev/null
-  ufw allow https > /dev/null
+  ufw allow ssh >/dev/null
+  ufw allow http >/dev/null
+  ufw allow https >/dev/null
 
   ufw --force enable
   ufw --force reload
@@ -679,17 +724,17 @@ firewall_firewalld() {
   echo "* Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
 
   # Install
-  [ "$OS_VER_MAJOR" == "7" ] && yum -y -q install firewalld > /dev/null
-  [ "$OS_VER_MAJOR" == "8" ] && dnf -y -q install firewalld > /dev/null
+  [ "$OS_VER_MAJOR" == "7" ] && yum -y -q install firewalld >/dev/null
+  [ "$OS_VER_MAJOR" == "8" ] && dnf -y -q install firewalld >/dev/null
 
   # Enable
-  systemctl --now enable firewalld > /dev/null # Enable and start
+  systemctl --now enable firewalld >/dev/null # Enable and start
 
   # Configure
-  firewall-cmd --add-service=http --permanent -q # Port 80
+  firewall-cmd --add-service=http --permanent -q  # Port 80
   firewall-cmd --add-service=https --permanent -q # Port 443
-  firewall-cmd --add-service=ssh --permanent -q  # Port 22
-  firewall-cmd --reload -q # Enable firewall
+  firewall-cmd --add-service=ssh --permanent -q   # Port 22
+  firewall-cmd --reload -q                        # Enable firewall
 
   echo "* Firewall-cmd installed"
   print_brake 70
@@ -700,13 +745,13 @@ letsencrypt() {
 
   # Install certbot
   case "$OS" in
-    debian | ubuntu)
-      apt-get -y install certbot python3-certbot-nginx
-      ;;
-    centos)
-      [ "$OS_VER_MAJOR" == "7" ] && yum -y -q install certbot python-certbot-nginx
-      [ "$OS_VER_MAJOR" == "8" ] && dnf -y -q install certbot python3-certbot-nginx
-      ;;
+  debian | ubuntu)
+    apt-get -y install certbot python3-certbot-nginx
+    ;;
+  centos)
+    [ "$OS_VER_MAJOR" == "7" ] && yum -y -q install certbot python-certbot-nginx
+    [ "$OS_VER_MAJOR" == "8" ] && dnf -y -q install certbot python3-certbot-nginx
+    ;;
   esac
 
   # Obtain certificate
@@ -741,35 +786,35 @@ configure_nginx() {
   fi
 
   if [ "$OS" == "centos" ]; then
-      # remove default config
-      rm -rf /etc/nginx/conf.d/default
+    # remove default config
+    rm -rf /etc/nginx/conf.d/default
 
-      # download new config
-      curl -o /etc/nginx/conf.d/pterodactyl.conf $GITHUB_BASE_URL/configs/$DL_FILE
+    # download new config
+    curl -o /etc/nginx/conf.d/pterodactyl.conf $GITHUB_BASE_URL/configs/$DL_FILE
 
-      # replace all <domain> places with the correct domain
-      sed -i -e "s@<domain>@${FQDN}@g" /etc/nginx/conf.d/pterodactyl.conf
+    # replace all <domain> places with the correct domain
+    sed -i -e "s@<domain>@${FQDN}@g" /etc/nginx/conf.d/pterodactyl.conf
 
-      # replace all <php_socket> places with correct socket "path"
-      sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" /etc/nginx/conf.d/pterodactyl.conf
+    # replace all <php_socket> places with correct socket "path"
+    sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" /etc/nginx/conf.d/pterodactyl.conf
   else
-      # remove default config
-      rm -rf /etc/nginx/sites-enabled/default
+    # remove default config
+    rm -rf /etc/nginx/sites-enabled/default
 
-      # download new config
-      curl -o /etc/nginx/sites-available/pterodactyl.conf $GITHUB_BASE_URL/configs/$DL_FILE
+    # download new config
+    curl -o /etc/nginx/sites-available/pterodactyl.conf $GITHUB_BASE_URL/configs/$DL_FILE
 
-      # replace all <domain> places with the correct domain
-      sed -i -e "s@<domain>@${FQDN}@g" /etc/nginx/sites-available/pterodactyl.conf
+    # replace all <domain> places with the correct domain
+    sed -i -e "s@<domain>@${FQDN}@g" /etc/nginx/sites-available/pterodactyl.conf
 
-      # replace all <php_socket> places with correct socket "path"
-      sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" /etc/nginx/sites-available/pterodactyl.conf
+    # replace all <php_socket> places with correct socket "path"
+    sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" /etc/nginx/sites-available/pterodactyl.conf
 
-      # on debian 9, TLS v1.3 is not supported (see #76)
-      [ "$OS" == "debian" ] && [ "$OS_VER_MAJOR" == "9" ] && sed -i 's/ TLSv1.3//' /etc/nginx/sites-available/pterodactyl.conf
+    # on debian 9, TLS v1.3 is not supported (see #76)
+    [ "$OS" == "debian" ] && [ "$OS_VER_MAJOR" == "9" ] && sed -i 's/ TLSv1.3//' /etc/nginx/sites-available/pterodactyl.conf
 
-      # enable pterodactyl
-      ln -s /etc/nginx/sites-available/pterodactyl.conf /etc/nginx/sites-enabled/pterodactyl.conf
+    # enable pterodactyl
+    ln -s /etc/nginx/sites-available/pterodactyl.conf /etc/nginx/sites-enabled/pterodactyl.conf
   fi
 
   if [ "$ASSUME_SSL" == false ] && [ "$CONFIGURE_LETSENCRYPT" == false ]; then
@@ -785,31 +830,31 @@ perform_install() {
   echo "* Starting installation.. this might take a while!"
 
   case "$OS" in
-    debian | ubuntu)
-      apt_update
+  debian | ubuntu)
+    apt_update
 
-      [ "$CONFIGURE_UFW" == true ] && firewall_ufw
+    [ "$CONFIGURE_UFW" == true ] && firewall_ufw
 
-      if [ "$OS" == "ubuntu" ]; then
-        [ "$OS_VER_MAJOR" == "20" ] && ubuntu20_dep
-        [ "$OS_VER_MAJOR" == "18" ] && ubuntu18_dep
-      elif [ "$OS" == "debian" ]; then
-        [ "$OS_VER_MAJOR" == "9" ] && debian_stretch_dep
-        [ "$OS_VER_MAJOR" == "10" ] && debian_dep
-      fi
+    if [ "$OS" == "ubuntu" ]; then
+      [ "$OS_VER_MAJOR" == "20" ] && ubuntu20_dep
+      [ "$OS_VER_MAJOR" == "18" ] && ubuntu18_dep
+    elif [ "$OS" == "debian" ]; then
+      [ "$OS_VER_MAJOR" == "9" ] && debian_stretch_dep
+      [ "$OS_VER_MAJOR" == "10" ] && debian_dep
+    fi
     ;;
 
-    centos)
-      [ "$OS_VER_MAJOR" == "7" ] && yum_update
-      [ "$OS_VER_MAJOR" == "8" ] && dnf_update
+  centos)
+    [ "$OS_VER_MAJOR" == "7" ] && yum_update
+    [ "$OS_VER_MAJOR" == "8" ] && dnf_update
 
-      [ "$CONFIGURE_FIREWALL_CMD" == true ] && firewall_firewalld
+    [ "$CONFIGURE_FIREWALL_CMD" == true ] && firewall_firewalld
 
-      [ "$OS_VER_MAJOR" == "7" ] && centos7_dep
-      [ "$OS_VER_MAJOR" == "8" ] && centos8_dep
+    [ "$OS_VER_MAJOR" == "7" ] && centos7_dep
+    [ "$OS_VER_MAJOR" == "8" ] && centos8_dep
     ;;
   esac
-  
+
   [ "$OS" == "centos" ] && centos_php
   install_composer
   ptdl_dl
@@ -873,24 +918,27 @@ main() {
   [ -z "$MYSQL_USER_INPUT" ] && MYSQL_USER="pterodactyl" || MYSQL_USER=$MYSQL_USER_INPUT
 
   # MySQL password input
-  rand_pw=$(tr -dc 'A-Za-z0-9!"#$%&()*+,-./:;<=>?@[\]^_`{|}~' </dev/urandom | head -c 64  ; echo)
+  rand_pw=$(
+    tr -dc 'A-Za-z0-9!"#$%&()*+,-./:;<=>?@[\]^_`{|}~' </dev/urandom | head -c 64
+    echo
+  )
   password_input MYSQL_PASSWORD "Password (press enter to use randomly generated password): " "MySQL password cannot be empty" "$rand_pw"
 
-  readarray -t valid_timezones <<< "$(curl -s $GITHUB_BASE_URL/configs/valid_timezones.txt)"
+  readarray -t valid_timezones <<<"$(curl -s $GITHUB_BASE_URL/configs/valid_timezones.txt)"
   echo "* List of valid timezones here $(hyperlink "https://www.php.net/manual/en/timezones.php")"
 
   while [ -z "$timezone" ]; do
     echo -n "* Select timezone [Europe/Stockholm]: "
     read -r timezone_input
-  
+
     array_contains_element "$timezone_input" "${valid_timezones[@]}" && timezone="$timezone_input"
     [ -z "$timezone_input" ] && timezone="Europe/Stockholm" # because köttbullar!
   done
 
-  required_input email "Provide the email address that will be used to configure Let's Encrypt and Pterodactyl: " "Email cannot be empty"
+  email_input email "Provide the email address that will be used to configure Let's Encrypt and Pterodactyl: " "Email cannot be empty or invalid"
 
   # Initial admin account
-  required_input user_email "Email address for the initial admin account: " "Email cannot be empty"
+  email_input user_email "Email address for the initial admin account: " "Email cannot be empty or invalid"
   required_input user_username "Username for the initial admin account: " "Username cannot be empty"
   required_input user_firstname "First name for the initial admin account: " "Name cannot be empty"
   required_input user_lastname "Last name for the initial admin account: " "Name cannot be empty"
@@ -900,9 +948,9 @@ main() {
 
   # set FQDN
   while [ -z "$FQDN" ]; do
-      echo -n "* Set the FQDN of this panel (panel.example.com): "
-      read -r FQDN
-      [ -z "$FQDN" ] && print_error "FQDN cannot be empty"
+    echo -n "* Set the FQDN of this panel (panel.example.com): "
+    read -r FQDN
+    [ -z "$FQDN" ] && print_error "FQDN cannot be empty"
   done
 
   # Ask if firewall is needed
