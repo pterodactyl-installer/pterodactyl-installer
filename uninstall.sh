@@ -154,15 +154,15 @@ check_os_comp() {
 
 ### Main uninstallation functions ###
 
-rm_files(){
-  if [ "$RM_PANEL" == true ]; then
-    rm -rf /var/www/pterodactyl
-    [ "$OS" != "centos" ] && unlink /etc/nginx/sites-enabled/pterodactyl.conf
-    [ "$OS" != "centos" ] && rm -f /etc/nginx/sites-available/pterodactyl.conf
-    [ "$OS" == "centos" ] && rm -f /etc/nginx/conf.d/pterodactyl.conf
-  fi
+rm_panel_files(){
+  rm -rf /var/www/pterodactyl /usr/local/bin/composer
+  [ "$OS" != "centos" ] && unlink /etc/nginx/sites-enabled/pterodactyl.conf
+  [ "$OS" != "centos" ] && rm -f /etc/nginx/sites-available/pterodactyl.conf
+  [ "$OS" == "centos" ] && rm -f /etc/nginx/conf.d/pterodactyl.conf
+}
 
-  [ "$RM_WINGS" == true ] && rm -rf /etc/pterodactyl /usr/local/bin/wings
+rm_wings_files(){
+  rm -rf /etc/pterodactyl /usr/local/bin/wings /var/lib/pterodactyl
 }
 
 rm_services(){
@@ -224,10 +224,11 @@ rm_database(){
 ## MAIN FUNCTIONS ##
 
 perform_uninstall(){
-  rm_files
+  [ "$RM_PANEL" == true ] && rm_panel_files
   [ "$RM_PANEL" == true ] && rm_services
   [ "$RM_PANEL" == true ] && rm_cron
   [ "$RM_PANEL" == true ] && rm_database
+  [ "$RM_WINGS" == true ] && rm_wings_files
 }
 
 main() {
@@ -256,13 +257,14 @@ main() {
 
   if [ -d "/etc/pterodactyl" ]; then
     output "Wings installation has been detected."
+    warning "This will remove all the servers!"
     echo -e -n  "* Do you want to remove wings(daemon)? (y/N):"
     read -r RM_WINGS_INPUT
     [[ "$RM_WINGS_INPUT" =~ [Yy] ]] && RM_WINGS=true
   fi
 
   if [ "$RM_PANEL" == false ] && [ "$RM_WINGS" == false ]; then 
-    error "Nothing to uninstall"
+    error "Nothing to uninstall!"
     exit 1
   fi
 
