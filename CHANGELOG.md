@@ -2,6 +2,12 @@
 
 This project follows the [semantic versioning](https://semver.org) convention. Changelog points should be divided into fixed, changed, or added.
 
+## next-release
+
+### Added
+
+- [#81](https://github.com/vilhelmprytz/pterodactyl-installer/issues/81) wings: Added a feature that automatically skips the MariaDB question if MySQL/MariaDB is detected.
+
 ## v0.6.0 (released on 2021-05-21)
 
 ### Fixed
