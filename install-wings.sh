@@ -530,11 +530,12 @@ main() {
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: this script will not enable swap (for docker)."
   print_brake 42
 
-  echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you installed the Pterodactyl panel on the same machine, do not use this option or the script will fail!"
-  echo -n "* Would you like to install MariaDB (MySQL) server on the daemon as well? (y/N): "
+  # Only ask if MySQL is not detected
+  type mysql >/dev/null 2>&1 && ASK_MYSQL=false || ASK_MYSQL=true
 
-  read -r CONFIRM_INSTALL_MARIADB
-  [[ "$CONFIRM_INSTALL_MARIADB" =~ [Yy] ]] && INSTALL_MARIADB=true
+  $ASK_MYSQL && echo -n "* Would you like to install MariaDB (MySQL) server on the daemon as well? (y/N): "
+  $ASK_MYSQL && read -r CONFIRM_INSTALL_MARIADB
+  $ASK_MYSQL && [[ "$CONFIRM_INSTALL_MARIADB" =~ [Yy] ]] && INSTALL_MARIADB=true
 
   # UFW is available for Ubuntu/Debian
   if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
