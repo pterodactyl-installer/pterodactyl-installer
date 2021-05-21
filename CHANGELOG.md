@@ -4,6 +4,10 @@ This project follows the [semantic versioning](https://semver.org) convention. C
 
 ## next-release
 
+### Fixed
+
+- [#186](https://github.com/vilhelmprytz/pterodactyl-installer/issues/186) panel: Fixed a bug that would cause the script to exit if the script tried to create a symbolic link twice (thanks [@Linux123123](https://github.com/Linux123123) for reporting and contributing!).
+
 ### Added
 
 - [#157](https://github.com/vilhelmprytz/pterodactyl-installer/issues/157) panel/wings: Added email validation. Emails are now validated using a regex before accepted as values (thanks [@Linux123123](https://github.com/Linux123123) for contributing!).
