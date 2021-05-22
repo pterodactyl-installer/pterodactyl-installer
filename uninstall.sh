@@ -270,7 +270,7 @@ main() {
   summary
 
   # confirm uninstallation
-  echo -e -n "* Continue with installation? (y/N): "
+  echo -e -n "* Continue with uninstallation? (y/N): "
   read -r CONFIRM
   if [[ "$CONFIRM" =~ [Yy] ]]; then
     perform_uninstall
