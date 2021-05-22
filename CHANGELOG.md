@@ -6,6 +6,16 @@ This project follows the [semantic versioning](https://semver.org) convention. C
 
 ### Added
 
+- [#81](https://github.com/vilhelmprytz/pterodactyl-installer/issues/81) wings: Added a feature that automatically skips the MariaDB question if MySQL/MariaDB is detected.
+
+## v0.6.0 (released on 2021-05-21)
+
+### Fixed
+
+- [#186](https://github.com/vilhelmprytz/pterodactyl-installer/issues/186) panel: Fixed a bug that would cause the script to exit if the script tried to create a symbolic link twice (thanks [@Linux123123](https://github.com/Linux123123) for reporting and contributing!).
+
+### Added
+
 - [#157](https://github.com/vilhelmprytz/pterodactyl-installer/issues/157) panel/wings: Added email validation. Emails are now validated using a regex before accepted as values (thanks [@Linux123123](https://github.com/Linux123123) for contributing!).
 
 ## v0.5.0 (released on 2021-05-15)
