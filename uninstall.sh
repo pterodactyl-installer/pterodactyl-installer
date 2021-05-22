@@ -237,7 +237,7 @@ main() {
   print_brake 70
   output "Pterodactyl uninstallation script"
   output
-  output "Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al."
+  output "Copyright (C) 2018 - 2021, Vilhelm Prytz, <vilhelm@prytznet.se>"
   output "https://github.com/vilhelmprytz/pterodactyl-installer"
   output
   output "Sponsoring/Donations: https://github.com/vilhelmprytz/pterodactyl-installer?sponsor=1"
