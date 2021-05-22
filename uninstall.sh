@@ -282,7 +282,8 @@ main() {
 
 goodbye() {
   print_brake 62
-  output "Panel uninstallation completed"
+  [ "$RM_PANEL" == true ] && output "Panel uninstallation completed"
+  [ "$RM_WINGS" == true ] && output "Wings uninstallation completed"
   output "Thank you for using this script."
   print_brake 62
 }
