@@ -275,7 +275,7 @@ main() {
   if [[ "$CONFIRM" =~ [Yy] ]]; then
     perform_uninstall
   else
-    error "Installation aborted."
+    error "Uninstallation aborted."
     exit 1
   fi
 }
