@@ -245,7 +245,7 @@ main() {
   output
   output "Running $OS version $OS_VER."
   print_brake 70
-  # check_os_comp
+  check_os_comp
 
   if [ -d "/var/www/pterodactyl" ]; then
     output "Panel installation has been detected."
