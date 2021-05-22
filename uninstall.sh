@@ -6,7 +6,7 @@ set -e
 #                                                                           #
 # Project 'pterodactyl-installer'                                           #
 #                                                                           #
-# Copyright (C) 2018 - 2020, Vilhelm Prytz, <vilhelm@prytznet.se>, et al.   #
+# Copyright (C) 2018 - 2021, Vilhelm Prytz, <vilhelm@prytznet.se>           #
 #                                                                           #
 #   This program is free software: you can redistribute it and/or modify    #
 #   it under the terms of the GNU General Public License as published by    #
@@ -51,11 +51,10 @@ RM_WINGS=false
 ####### Visual functions ########
 
 print_brake() {
-  for ((n=0;n<$1;n++));
-    do
-      echo -n "#"
-    done
-    echo ""
+  for ((n = 0; n < $1; n++)); do
+    echo -n "#"
+  done
+  echo ""
 }
 
 output() {
@@ -128,18 +127,18 @@ detect_distro() {
 check_os_comp() {
   SUPPORTED=false
   case "$OS" in
-    ubuntu)
-      [ "$OS_VER_MAJOR" == "18" ] && SUPPORTED=true
-      [ "$OS_VER_MAJOR" == "20" ] && SUPPORTED=true
-      ;;
-    debian)
-      [ "$OS_VER_MAJOR" == "9" ] && SUPPORTED=true
-      [ "$OS_VER_MAJOR" == "10" ] && SUPPORTED=true
-      ;;
-    centos)
-      [ "$OS_VER_MAJOR" == "7" ] && SUPPORTED=true
-      [ "$OS_VER_MAJOR" == "8" ] && SUPPORTED=true
-      ;;
+  ubuntu)
+    [ "$OS_VER_MAJOR" == "18" ] && SUPPORTED=true
+    [ "$OS_VER_MAJOR" == "20" ] && SUPPORTED=true
+    ;;
+  debian)
+    [ "$OS_VER_MAJOR" == "9" ] && SUPPORTED=true
+    [ "$OS_VER_MAJOR" == "10" ] && SUPPORTED=true
+    ;;
+  centos)
+    [ "$OS_VER_MAJOR" == "7" ] && SUPPORTED=true
+    [ "$OS_VER_MAJOR" == "8" ] && SUPPORTED=true
+    ;;
   esac
 
   # exit if not supported
@@ -154,39 +153,39 @@ check_os_comp() {
 
 ### Main uninstallation functions ###
 
-rm_panel_files(){
+rm_panel_files() {
   rm -rf /var/www/pterodactyl /usr/local/bin/composer
   [ "$OS" != "centos" ] && unlink /etc/nginx/sites-enabled/pterodactyl.conf
   [ "$OS" != "centos" ] && rm -f /etc/nginx/sites-available/pterodactyl.conf
   [ "$OS" == "centos" ] && rm -f /etc/nginx/conf.d/pterodactyl.conf
 }
 
-rm_wings_files(){
+rm_wings_files() {
   rm -rf /etc/pterodactyl /usr/local/bin/wings /var/lib/pterodactyl
 }
 
-rm_services(){
+rm_services() {
   systemctl disable --now mariadb
   systemctl disable --now pteroq
   rm -rf /etc/systemd/system/pteroq.service
   case "$OS" in
-    debian | ubuntu)
-      systemctl disable --now redis-server
-      ;;
-    centos)
-      systemctl disable --now redis
-      systemctl disable --now php-fpm
-      rm -rf /etc/php-fpm.d/www-pterodactyl.conf
-      ;;
-  esac 
+  debian | ubuntu)
+    systemctl disable --now redis-server
+    ;;
+  centos)
+    systemctl disable --now redis
+    systemctl disable --now php-fpm
+    rm -rf /etc/php-fpm.d/www-pterodactyl.conf
+    ;;
+  esac
 }
 
-rm_cron(){
+rm_cron() {
   # shellcheck disable=SC2063
   crontab -l | grep -v "* * * * * php /var/www/pterodactyl/artisan schedule:run >> /dev/null 2>&1" | crontab -
 }
 
-rm_database(){
+rm_database() {
   valid_db=$(mysql -u root -p -e "SELECT schema_name FROM information_schema.schemata;" | grep -v -E -- 'schema_name|information_schema|performance_schema')
   warning "Be careful! This database will be deleted!"
   if [[ "$valid_db" == *"panel"* ]]; then
@@ -223,7 +222,7 @@ rm_database(){
 
 ## MAIN FUNCTIONS ##
 
-perform_uninstall(){
+perform_uninstall() {
   [ "$RM_PANEL" == true ] && rm_panel_files
   [ "$RM_PANEL" == true ] && rm_services
   [ "$RM_PANEL" == true ] && rm_cron
@@ -250,7 +249,7 @@ main() {
 
   if [ -d "/var/www/pterodactyl" ]; then
     output "Panel installation has been detected."
-    echo -e -n  "* Do you want to remove panel? (y/N):"
+    echo -e -n "* Do you want to remove panel? (y/N):"
     read -r RM_PANEL_INPUT
     [[ "$RM_PANEL_INPUT" =~ [Yy] ]] && RM_PANEL=true
   fi
@@ -258,12 +257,12 @@ main() {
   if [ -d "/etc/pterodactyl" ]; then
     output "Wings installation has been detected."
     warning "This will remove all the servers!"
-    echo -e -n  "* Do you want to remove wings(daemon)? (y/N):"
+    echo -e -n "* Do you want to remove wings(daemon)? (y/N):"
     read -r RM_WINGS_INPUT
     [[ "$RM_WINGS_INPUT" =~ [Yy] ]] && RM_WINGS=true
   fi
 
-  if [ "$RM_PANEL" == false ] && [ "$RM_WINGS" == false ]; then 
+  if [ "$RM_PANEL" == false ] && [ "$RM_WINGS" == false ]; then
     error "Nothing to uninstall!"
     exit 1
   fi
