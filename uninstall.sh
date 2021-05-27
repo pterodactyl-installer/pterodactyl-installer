@@ -202,7 +202,7 @@ rm_database() {
   done
   [[ "$DATABASE" != "none" ]] && mysql -u root -p -e "DROP $DATABASE"
   # Exclude usernames User and root (Hope no one uses username User)
-  valid_users=$(mysql -u root -p -e "SELECT user FROM mysql.user;" | grep -v -E -- 'User|root')
+  valid_users=$(mysql -u root -p -e "SELECT user FROM mysql.user;" | grep -v -E -- 'user|root')
   warning "Be careful! This user will be deleted!"
   if [[ "$valid_users" == *"pteroactyl"* ]]; then
     echo -n "* User called pterodactyl has been detected. Is it the pterodactyl user? (y/N): "
