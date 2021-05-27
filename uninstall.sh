@@ -257,7 +257,7 @@ main() {
   if [ -d "/etc/pterodactyl" ]; then
     output "Wings installation has been detected."
     warning "This will remove all the servers!"
-    echo -e -n "* Do you want to remove wings(daemon)? (y/N):"
+    echo -e -n "* Do you want to remove Wings (daemon)? (y/N):"
     read -r RM_WINGS_INPUT
     [[ "$RM_WINGS_INPUT" =~ [Yy] ]] && RM_WINGS=true
   fi
