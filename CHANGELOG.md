@@ -4,6 +4,10 @@ This project follows the [semantic versioning](https://semver.org) convention. C
 
 ## next-release
 
+### Fixed
+
+- [#193](https://github.com/vilhelmprytz/pterodactyl-installer/issues/193) lib/verify-fqdn: Fixed a minor typo, the word "Encrypt" was misspelled and is now fixed (thanks to [@Hey](https://github.com/Hey) for contributing!).
+
 ### Added
 
 - [#81](https://github.com/vilhelmprytz/pterodactyl-installer/issues/81) wings: Added a feature that automatically skips the MariaDB question if MySQL/MariaDB is detected.
