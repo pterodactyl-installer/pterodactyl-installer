@@ -181,8 +181,7 @@ rm_services() {
 }
 
 rm_cron() {
-  # shellcheck disable=SC2063
-  crontab -l | grep -v "* * * * * php /var/www/pterodactyl/artisan schedule:run >> /dev/null 2>&1" | crontab -
+  crontab -l | grep -vF "* * * * * php /var/www/pterodactyl/artisan schedule:run >> /dev/null 2>&1" | crontab -
 }
 
 rm_database() {
