@@ -196,27 +196,36 @@ rm_database() {
     echo "$valid_db"
   fi
   while [ -z "$DATABASE" ] || [[ $valid_db != *"$database_input"* ]]; do
-    echo -n "* Choose the panel database(to skip type none): "
+    echo -n "* Choose the panel database (to skip don't input anything): "
     read -r database_input
-    DATABASE=$database_input
+    if [[ -n "$database_input" ]]; then
+      DATABASE="$database_input"
+    else
+      break
+    fi
   done
-  [[ "$DATABASE" != "none" ]] && mysql -u root -p -e "DROP $DATABASE"
+  [[ -n "$DATABASE" ]] && mysql -u root -p -e "DROP $DATABASE"
   # Exclude usernames User and root (Hope no one uses username User)
   valid_users=$(mysql -u root -p -e "SELECT user FROM mysql.user;" | grep -v -E -- 'user|root')
+  # valid_users="$valid_users "
   warning "Be careful! This user will be deleted!"
   if [[ "$valid_users" == *"pteroactyl"* ]]; then
     echo -n "* User called pterodactyl has been detected. Is it the pterodactyl user? (y/N): "
     read -r is_user
-    [[ "$is_user" =~ [Yy] ]] && USER=pterodactyl || echo "$valid_users"
+    [[ "$is_user" =~ [Yy] ]] && DB_USER=pterodactyl || echo "$valid_users"
   else
     echo "$valid_users"
   fi
-  while [ -z "$USER" ] || [[ $valid_users != *"$user_input"* ]]; do
-    echo -n "* Choose the panel user(to skip type none): "
+  while [ -z "$DB_USER" ] || [[ $valid_users != *"$user_input"* ]]; do
+    echo -n "* Choose the panel user (to skip don't input anything): "
     read -r user_input
-    USER=$user_input
+    if [[ -n "$user_input" ]]; then
+      DB_USER=$user_input
+    else
+      break
+    fi
   done
-  [[ "$USER" != "none" ]] && mysql -u root -p -e "DROP USER '$USER'@'127.0.0.1'"
+  [[ -n "$DB_USER" ]] && mysql -u root -p -e "DROP USER '$DB_USER'@'127.0.0.1'"
   mysql -u root -p -e "FLUSH PRIVILEGES;"
 }
 
