@@ -90,7 +90,7 @@ dns_verify() {
   output "Resolving DNS for $fqdn"
   ip=$(curl -4 -s $CHECKIP_URL)
   dns_record=$(dig +short @$DNS_SERVER "$fqdn")
-  [[ $dns_record != *"$ip"* ]] && fail
+  [ "${ip}" != "${dns_record} | tail -n1" ] && fail
   output "DNS verified!"
 }
 
