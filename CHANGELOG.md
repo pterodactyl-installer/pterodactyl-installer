@@ -7,6 +7,7 @@ This project follows the [semantic versioning](https://semver.org) convention. C
 ### Fixed
 
 - [#193](https://github.com/vilhelmprytz/pterodactyl-installer/issues/193) lib/verify-fqdn: Fixed a minor typo, the word "Encrypt" was misspelled and is now fixed (thanks to [@Hey](https://github.com/Hey) for contributing!).
+- [#201](https://github.com/vilhelmprytz/pterodactyl-installer/issues/201) lib/verify-fqdn: Fixed so that CNAME records work as FQDN and are properly detected by the script (thanks to [@jobhh](https://github.com/jobhh) for contributing!).
 
 ### Added
 
