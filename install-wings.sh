@@ -172,8 +172,8 @@ check_os_comp() {
   x86_64)
     ARCH=amd64
     ;;
-  arm64)
-    ;& # fallthrough
+  arm64) ;&
+    # fallthrough
   aarch64)
     print_warning "Detected architecture arm64"
     print_warning "You will need to use Docker images made specifically for arm64"
