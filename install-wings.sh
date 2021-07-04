@@ -370,13 +370,23 @@ systemd_file() {
 }
 
 install_mariadb() {
+  MARIADB_URL="https://downloads.mariadb.com/MariaDB/mariadb_repo_setup"
+
   case "$OS" in
-  ubuntu | debian)
-    curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
-    apt update && apt install mariadb-server -y
+  debian)
+    if [ "$ARCH" == "aarch64" ]; then
+      print_warning "MariaDB doesn't support Debian on arm64"
+      return
+    fi
+    [ "$OS_VER_MAJOR" == "9" ] && curl -sS $MARIADB_URL | sudo bash
+    apt install -y mariadb-server
+    ;;
+  ubuntu)
+    [ "$OS_VER_MAJOR" == "18" ] && curl -sS $MARIADB_URL | sudo bash
+    apt install -y mariadb-server
     ;;
   centos)
-    [ "$OS_VER_MAJOR" == "7" ] && curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
+    [ "$OS_VER_MAJOR" == "7" ] && curl -sS $MARIADB_URL | bash
     [ "$OS_VER_MAJOR" == "7" ] && yum -y install mariadb-server
     [ "$OS_VER_MAJOR" == "8" ] && dnf install -y mariadb mariadb-server
     ;;
