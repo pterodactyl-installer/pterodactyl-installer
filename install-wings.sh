@@ -54,7 +54,7 @@ fi
 #################################
 
 # download URLs
-WINGS_DL_URL="https://github.com/pterodactyl/wings/releases/latest/download/wings_linux_amd64"
+WINGS_DL_BASE_URL="https://github.com/pterodactyl/wings/releases/latest/download/wings_linux_"
 GITHUB_BASE_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/$GITHUB_SOURCE"
 
 COLOR_RED='\033[0;31m'
@@ -168,10 +168,15 @@ check_os_comp() {
   SUPPORTED=false
 
   MACHINE_TYPE=$(uname -m)
-  if [ "${MACHINE_TYPE}" != "x86_64" ]; then # check the architecture
-    print_warning "Detected architecture $MACHINE_TYPE"
-    print_warning "Using any other architecture than 64 bit (x86_64) will cause problems."
-
+  case "$MACHINE_TYPE" in
+  x86_64)
+    ARCH=amd64
+    ;;
+  arm64) ;&
+    # fallthrough
+  aarch64)
+    print_warning "Detected architecture arm64"
+    print_warning "You will need to use Docker images made specifically for arm64"
     echo -e -n "* Are you sure you want to proceed? (y/N):"
     read -r choice
 
@@ -179,7 +184,13 @@ check_os_comp() {
       print_error "Installation aborted!"
       exit 1
     fi
-  fi
+    ARCH=arm64
+    ;;
+  *)
+    print_error "Only x86_64 and arm64 are supported for Wings"
+    exit 1
+    ;;
+  esac
 
   case "$OS" in
   ubuntu)
@@ -299,7 +310,7 @@ install_docker() {
 
     # Add docker repo
     add-apt-repository \
-      "deb [arch=amd64] https://download.docker.com/linux/$OS \
+      "deb [arch=$ARCH] https://download.docker.com/linux/$OS \
     $(lsb_release -cs) \
     stable"
 
@@ -343,7 +354,7 @@ ptdl_dl() {
   echo "* Installing Pterodactyl Wings .. "
 
   mkdir -p /etc/pterodactyl
-  curl -L -o /usr/local/bin/wings "$WINGS_DL_URL"
+  curl -L -o /usr/local/bin/wings "$WINGS_DL_BASE_URL$ARCH"
 
   chmod u+x /usr/local/bin/wings
 
@@ -359,13 +370,23 @@ systemd_file() {
 }
 
 install_mariadb() {
+  MARIADB_URL="https://downloads.mariadb.com/MariaDB/mariadb_repo_setup"
+
   case "$OS" in
-  ubuntu | debian)
-    curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
-    apt update && apt install mariadb-server -y
+  debian)
+    if [ "$ARCH" == "aarch64" ]; then
+      print_warning "MariaDB doesn't support Debian on arm64"
+      return
+    fi
+    [ "$OS_VER_MAJOR" == "9" ] && curl -sS $MARIADB_URL | sudo bash
+    apt install -y mariadb-server
+    ;;
+  ubuntu)
+    [ "$OS_VER_MAJOR" == "18" ] && curl -sS $MARIADB_URL | sudo bash
+    apt install -y mariadb-server
     ;;
   centos)
-    [ "$OS_VER_MAJOR" == "7" ] && curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
+    [ "$OS_VER_MAJOR" == "7" ] && curl -sS $MARIADB_URL | bash
     [ "$OS_VER_MAJOR" == "7" ] && yum -y install mariadb-server
     [ "$OS_VER_MAJOR" == "8" ] && dnf install -y mariadb mariadb-server
     ;;
