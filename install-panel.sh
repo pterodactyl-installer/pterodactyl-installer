@@ -382,7 +382,7 @@ create_database() {
     echo "* Reload privilege tables now? [Y/n] Y"
     echo "*"
 
-    mysql_secure_installation
+    mariadb-secure-installation
 
     echo "* The script should have asked you to set the MySQL root password earlier (not to be confused with the pterodactyl database user password)"
     echo "* MySQL will now ask you to enter the password before each command."

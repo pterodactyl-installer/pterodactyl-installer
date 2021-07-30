@@ -59,7 +59,7 @@ error() {
 
 fail() {
   output "The DNS record ($dns_record) does not match your server IP. Please make sure the FQDN $fqdn is pointing to the IP of your server, $ip"
-  output "If you are using Cloudflare, please disable the proxy or opt out from Let's Ecnrypt."
+  output "If you are using Cloudflare, please disable the proxy or opt out from Let's Encrypt."
 
   echo -n "* Proceed anyways (your install will be broken if you do not know what you are doing)? (y/N): "
   read -r override
@@ -89,7 +89,7 @@ confirm() {
 dns_verify() {
   output "Resolving DNS for $fqdn"
   ip=$(curl -4 -s $CHECKIP_URL)
-  dns_record=$(dig +short @$DNS_SERVER "$fqdn")
+  dns_record=$(dig +short @$DNS_SERVER "$fqdn" | tail -n1)
   [ "${ip}" != "${dns_record}" ] && fail
   output "DNS verified!"
 }
