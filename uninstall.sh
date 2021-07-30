@@ -61,6 +61,15 @@ output() {
   echo "* ${1}"
 }
 
+print_list() {
+  print_brake 30
+  for word in $1; do
+    output "$word"
+  done
+  print_brake 30
+  echo ""
+}
+
 error() {
   COLOR_RED='\033[0;31m'
   COLOR_NC='\033[0m'
@@ -185,14 +194,18 @@ rm_cron() {
 }
 
 rm_database() {
-  valid_db=$(mysql -u root -p -e "SELECT schema_name FROM information_schema.schemata;" | grep -v -E -- 'schema_name|information_schema|performance_schema')
+  valid_db=$(mysql -u root -e "SELECT schema_name FROM information_schema.schemata;" | grep -v -E -- 'schema_name|information_schema|performance_schema|mysql')
   warning "Be careful! This database will be deleted!"
   if [[ "$valid_db" == *"panel"* ]]; then
     echo -n "* Database called panel has been detected. Is it the pterodactyl database? (y/N): "
     read -r is_panel
-    [[ "$is_panel" =~ [Yy] ]] && DATABASE=panel || echo "$valid_db"
+    if [[ "$is_panel" =~ [Yy] ]]; then
+     DATABASE=panel 
+    else 
+      print_list "$valid_db" 
+    fi
   else
-    echo "$valid_db"
+    print_list "$valid_db"
   fi
   while [ -z "$DATABASE" ] || [[ $valid_db != *"$database_input"* ]]; do
     echo -n "* Choose the panel database (to skip don't input anything): "
@@ -203,16 +216,20 @@ rm_database() {
       break
     fi
   done
-  [[ -n "$DATABASE" ]] && mysql -u root -p -e "DROP $DATABASE"
+  [[ -n "$DATABASE" ]] && mysql -u root -e "DROP DATABASE $DATABASE;"
   # Exclude usernames User and root (Hope no one uses username User)
-  valid_users=$(mysql -u root -p -e "SELECT user FROM mysql.user;" | grep -v -E -- 'user|root')
+  valid_users=$(mysql -u root -e "SELECT user FROM mysql.user;" | grep -v -E -- 'user|root')
   warning "Be careful! This user will be deleted!"
-  if [[ "$valid_users" == *"pteroactyl"* ]]; then
+  if [[ "$valid_users" == *"pterodactyl"* ]]; then
     echo -n "* User called pterodactyl has been detected. Is it the pterodactyl user? (y/N): "
     read -r is_user
-    [[ "$is_user" =~ [Yy] ]] && DB_USER=pterodactyl || echo "$valid_users"
+    if [[ "$is_user" =~ [Yy] ]];then
+      DB_USER=pterodactyl
+    else
+     print_list "$valid_users"
+    fi
   else
-    echo "$valid_users"
+    print_list "$valid_users"
   fi
   while [ -z "$DB_USER" ] || [[ $valid_users != *"$user_input"* ]]; do
     echo -n "* Choose the panel user (to skip don't input anything): "
@@ -223,8 +240,8 @@ rm_database() {
       break
     fi
   done
-  [[ -n "$DB_USER" ]] && mysql -u root -p -e "DROP USER '$DB_USER'@'127.0.0.1'"
-  mysql -u root -p -e "FLUSH PRIVILEGES;"
+  [[ -n "$DB_USER" ]] && mysql -u root -e "DROP USER $DB_USER;"
+  mysql -u root -e "FLUSH PRIVILEGES;"
 }
 
 ## MAIN FUNCTIONS ##
@@ -238,8 +255,6 @@ perform_uninstall() {
 }
 
 main() {
-  rm_database
-  exit 1
   detect_distro
   print_brake 70
   output "Pterodactyl uninstallation script"
