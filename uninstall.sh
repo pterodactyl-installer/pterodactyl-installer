@@ -163,17 +163,22 @@ check_os_comp() {
 ### Main uninstallation functions ###
 
 rm_panel_files() {
+  output "Removing panel files..."
   rm -rf /var/www/pterodactyl /usr/local/bin/composer
   [ "$OS" != "centos" ] && unlink /etc/nginx/sites-enabled/pterodactyl.conf
   [ "$OS" != "centos" ] && rm -f /etc/nginx/sites-available/pterodactyl.conf
   [ "$OS" == "centos" ] && rm -f /etc/nginx/conf.d/pterodactyl.conf
+  output "Succesfully removed panel files."
 }
 
 rm_wings_files() {
+  output "Removing wings files..."
   rm -rf /etc/pterodactyl /usr/local/bin/wings /var/lib/pterodactyl
+  output "Succesfully removed wings files."
 }
 
 rm_services() {
+  output "Removing services..."
   systemctl disable --now mariadb
   systemctl disable --now pteroq
   rm -rf /etc/systemd/system/pteroq.service
@@ -187,13 +192,17 @@ rm_services() {
     rm -rf /etc/php-fpm.d/www-pterodactyl.conf
     ;;
   esac
+  output "Succesfully removed services."
 }
 
 rm_cron() {
+  output "Removing cron jobs..."
   crontab -l | grep -vF "* * * * * php /var/www/pterodactyl/artisan schedule:run >> /dev/null 2>&1" | crontab -
+  output "Succesfully removed cron jobs."
 }
 
 rm_database() {
+  output "Removing database..."
   valid_db=$(mysql -u root -e "SELECT schema_name FROM information_schema.schemata;" | grep -v -E -- 'schema_name|information_schema|performance_schema|mysql')
   warning "Be careful! This database will be deleted!"
   if [[ "$valid_db" == *"panel"* ]]; then
@@ -218,6 +227,7 @@ rm_database() {
   done
   [[ -n "$DATABASE" ]] && mysql -u root -e "DROP DATABASE $DATABASE;"
   # Exclude usernames User and root (Hope no one uses username User)
+  output "Removing database user..."
   valid_users=$(mysql -u root -e "SELECT user FROM mysql.user;" | grep -v -E -- 'user|root')
   warning "Be careful! This user will be deleted!"
   if [[ "$valid_users" == *"pterodactyl"* ]]; then
@@ -240,18 +250,20 @@ rm_database() {
       break
     fi
   done
-  [[ -n "$DB_USER" ]] && mysql -u root -e "DROP USER $DB_USER;"
+  [[ -n "$DB_USER" ]] && mysql -u root -e "DROP USER $DB_USER@'127.0.0.1';"
   mysql -u root -e "FLUSH PRIVILEGES;"
+  output "Succesfully removed database and database user."
 }
 
 ## MAIN FUNCTIONS ##
 
 perform_uninstall() {
   [ "$RM_PANEL" == true ] && rm_panel_files
-  [ "$RM_PANEL" == true ] && rm_services
   [ "$RM_PANEL" == true ] && rm_cron
   [ "$RM_PANEL" == true ] && rm_database
+  [ "$RM_PANEL" == true ] && rm_services
   [ "$RM_WINGS" == true ] && rm_wings_files
+  true
 }
 
 main() {
