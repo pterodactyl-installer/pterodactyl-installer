@@ -2,6 +2,12 @@
 
 This project follows the [semantic versioning](https://semver.org) convention. Changelog points should be divided into fixed, changed, or added.
 
+## next-release
+
+### Fixed
+
+- [#217](https://github.com/vilhelmprytz/pterodactyl-installer/issues/217) panel: Fixed a bug that would cause the panel installation to fail on CentOS since the symlink `mysql_secure_installation` is gone (thanks [@aa-abert](https://github.com/aa-abert) for contributing!).
+
 ## v0.7.0 (released on 2021-07-16)
 
 ### Fixed
