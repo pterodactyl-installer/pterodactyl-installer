@@ -56,6 +56,11 @@ MYSQL_DB="pterodactyl"
 MYSQL_USER="pterodactyl"
 MYSQL_PASSWORD=""
 
+# Database host
+CONFIGURE_DBHOST=false
+MYSQL_DBHOST_USER="pterodactyluser"
+MYSQL_DBHOST_PASSWORD="password"
+
 # Environment
 email=""
 
