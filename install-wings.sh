@@ -72,6 +72,11 @@ CONFIGURE_LETSENCRYPT=false
 FQDN=""
 EMAIL=""
 
+# Database host
+CONFIGURE_DBHOST=false
+MYSQL_DBHOST_USER="pterodactyluser"
+MYSQL_DBHOST_PASSWORD="password"
+
 # regex for email input
 regex="^(([A-Za-z0-9]+((\.|\-|\_|\+)?[A-Za-z0-9]?)*[A-Za-z0-9]+)|[A-Za-z0-9]+)@(([A-Za-z0-9]+)+((\.|\-|\_)?([A-Za-z0-9]+)+)*)+\.([A-Za-z]{2,})+$"
 
@@ -92,6 +97,42 @@ WINGS_VERSION="$(get_latest_release "pterodactyl/wings")"
 
 valid_email() {
   [[ $1 =~ ${regex} ]]
+}
+
+password_input() {
+  local __resultvar=$1
+  local result=''
+  local default="$4"
+
+  while [ -z "$result" ]; do
+    echo -n "* ${2}"
+
+    # modified from https://stackoverflow.com/a/22940001
+    while IFS= read -r -s -n1 char; do
+      [[ -z $char ]] && {
+        printf '\n'
+        break
+      }                               # ENTER pressed; output \n and break.
+      if [[ $char == $'\x7f' ]]; then # backspace was pressed
+        # Only if variable is not empty
+        if [ -n "$result" ]; then
+          # Remove last char from output variable.
+          [[ -n $result ]] && result=${result%?}
+          # Erase '*' to the left.
+          printf '\b \b'
+        fi
+      else
+        # Add typed char to output variable.
+        result+=$char
+        # Print '*' in its stead.
+        printf '*'
+      fi
+    done
+    [ -z "$result" ] && [ -n "$default" ] && result="$default"
+    [ -z "$result" ] && print_error "${3}"
+  done
+
+  eval "$__resultvar="'$result'""
 }
 
 #################################
@@ -396,6 +437,30 @@ install_mariadb() {
   systemctl start mariadb
 }
 
+ask_database_host() {
+  echo -n "* Do you want to automatically configure a database host? (y/N): "
+  read -r CONFIRM_DBHOST
+
+  if [[ "$CONFIRM_DBHOST" =~ [Yy] ]]; then
+    CONFIGURE_DBHOST=true
+  fi
+}
+
+create_dbhost() {
+  echo "* Performing MySQL queries for database hosts.."
+
+  echo "* Creating MySQL user for database hosts..."
+  mysql -u root -e "CREATE USER '${MYSQL_DBHOST_USER}'@'127.0.0.1' IDENTIFIED BY '${MYSQL_DBHOST_PASSWORD}';"
+
+  echo "* Granting privileges.."
+  mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO '${MYSQL_DBHOST_USER}'@'127.0.0.1' WITH GRANT OPTION;"
+
+  echo "* Flushing privileges.."
+  mysql -u root -e "FLUSH PRIVILEGES;"
+
+  echo "* MySQL database host configured!"
+}
+
 #################################
 ##### OS SPECIFIC FUNCTIONS #####
 #################################
@@ -504,6 +569,7 @@ perform_install() {
   ptdl_dl
   systemd_file
   [ "$INSTALL_MARIADB" == true ] && install_mariadb
+  [ "$CONFIGURE_DBHOST" == true ] && create_dbhost
   [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
 
   # return true if script has made it this far
@@ -557,6 +623,19 @@ main() {
   $ASK_MYSQL && echo -n "* Would you like to install MariaDB (MySQL) server on the daemon as well? (y/N): "
   $ASK_MYSQL && read -r CONFIRM_INSTALL_MARIADB
   $ASK_MYSQL && [[ "$CONFIRM_INSTALL_MARIADB" =~ [Yy] ]] && INSTALL_MARIADB=true
+
+  if [ "$INSTALL_MARIADB" == true ]; then
+    ask_database_host
+  fi
+
+  if [ "$CONFIGURE_DBHOST" == true ]; then
+    echo -n "* Database host username (pterodactyluser): "
+    read -r MYSQL_DBHOST_USER_INPUT
+    
+    [ -z "$MYSQL_DBHOST_USER_INPUT" ] && MYSQL_DBHOST_USER="pterodactyluser" || MYSQL_DBHOST_USER=$MYSQL_DBHOST_USER_INPUT
+  
+    password_input MYSQL_DBHOST_PASSWORD "Database host password: " "Password cannot be empty"
+  fi
 
   # UFW is available for Ubuntu/Debian
   if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then

@@ -56,11 +56,6 @@ MYSQL_DB="pterodactyl"
 MYSQL_USER="pterodactyl"
 MYSQL_PASSWORD=""
 
-# Database host
-CONFIGURE_DBHOST=false
-MYSQL_DBHOST_USER="pterodactyluser"
-MYSQL_DBHOST_PASSWORD="password"
-
 # Environment
 email=""
 
@@ -263,15 +258,6 @@ ask_firewall() {
   esac
 }
 
-ask_database_host() {
-  echo "* Do you want to automatically configure a database host? (y/N): "
-  read -r CONFIRM_DBHOST
-
-  if [[ "$CONFIRM_DBHOST" =~ [Yy] ]]; then
-    CONFIGURE_DBHOST=true
-  fi
-}
-
 ####### OS check funtions #######
 
 detect_distro() {
@@ -429,21 +415,6 @@ create_database() {
 
     echo "* MySQL database created & configured!"
   fi
-}
-
-create_dbhost() {
-  echo "* Performing MySQL queries for database hosts.."
-
-  echo "* Creating MySQL user for database hosts..."
-  mysql -u root -e "CREATE USER '${MYSQL_DBHOST_USER}'@'127.0.0.1' IDENTIFIED BY '${MYSQL_DBHOST_PASSWORD}';"
-
-  echo "* Granting privileges.."
-  mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO '${MYSQL_DBHOST_USER}'@'127.0.0.1' WITH GRANT OPTION;"
-
-  echo "* Flushing privileges.."
-  mysql -u root -e "FLUSH PRIVILEGES;"
-
-  echo "* MySQL database host configured!"
 }
 
 # Configure environment
@@ -888,7 +859,6 @@ perform_install() {
   install_composer
   ptdl_dl
   create_database
-  [ "$CONFIGURE_DBHOST" == true ] && create_dbhost
   configure
   set_folder_permissions
   insert_cronjob
@@ -954,17 +924,6 @@ main() {
   )
   password_input MYSQL_PASSWORD "Password (press enter to use randomly generated password): " "MySQL password cannot be empty" "$rand_pw"
 
-  ask_database_host
-
-  if [ "$CONFIGURE_DBHOST" == true ]; then
-    echo -n "* Database host username (pterodactyluser): "
-    read -r MYSQL_DBHOST_USER_INPUT
-
-    [ -z "$MYSQL_DBHOST_USER_INPUT" ] && MYSQL_DBHOST_USER="pterodactyluser" || MYSQL_DBHOST_USER=$MYSQL_DBHOST_USER_INPUT
-  
-    password_input MYSQL_DBHOST_PASSWORD "Database host password: " "Password cannot be empty"
-  fi
-
   readarray -t valid_timezones <<<"$(curl -s $GITHUB_BASE_URL/configs/valid_timezones.txt)"
   echo "* List of valid timezones here $(hyperlink "https://www.php.net/manual/en/timezones.php")"
 
@@ -1027,8 +986,6 @@ summary() {
   echo "* Database name: $MYSQL_DB"
   echo "* Database user: $MYSQL_USER"
   echo "* Database password: (censored)"
-  echo "* Database host user: $MYSQL_DBHOST_USER"
-  echo "* Database host password: (censored)"
   echo "* Timezone: $timezone"
   echo "* Email: $email"
   echo "* User email: $user_email"
