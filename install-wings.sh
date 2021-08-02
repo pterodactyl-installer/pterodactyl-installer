@@ -634,7 +634,7 @@ main() {
   $ASK_MYSQL && read -r CONFIRM_INSTALL_MARIADB
   $ASK_MYSQL && [[ "$CONFIRM_INSTALL_MARIADB" =~ [Yy] ]] && INSTALL_MARIADB=true
 
-  if [ "$INSTALL_MARIADB" == true ]; then
+  if [ "$INSTALL_MARIADB" == true ] || [ "$ASK_MYSQL" == false ]; then
     ask_database_host
   fi
 
@@ -646,6 +646,8 @@ main() {
     
     # Check if the user exists, variale is 1 if it exists and 0 if it doesn't
     USER_EXISTS=$(mysql -u root -s --skip-column-names -e "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = '${MYSQL_DBHOST_USER}')")
+
+    printf "%i" "$USER_EXISTS"
 
     if [ "$USER_EXISTS" -eq 1 ]; then
       error "This user already exists!"
