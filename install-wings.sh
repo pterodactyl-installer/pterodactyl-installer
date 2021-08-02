@@ -642,8 +642,7 @@ main() {
     echo -n "* Database host username (pterodactyluser): "
     read -r MYSQL_DBHOST_USER_INPUT
     
-    [ -z "$MYSQL_DBHOST_USER_INPUT" ] && MYSQL_DBHOST_USER="pterodactyluser" || MYSQL_DBHOST_USER=$MYSQL_DBHOST_USER_INPUT
-  
+    [ -z "$MYSQL_DBHOST_USER_INPUT" ] || MYSQL_DBHOST_USER=$MYSQL_DBHOST_USER_INPUT
     password_input MYSQL_DBHOST_PASSWORD "Database host password: " "Password cannot be empty"
   fi
 
