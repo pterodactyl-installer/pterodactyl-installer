@@ -643,6 +643,15 @@ main() {
     read -r MYSQL_DBHOST_USER_INPUT
     
     [ -z "$MYSQL_DBHOST_USER_INPUT" ] || MYSQL_DBHOST_USER=$MYSQL_DBHOST_USER_INPUT
+    
+    # Check if the user exists, variale is 1 if it exists and 0 if it doesn't
+    USER_EXISTS=$(mysql -u root -s --skip-column-names -e "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = '${MYSQL_DBHOST_USER}')")
+
+    if [ "$USER_EXISTS" -eq 1 ]; then
+      error "This user already exists!"
+      exit 1
+    fi
+
     password_input MYSQL_DBHOST_PASSWORD "Database host password: " "Password cannot be empty"
   fi
 
