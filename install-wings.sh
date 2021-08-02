@@ -458,6 +458,16 @@ create_dbhost() {
   echo "* Flushing privileges.."
   mysql -u root -e "FLUSH PRIVILEGES;"
 
+  echo "* Changing MySQL bind address.."
+  case "$OS" in
+  debian|ubuntu)
+    sed -ne 's/^bind-address            = 127.0.0.1$/bind-address=0.0.0.0/' /etc/mysql/mariadb.conf.d/50-server.cnf
+    ;;
+  centos)
+    sed -ne 's/^#bind-address=0.0.0.0$/bind-address=0.0.0.0/' /etc/my.cnf.d/mariadb-server.cnf
+    ;;
+  esac
+
   echo "* MySQL database host configured!"
 }
 
