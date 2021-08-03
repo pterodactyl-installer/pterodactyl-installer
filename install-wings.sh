@@ -437,8 +437,8 @@ install_mariadb() {
   systemctl start mariadb
 }
 
-ask_database_host() {
-  echo -n "* Do you want to automatically configure a database host? (y/N): "
+ask_database_user() {
+  echo -n "* Do you want to automatically configure an user for database hosts? (y/N): "
   read -r CONFIRM_DBHOST
 
   if [[ "$CONFIRM_DBHOST" =~ [Yy] ]]; then
@@ -446,10 +446,10 @@ ask_database_host() {
   fi
 }
 
-create_dbhost() {
-  echo "* Performing MySQL queries for database hosts.."
+configure_database() {
+  echo "* Performing MySQL queries.."
 
-  echo "* Creating MySQL user for database hosts..."
+  echo "* Creating MySQL user..."
   mysql -u root -e "CREATE USER '${MYSQL_DBHOST_USER}'@'127.0.0.1' IDENTIFIED BY '${MYSQL_DBHOST_PASSWORD}';"
 
   echo "* Granting privileges.."
@@ -468,7 +468,7 @@ create_dbhost() {
     ;;
   esac
 
-  echo "* MySQL database host configured!"
+  echo "* MySQL configured!"
 }
 
 #################################
@@ -579,7 +579,7 @@ perform_install() {
   ptdl_dl
   systemd_file
   [ "$INSTALL_MARIADB" == true ] && install_mariadb
-  [ "$CONFIGURE_DBHOST" == true ] && create_dbhost
+  [ "$CONFIGURE_DBHOST" == true ] && create_database
   [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
 
   # return true if script has made it this far
@@ -627,32 +627,19 @@ main() {
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: this script will not enable swap (for docker)."
   print_brake 42
 
-  # Only ask if MySQL is not detected
-  type mysql >/dev/null 2>&1 && ASK_MYSQL=false || ASK_MYSQL=true
-
-  $ASK_MYSQL && echo -n "* Would you like to install MariaDB (MySQL) server on the daemon as well? (y/N): "
-  $ASK_MYSQL && read -r CONFIRM_INSTALL_MARIADB
-  $ASK_MYSQL && [[ "$CONFIRM_INSTALL_MARIADB" =~ [Yy] ]] && INSTALL_MARIADB=true
-
-  if [ "$INSTALL_MARIADB" == true ] || [ "$ASK_MYSQL" == false ]; then
-    ask_database_host
-  fi
+  ask_database_user
 
   if [ "$CONFIGURE_DBHOST" == true ]; then
+    type mysql >/dev/null 2>&1 && HAS_MYSQL=true || HAS_MYSQL=false
+
+    if [ "$HAS_MYSQL" == false ]; then
+      INSTALL_MARIADB=true
+    fi
+
     echo -n "* Database host username (pterodactyluser): "
     read -r MYSQL_DBHOST_USER_INPUT
     
     [ -z "$MYSQL_DBHOST_USER_INPUT" ] || MYSQL_DBHOST_USER=$MYSQL_DBHOST_USER_INPUT
-    
-    # Check if the user exists, variale is 1 if it exists and 0 if it doesn't
-    USER_EXISTS=$(mysql -u root -s --skip-column-names -e "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = '${MYSQL_DBHOST_USER}')")
-
-    printf "%i" "$USER_EXISTS"
-
-    if [ "$USER_EXISTS" -eq 1 ]; then
-      error "This user already exists!"
-      exit 1
-    fi
 
     password_input MYSQL_DBHOST_PASSWORD "Database host password: " "Password cannot be empty"
   fi
