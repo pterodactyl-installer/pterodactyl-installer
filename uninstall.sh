@@ -209,9 +209,9 @@ rm_database() {
     echo -n "* Database called panel has been detected. Is it the pterodactyl database? (y/N): "
     read -r is_panel
     if [[ "$is_panel" =~ [Yy] ]]; then
-     DATABASE=panel 
-    else 
-      print_list "$valid_db" 
+      DATABASE=panel
+    else
+      print_list "$valid_db"
     fi
   else
     print_list "$valid_db"
@@ -233,10 +233,10 @@ rm_database() {
   if [[ "$valid_users" == *"pterodactyl"* ]]; then
     echo -n "* User called pterodactyl has been detected. Is it the pterodactyl user? (y/N): "
     read -r is_user
-    if [[ "$is_user" =~ [Yy] ]];then
+    if [[ "$is_user" =~ [Yy] ]]; then
       DB_USER=pterodactyl
     else
-     print_list "$valid_users"
+      print_list "$valid_users"
     fi
   else
     print_list "$valid_users"
@@ -283,7 +283,7 @@ main() {
 
   if [ -d "/var/www/pterodactyl" ]; then
     output "Panel installation has been detected."
-    echo -e -n "* Do you want to remove panel? (y/N):"
+    echo -e -n "* Do you want to remove panel? (y/N): "
     read -r RM_PANEL_INPUT
     [[ "$RM_PANEL_INPUT" =~ [Yy] ]] && RM_PANEL=true
   fi
@@ -291,7 +291,7 @@ main() {
   if [ -d "/etc/pterodactyl" ]; then
     output "Wings installation has been detected."
     warning "This will remove all the servers!"
-    echo -e -n "* Do you want to remove Wings (daemon)? (y/N):"
+    echo -e -n "* Do you want to remove Wings (daemon)? (y/N): "
     read -r RM_WINGS_INPUT
     [[ "$RM_WINGS_INPUT" =~ [Yy] ]] && RM_WINGS=true
   fi
