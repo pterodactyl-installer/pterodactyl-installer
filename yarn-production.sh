@@ -2,7 +2,7 @@
 
 #### Panel Production ####
 
-DIR=/var/www/pterodactyl/ei
+DIR=/var/www/pterodactyl/efgewrgwergwergwergweg
 
 if [ -d "$DIR" ]; then
 echo "The default directory exists, proceeding with the installation..."
