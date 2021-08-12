@@ -56,10 +56,18 @@ List of supported installation setups for panel and Wings (installations support
 
 _\* Ubuntu 16 and Debian 8 no longer supported since Pterodactyl does not actively support it._
 
+## This script has been edited to download the latest version of pterodactyl (1.5.1) along with a simple but relatively nice theme.
+
+## Some images of the theme:
+![dracula1](https://user-images.githubusercontent.com/69549678/129277566-feef6f68-df47-4c2c-9aa5-c6fb7fcdffe1.png)
+![dracula2](https://user-images.githubusercontent.com/69549678/129277583-3036fe7d-d166-410e-928d-4d55ef7d3681.png)
+
+
 ## Using the installation scripts
 
 To use the installation scripts, simply run this command as root. The script will ask you whether you would like to install just the panel, just the daemon or both.
 
+Panel Installation:
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/Ferks-FK/pterodactyl-installer/master/install-panel.sh)
 ```
@@ -68,6 +76,17 @@ Don't despair, run this command, wait for it to finish, and everything will be w
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/Ferks-FK/pterodactyl-installer/master/yarn-production.sh)
 ```
+Wings Installation:
+```bash
+bash <(curl -s https://raw.githubusercontent.com/Ferks-FK/pterodactyl-installer/master/install-wings.sh)
+```
+
+## Additional information:
+This is a fork of the official script.
+
+Use this modified script only if you want a dashboard with a different theme.
+
+This modification does not change the default installation of the wings of the official script, therefore, it can be used safely.
 
 _Note: On some systems, it's required to be already logged in as root before executing the one-line command (where `sudo` is in front of the command does not work)._
 
