@@ -1013,6 +1013,17 @@ summary() {
   print_brake 62
 }
 
+####PRODUCTION PANEL####
+cd
+curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+apt install -y nodejs
+
+cd /var/www/pterodactyl
+npm i -g yarn
+yarn
+
+yarn build:production
+
 goodbye() {
   print_brake 62
   echo "* Panel installation completed"
