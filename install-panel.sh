@@ -71,7 +71,7 @@ ASSUME_SSL=false
 CONFIGURE_LETSENCRYPT=false
 
 # download URLs
-PANEL_DL_URL="https://github.com/pterodactyl/panel/releases/latest/download/panel.tar.gz"
+PANEL_DL_URL="https://github.com/Ferks-FK/panel/archive/refs/tags/v1.5.1-Theme.tar.gz"
 GITHUB_BASE_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/$GITHUB_SOURCE"
 
 # ufw firewall
@@ -358,8 +358,12 @@ ptdl_dl() {
   mkdir -p /var/www/pterodactyl
   cd /var/www/pterodactyl || exit
 
-  curl -Lo panel.tar.gz "$PANEL_DL_URL"
-  tar -xzvf panel.tar.gz
+  curl -Lo panel-1.5.1-Theme.tar.gz "$PANEL_DL_URL"
+  tar -xzvf panel-1.5.1-Theme.tar.gz
+  cd panel-1.5.1-Theme
+  cp -R * /var/www/pterodactyl
+  cd ..
+  rm -R panel-1.5.1-Theme panel-1.5.1-Theme.tar.gz
   chmod -R 755 storage/* bootstrap/cache/
 
   cp .env.example .env
