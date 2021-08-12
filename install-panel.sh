@@ -362,6 +362,15 @@ ptdl_dl() {
   tar -xzvf panel-1.5.1-Theme.tar.gz
   cd panel-1.5.1-Theme
   cp -R * /var/www/pterodactyl
+  cp -R .env.example /var/www/pterodactyl
+  cp -R .babel-plugin-macrosrc.js /var/www/pterodactyl
+  cp -R .editorconfig /var/www/pterodactyl
+  cp -R .env.ci /var/www/pterodactyl
+  cp -R .eslintignore /var/www/pterodactyl
+  cp -R .eslintrc.yml /var/www/pterodactyl
+  cp -R .gitignore /var/www/pterodactyl
+  cp -R .php_cs.dist /var/www/pterodactyl
+  cp -R .yarnclean /var/www/pterodactyl
   cd ..
   rm -R panel-1.5.1-Theme panel-1.5.1-Theme.tar.gz
   chmod -R 755 storage/* bootstrap/cache/
