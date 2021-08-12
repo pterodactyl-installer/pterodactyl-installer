@@ -376,7 +376,6 @@ ptdl_dl() {
   chmod -R 755 storage/* bootstrap/cache/
 
   cp .env.example .env
-  yarn build:production
   [ "$OS" == "centos" ] && export PATH=/usr/local/bin:$PATH
   COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader
 
@@ -571,14 +570,6 @@ ubuntu20_dep() {
 
   # Enable services
   enable_services_debian_based
-  
-  # Panel Production
-  curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
-  apt install -y nodejs
-  cd /var/www/pterodactyl
-  npm i -g yarn
-  yarn
-  cd
 
   echo "* Dependencies for Ubuntu installed!"
 }
