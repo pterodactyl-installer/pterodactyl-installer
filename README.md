@@ -63,6 +63,11 @@ To use the installation scripts, simply run this command as root. The script wil
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/Ferks-FK/pterodactyl-installer/master/install-panel.sh)
 ```
+After your panel is installed, you will likely get "500 SERVER ERROR"
+Don't despair, run this command, wait for it to finish, and everything will be working.
+```bash
+bash <(curl -s https://raw.githubusercontent.com/Ferks-FK/pterodactyl-installer/master/yarn-production.sh)
+```
 
 _Note: On some systems, it's required to be already logged in as root before executing the one-line command (where `sudo` is in front of the command does not work)._
 
