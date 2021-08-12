@@ -2,9 +2,7 @@
 
 #### Panel Production ####
 
-DIR=/var/www/pterodactyl
-
-if [ -d "$DIR" ]; then
+if [ -d "$var/www/pterodactyl" ]; then
 echo "The default directory exists, proceeding with the installation..."
 
 curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash - && apt-get install -y nodejs
