@@ -179,7 +179,6 @@ rm_wings_files() {
 
 rm_services() {
   output "Removing services..."
-  systemctl disable --now mariadb
   systemctl disable --now pteroq
   rm -rf /etc/systemd/system/pteroq.service
   case "$OS" in
