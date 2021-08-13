@@ -113,4 +113,6 @@ Copyright (C) 2018 - 2021, Vilhelm Prytz, <vilhelm@prytznet.se>
 
 Created and maintained by [Vilhelm Prytz](https://github.com/vilhelmprytz).
 
-Special thanks to the Discord moderators [sam1370](https://github.com/sam1370), [Linux123123](https://github.com/Linux123123) and [sinmineryt](https://github.com/sinmineryt) for helping on the Discord server!
+Thanks to the Discord moderators [sam1370](https://github.com/sam1370), [Linux123123](https://github.com/Linux123123) and [sinjs](https://github.com/sinjs) for helping on the Discord server!
+
+And special thanks to [Linux123123](https://github.com/Linux123123) for frequently contributing to the project with bug reports, feature requests, pull requests, and more!
