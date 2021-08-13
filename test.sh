@@ -16,7 +16,6 @@ then
 echo "You have not entered a user!"
 exit
 else
-echo "Success!"
   if [ -z "$password" ]
   then
   echo "You have not entered a password!"
