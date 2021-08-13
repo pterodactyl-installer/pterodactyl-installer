@@ -1,3 +1,4 @@
+#!bin/bash
 #### Updating Repositories ####
 
 apt-get -y update
