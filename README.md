@@ -98,39 +98,6 @@ The installation scripts can install and configure a firewall for you. The scrip
 
 ## Development & Ops
 
-### Testing the script locally
-
-To test the script, we use [Vagrant](https://www.vagrantup.com). With Vagrant, you can quickly get a fresh machine up and running to test the script.
-
-If you want to test the script on all supported installations in one go, just run the following.
-
-```bash
-vagrant up
-```
-
-If you only want to test a specific distribution, you can run the following.
-
-```bash
-vagrant up <name>
-```
-
-Replace name with one of the following (supported installations).
-
-- `ubuntu_focal`
-- `ubuntu_bionic`
-- `debian_buster`
-- `debian_stretch`
-- `centos_8`
-- `centos_7`
-
-Then you can use `vagrant ssh <name of machine>` to SSH into the box. The project directory will be mounted in `/vagrant` so you can quickly modify the script locally and then test the changes by running the script from `/vagrant/install_panel.sh` and `/vagrant/install_wings.sh` respectively.
-
-### Creating a release
-
-There are a couple of files that each release commit should always change. Firstly, update the `CHANGELOG.md` so that the release date and release tag are both displayed. No changes should be made to the changelog points themselves. Secondly, update `GITHUB_SOURCE` and `SCRIPT_RELEASE` in both `install-panel.sh` and `install-wings.sh`. Thirdly, update `SCRIPT_RELEASE` in `install.sh`. Finally, you can now push a commit with the message `Release vX.Y.Z`. Create a release on GitHub. See [this commit](https://github.com/vilhelmprytz/pterodactyl-installer/commit/90aaae10785f1032fdf90b216a4a8d8ca64e6d44) for reference.
-
-When the release is published, push another commit which revers the changes you made to `install-wings.sh` and `install-panel.sh`. See [this commit](https://github.com/vilhelmprytz/pterodactyl-installer/commit/be5f361523d1d546d49eef8b3ce1a9145eded234) for reference.
-
 ## Contributors ✨
 
 Copyright (C) 2018 - 2021, Vilhelm Prytz, <vilhelm@prytznet.se>
