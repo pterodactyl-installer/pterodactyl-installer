@@ -4,7 +4,6 @@
 PHPMYADMIN=5.1.1
 DIR=/var/www/pterodactyl
 
-install_phpmyadmin() {
 if [ -d "$DIR" ]; then
 echo "The default directory exists, proceeding with the installation..."
 cd /var/www/pterodactyl/public
@@ -22,6 +21,8 @@ cd /var/www/pterodactyl/public/phpmyadmin || exit
 else
 echo "Default directory does not exist, aborting!"
 fi
+
+install_phpmyadmin() {
 
     SERVER_IP=$(dig +short myip.opendns.com @resolver1.opendns.com)
     BOWFISH=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 34 | head -n 1`
