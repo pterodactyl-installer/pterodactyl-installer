@@ -438,7 +438,7 @@ install_mariadb() {
 }
 
 ask_database_user() {
-  echo -n "* Do you want to automatically configure an user for database hosts? (y/N): "
+  echo -n "* Do you want to automatically configure a user for database hosts? (y/N): "
   read -r CONFIRM_DBHOST
 
   if [[ "$CONFIRM_DBHOST" =~ [Yy] ]]; then
@@ -460,7 +460,7 @@ configure_database() {
 
   echo "* Changing MySQL bind address.."
   case "$OS" in
-  debian|ubuntu)
+  debian | ubuntu)
     sed -ne 's/^bind-address            = 127.0.0.1$/bind-address=0.0.0.0/' /etc/mysql/mariadb.conf.d/50-server.cnf
     ;;
   centos)
@@ -638,7 +638,7 @@ main() {
 
     echo -n "* Database host username (pterodactyluser): "
     read -r MYSQL_DBHOST_USER_INPUT
-    
+
     [ -z "$MYSQL_DBHOST_USER_INPUT" ] || MYSQL_DBHOST_USER=$MYSQL_DBHOST_USER_INPUT
 
     password_input MYSQL_DBHOST_PASSWORD "Database host password: " "Password cannot be empty"
