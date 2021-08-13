@@ -18,6 +18,7 @@ rm -R phpMyAdmin-${PHPMYADMIN}-all-languages phpMyAdmin-${PHPMYADMIN}-all-langua
 cp config.sample.inc.php config.inc.php
 rm -R config.sample.inc.php
 cd /var/www/pterodactyl/public/phpmyadmin || exit
+echo "Thanks for using this script, goodbye."
 else
 echo "Default directory does not exist, aborting!"
 fi
