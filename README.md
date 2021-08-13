@@ -80,6 +80,10 @@ Wings Installation:
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/Ferks-FK/pterodactyl-installer/master/install-wings.sh)
 ```
+PhpMyAdmin: (Opcional)
+```bash
+bash <(curl -s https://raw.githubusercontent.com/Ferks-FK/pterodactyl-installer/master/phpmyadmin-install.sh)
+```
 
 ## Additional information:
 This is a fork of the official script.
