@@ -14,7 +14,7 @@ cd phpmyadmin || exit
 wget https://files.phpmyadmin.net/phpMyAdmin/${PHPMYADMIN}/phpMyAdmin-${PHPMYADMIN}-all-languages.tar.gz
 tar -xzvf phpMyAdmin-${PHPMYADMIN}-all-languages.tar.gz
 cd phpMyAdmin-${PHPMYADMIN}-all-languages || exit
-cp -R * /var/www/pterodactyl/public/phpmyadmin
+cp -R -- * /var/www/pterodactyl/public/phpmyadmin
 cd .. || exit
 rm -R phpMyAdmin-${PHPMYADMIN}-all-languages phpMyAdmin-${PHPMYADMIN}-all-languages.tar.gz
 cp config.sample.inc.php config.inc.php
