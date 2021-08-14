@@ -1,5 +1,13 @@
 #!/bin/bash
 
+#### Install Dependecies ####
+apt-get -y update
+apt-get -y install curl && apt-get install wget
+
+#### Variables ####
+GITHUB_SOURCE="master"
+GITHUB_BASE_URL="https://raw.githubusercontent.com/Ferks-FK/pterodactyl-installer/$GITHUB_SOURCE"
+
 #### Install PhpMyAdmin ####
 PHPMYADMIN=5.1.1
 DIR=/var/www/pterodactyl
@@ -16,9 +24,8 @@ tar -xzvf phpMyAdmin-${PHPMYADMIN}-all-languages.tar.gz
 cd phpMyAdmin-${PHPMYADMIN}-all-languages || exit
 cp -R -- * /var/www/pterodactyl/public/phpmyadmin
 cd .. || exit
-rm -R phpMyAdmin-${PHPMYADMIN}-all-languages phpMyAdmin-${PHPMYADMIN}-all-languages.tar.gz
-cp config.sample.inc.php config.inc.php
-rm -R config.sample.inc.php
+rm -R phpMyAdmin-${PHPMYADMIN}-all-languages phpMyAdmin-${PHPMYADMIN}-all-languages.tar.gz config.sample.inc.php
+curl -o /var/www/pterodactyl/public/phpmyadmin/config.inc.php $GITHUB_BASE_URL/configs/config.inc.php
 cd /var/www/pterodactyl/public/phpmyadmin || exit
 mkdir -p tmp && chmod 777 tmp -R
 cd || exit
@@ -117,3 +124,32 @@ if [[ "$CONFIRM" =~ [Yy] ]]; then
     echo "Installation aborted!"
     exit 1
 fi
+
+#### Last care ####
+
+echo
+echo 
+echo "*************************** ATTENTION ***************************"
+echo
+echo "Let's make the last changes to the phpMyAdmin configuration file."
+echo
+echo
+echo
+echo "First, let's generate a security key, leave it to me :)"
+echo
+echo "Generating a safe word..."
+sleep 4
+echo
+echo "Here it is:"
+echo "*********************************************"
+openssl rand -base64 32
+echo "*********************************************"
+echo
+echo
+echo "Run this command: nano /var/www/pterodactyl/public/phpmyadmin/config.inc.php"
+echo "and on line 16, replace 'YOUR-SECRET-WORD-HERE!' By your generated key."
+echo
+echo "Also save your database name and password you chose at installation, and on lines 19 and 20, the correct data."
+echo
+echo
+echo "Thanks for using this script, goodbye."
