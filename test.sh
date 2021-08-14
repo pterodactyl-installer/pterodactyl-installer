@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #### Variables ####
-$GITHUB_SOURCE="master"
-$GITHUB_BASE_URL="https://raw.githubusercontent.com/Ferks-FK/pterodactyl-installer/$GITHUB_SOURCE"
+GITHUB_SOURCE="master"
+GITHUB_BASE_URL="https://raw.githubusercontent.com/Ferks-FK/pterodactyl-installer/$GITHUB_SOURCE"
 
 #### Install PhpMyAdmin ####
 PHPMYADMIN=5.1.1
@@ -22,7 +22,7 @@ cp -R -- * /var/www/pterodactyl/public/phpmyadmin
 cd .. || exit
 rm -R phpMyAdmin-${PHPMYADMIN}-all-languages phpMyAdmin-${PHPMYADMIN}-all-languages.tar.gz config.sample.inc.php
 #### test ####
-curl -o config.inc.php $GITHUB_BASE_URL/configs/config.inc.php
+curl -o /var/www/pterodactyl/public/phpmyadmin/config.inc.php $GITHUB_BASE_URL/configs/config.inc.php
 sed -i -e "s@<secret-word>@YOUR-SECRET-WORD-HERE!" /var/www/pterodactyl/public/phpmyadmin/config.inc.php
 sed -i -e "s@<db-user>@$MYSQL_USER" /var/www/pterodactyl/public/phpmyadmin/config.inc.php
 sed -i -e "s@<db-pass>@$MYSQL_PASS" /var/www/pterodactyl/public/phpmyadmin/config.inc.php
