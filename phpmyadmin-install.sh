@@ -6,13 +6,13 @@ DIR=/var/www/pterodactyl
 
 if [ -d "$DIR" ]; then
 echo "The default directory exists, proceeding with the installation..."
-cd /var/www/pterodactyl/public
+cd /var/www/pterodactyl/public || exit
 mkdir -p phpmyadmin
-cd phpmyadmin
+cd phpmyadmin || exit
 wget https://files.phpmyadmin.net/phpMyAdmin/${PHPMYADMIN}/phpMyAdmin-${PHPMYADMIN}-all-languages.tar.gz
 tar -xzvf phpMyAdmin-${PHPMYADMIN}-all-languages.tar.gz
-cd phpMyAdmin-${PHPMYADMIN}-all-languages
-cp -R * /var/www/pterodactyl/public/phpmyadmin
+cd phpMyAdmin-${PHPMYADMIN}-all-languages || exit
+cp -R ./*glob* /var/www/pterodactyl/public/phpmyadmin
 cd ..
 rm -R phpMyAdmin-${PHPMYADMIN}-all-languages phpMyAdmin-${PHPMYADMIN}-all-languages.tar.gz
 cp config.sample.inc.php config.inc.php
@@ -34,40 +34,41 @@ MYSQL_USER="admin"
 MYSQL_PASS="phpmyadminuser2021"
 
 #### Create MySQL User ####
-
-echo "* Let's create a login user on the phpMyAdmin page."
 echo
-echo -n "* Username (default > admin): "
+echo "****************************************************"
+echo "* Let's create a login user on the phpMyAdmin page.*"
+echo "****************************************************"
+echo
+echo -n "* Username (admin): "
 read -r MYSQL_USER_INPUT
 [ -z "$MYSQL_USER_INPUT" ] && MYSQL_USER="admin" || MYSQL_USER=$MYSQL_USER_INPUT
 
 echo
-echo -n "* Database name (default > phpmyadmin): "
+echo -n "* Database name (phpmyadmin): "
 read -r MYSQL_DATABASE_INPUT
 [ -z "$MYSQL_DATABASE_INPUT" ] && MYSQL_DATABASE="phpmyadmin" || MYSQL_DATABASE=$MYSQL_DATABASE_INPUT
 
 echo
-echo -n "* Password (default > phpmyadminuser2021)"
+echo -n "* Password (phpmyadminuser2021)"
 read -r MYSQL_PASS_INPUT
 [ -z "$MYSQL_PASS_INPUT" ] && MYSQL_PASS="phpmyadminuser2021" || MYSQL_PASS=$MYSQL_PASS_INPUT
+echo
+echo
 
 #### Review of settings ####
 
-sumarry() {
+summary() {
+echo "******************************"
 echo "* Username: $MYSQL_USER"
 echo "* Database name: $MYSQL_DATABASE"
 echo "* Password: $MYSQL_PASS"
+echo "******************************"
 }
 
-echo -e -n "\n* Initial configuration completed. Continue with installation? (y/N): "
-read -r CONFIRM
-if [[ "$CONFIRM" =~ [Yy] ]]; then
-    continue_install
-  else
-    # run welcome script again
-    echo "Installation aborted!"
-    exit 1
-fi
+
+# Exec summary
+
+summary
 
 continue_install() {
 echo "**************************************************"
@@ -96,3 +97,14 @@ echo
 echo "* Thanks for using this script, goodbye."
 echo "**************************************************"
 }
+
+#### Exec Install ####
+
+echo -e -n "\n* Initial configuration completed. Continue with installation? (y/N): "
+read -r CONFIRM
+if [[ "$CONFIRM" =~ [Yy] ]]; then
+    continue_install
+  else
+    echo "Installation aborted!"
+    exit 1
+fi
