@@ -15,7 +15,7 @@ wget https://files.phpmyadmin.net/phpMyAdmin/${PHPMYADMIN}/phpMyAdmin-${PHPMYADM
 tar -xzvf phpMyAdmin-${PHPMYADMIN}-all-languages.tar.gz
 cd phpMyAdmin-${PHPMYADMIN}-all-languages || exit
 cp -R * /var/www/pterodactyl/public/phpmyadmin
-cd ..
+cd .. || exit
 rm -R phpMyAdmin-${PHPMYADMIN}-all-languages phpMyAdmin-${PHPMYADMIN}-all-languages.tar.gz
 cp config.sample.inc.php config.inc.php
 rm -R config.sample.inc.php
