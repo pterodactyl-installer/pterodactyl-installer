@@ -20,6 +20,7 @@ rm -R config.sample.inc.php
 cd /var/www/pterodactyl/public/phpmyadmin || exit
 else
 echo "Default directory does not exist, aborting!"
+exit 1
 fi
 
 #### Updating Repositories ####
@@ -52,8 +53,6 @@ read -r MYSQL_PASS_INPUT
 
 #### Review of settings ####
 
-sumarry
-
 sumarry() {
 echo "* Username: $MYSQL_USER"
 echo "* Database name: $MYSQL_DATABASE"
@@ -66,7 +65,7 @@ if [[ "$CONFIRM" =~ [Yy] ]]; then
     continue_install
   else
     # run welcome script again
-    print_error "Installation aborted!"
+    echo "Installation aborted!"
     exit 1
 fi
 
