@@ -21,9 +21,9 @@ cp config.sample.inc.php config.inc.php
 rm -R config.sample.inc.php
 cd /var/www/pterodactyl/public/phpmyadmin || exit
 else
-echo "**********************************************"
-echo "* Default directory does not exist, aborting!*"
-echo "**********************************************"
+echo "***************************************************************"
+echo "* You don't have the panel installed, please install it first!*"
+echo "***************************************************************"
 exit 1
 fi
 
