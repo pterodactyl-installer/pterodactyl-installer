@@ -23,9 +23,9 @@ cd .. || exit
 rm -R phpMyAdmin-${PHPMYADMIN}-all-languages phpMyAdmin-${PHPMYADMIN}-all-languages.tar.gz config.sample.inc.php
 #### test ####
 curl -o /var/www/pterodactyl/public/phpmyadmin/config.inc.php $GITHUB_BASE_URL/configs/config.inc.php
-sed -i -e "s@<secret-word>@YOUR-SECRET-WORD-HERE!" /var/www/pterodactyl/public/phpmyadmin/config.inc.php
-sed -i -e "s@<db-user>@$MYSQL_USER" /var/www/pterodactyl/public/phpmyadmin/config.inc.php
-sed -i -e "s@<db-pass>@$MYSQL_PASS" /var/www/pterodactyl/public/phpmyadmin/config.inc.php
+sed -i -e "s@<secret-word>@YOUR-SECRET-WORD-HERE!@g" /var/www/pterodactyl/public/phpmyadmin/config.inc.php
+sed -i -e "s@<db-user>@${MYSQL_USER}@g" /var/www/pterodactyl/public/phpmyadmin/config.inc.php
+sed -i -e "s@<db-pass>@${MYSQL_PASS}@g" /var/www/pterodactyl/public/phpmyadmin/config.inc.php
 cd /var/www/pterodactyl/public/phpmyadmin || exit
 mkdir -p tmp && chmod 777 tmp -R
 cd || exit
