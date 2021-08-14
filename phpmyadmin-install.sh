@@ -5,7 +5,9 @@ PHPMYADMIN=5.1.1
 DIR=/var/www/pterodactyl
 
 if [ -d "$DIR" ]; then
-echo "The default directory exists, proceeding with the installation..."
+echo "******************************************************************"
+echo "* The default directory exists, proceeding with the installation...*"
+echo "******************************************************************"
 cd /var/www/pterodactyl/public || exit
 mkdir -p phpmyadmin
 cd phpmyadmin || exit
@@ -19,7 +21,9 @@ cp config.sample.inc.php config.inc.php
 rm -R config.sample.inc.php
 cd /var/www/pterodactyl/public/phpmyadmin || exit
 else
-echo "Default directory does not exist, aborting!"
+echo "**********************************************"
+echo "* Default directory does not exist, aborting!*"
+echo "**********************************************"
 exit 1
 fi
 
