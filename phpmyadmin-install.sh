@@ -9,7 +9,7 @@ echo "********************************************************************"
 echo "* The default directory exists, proceeding with the installation...*"
 echo "********************************************************************"
 cd /var/www/pterodactyl/public || exit
-mkdir -p phpmyadmin
+mkdir -p phpmyadmin && chown www-data.www-data /var/www/pterodactyl/public/phpmyadmin -R
 cd phpmyadmin || exit
 wget https://files.phpmyadmin.net/phpMyAdmin/${PHPMYADMIN}/phpMyAdmin-${PHPMYADMIN}-all-languages.tar.gz
 tar -xzvf phpMyAdmin-${PHPMYADMIN}-all-languages.tar.gz
@@ -20,6 +20,11 @@ rm -R phpMyAdmin-${PHPMYADMIN}-all-languages phpMyAdmin-${PHPMYADMIN}-all-langua
 cp config.sample.inc.php config.inc.php
 rm -R config.sample.inc.php
 cd /var/www/pterodactyl/public/phpmyadmin || exit
+mkdir -p tmp && chmod 777 tmp -R
+cd || exit
+mkdir -p /etc/phpmyadmin && chown www-data.www-data /etc/phpmyadmin -R && chmod 660 /etc/phpmyadmin -R
+cd /etc/phpmyadmin || exit
+mkdir -p tmp upload save
 else
 echo "***************************************************************"
 echo "* You don't have the panel installed, please install it first!*"
