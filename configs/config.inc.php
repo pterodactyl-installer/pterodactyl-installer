@@ -16,8 +16,8 @@ declare(strict_types=1);
 $cfg['blowfish_secret'] = '<secret-word>'; /* YOU MUST FILL IN THIS FOR COOKIE AUTH! */
 $cfg['Servers'][$i]['controlhost'] = 'localhost';
 $cfg['Servers'][$i]['controlport'] = '3306';
-$cfg['Servers'][$i]['controluser'] = '<db-user>';
-$cfg['Servers'][$i]['controlpass'] = '<db-pass>';
+#$cfg['Servers'][$i]['controluser'] = '<db-user>';
+#$cfg['Servers'][$i]['controlpass'] = '<db-pass>';
 $cfg['UploadDir'] = 'etc/phpmyadmin/upload';
 $cfg['SaveDir'] = 'etc/phpmyadmin/save';
 
