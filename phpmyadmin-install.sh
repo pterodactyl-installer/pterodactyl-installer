@@ -5,9 +5,9 @@ PHPMYADMIN=5.1.1
 DIR=/var/www/pterodactyl
 
 if [ -d "$DIR" ]; then
-echo "******************************************************************"
+echo "********************************************************************"
 echo "* The default directory exists, proceeding with the installation...*"
-echo "******************************************************************"
+echo "********************************************************************"
 cd /var/www/pterodactyl/public || exit
 mkdir -p phpmyadmin
 cd phpmyadmin || exit
