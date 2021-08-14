@@ -61,5 +61,9 @@ mysql -u root -e "GRANT ALL PRIVILEGES ON phpmyadmin.* TO '${MYSQL_USER}'@'%' WI
 echo "* Flush privileges..."
 mysql -u root -e "FLUSH PRIVILEGES;"
 
+#### Restart MySQL Service ####
+
+systemctl restart mysql
+
 echo "* MySQL user created and configured successfully!"
 echo "**************************************************"
