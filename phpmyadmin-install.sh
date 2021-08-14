@@ -58,7 +58,7 @@ read -r MYSQL_DATABASE_INPUT
 [ -z "$MYSQL_DATABASE_INPUT" ] && MYSQL_DATABASE="phpmyadmin" || MYSQL_DATABASE=$MYSQL_DATABASE_INPUT
 
 echo
-echo -n "* Password (phpmyadminuser2021)"
+echo -n "* Password (phpmyadminuser2021): "
 read -r MYSQL_PASS_INPUT
 [ -z "$MYSQL_PASS_INPUT" ] && MYSQL_PASS="phpmyadminuser2021" || MYSQL_PASS=$MYSQL_PASS_INPUT
 echo
