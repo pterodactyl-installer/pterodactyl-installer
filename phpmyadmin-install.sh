@@ -34,7 +34,7 @@ MYSQL_PASS="phpmyadminuser2021"
 
 #### Create MySQL User ####
 
-echo "Let's create a login user on the phpMyAdmin page."
+echo "* Let's create a login user on the phpMyAdmin page."
 echo
 echo -n "* Username (default > admin): "
 read -r MYSQL_USER_INPUT
@@ -62,6 +62,7 @@ mysql -u root -e "FLUSH PRIVILEGES;"
 
 #### Restart MySQL Service ####
 
+echo "* Restarting MySQL..."
 systemctl restart mysql
 
 echo "* MySQL user created and configured successfully!"
