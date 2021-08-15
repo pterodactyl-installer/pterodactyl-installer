@@ -26,7 +26,6 @@ cp -R -- * /var/www/pterodactyl/public/phpmyadmin
 cd .. || exit
 rm -R phpMyAdmin-${PHPMYADMIN}-all-languages phpMyAdmin-${PHPMYADMIN}-all-languages.tar.gz config.sample.inc.php
 curl -o /var/www/pterodactyl/public/phpmyadmin/config.inc.php $GITHUB_BASE_URL/configs/config.inc.php
-cd /var/www/pterodactyl/public/phpmyadmin || exit
 mkdir -p tmp && chmod 777 tmp -R
 cd || exit
 mkdir -p /etc/phpmyadmin && chown www-data.www-data /etc/phpmyadmin -R && chmod 660 /etc/phpmyadmin -R
