@@ -109,7 +109,6 @@ systemctl restart mysql
 
 echo "* MySQL user created and configured successfully!"
 echo
-echo "* Thanks for using this script, goodbye."
 echo "**************************************************"
 }
 
@@ -148,7 +147,7 @@ echo
 echo "Run this command: nano /var/www/pterodactyl/public/phpmyadmin/config.inc.php"
 echo "and on line 16, replace 'YOUR-SECRET-WORD-HERE!' By your generated key."
 echo
-echo "Also save your database name and password you chose at installation, and on lines 19 and 20, the correct data."
+echo "Also save your username and password you chose at installation, and on lines 19 and 20, the correct data."
 echo
 echo
 echo "Thanks for using this script, goodbye."
