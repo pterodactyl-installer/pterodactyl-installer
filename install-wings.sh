@@ -446,7 +446,7 @@ ask_database_user() {
   fi
 }
 
-configure_database() {
+configure_mysql() {
   echo "* Performing MySQL queries.."
 
   echo "* Creating MySQL user..."
@@ -579,7 +579,7 @@ perform_install() {
   ptdl_dl
   systemd_file
   [ "$INSTALL_MARIADB" == true ] && install_mariadb
-  [ "$CONFIGURE_DBHOST" == true ] && create_database
+  [ "$CONFIGURE_DBHOST" == true ] && configure_mysql
   [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
 
   # return true if script has made it this far
