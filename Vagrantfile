@@ -15,6 +15,10 @@ Vagrant.configure("2") do |config|
   end
 
   # debian
+  config.vm.define "debian_bullseye" do |debian_bullseye|
+    debian_bullseye.vm.box = "debian/bullseye64"
+  end
+
   config.vm.define "debian_buster" do |debian_buster|
     debian_buster.vm.box = "debian/buster64"
   end
