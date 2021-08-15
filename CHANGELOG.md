@@ -6,6 +6,7 @@ This project follows the [semantic versioning](https://semver.org) convention. C
 
 ### Added
 
+- [#220](https://github.com/vilhelmprytz/pterodactyl-installer/issues/220) wings: Add a feature that lets the user automatically create a user for "database host" (thanks [@sinjs](https://github.com/sinjs) for contributing!).
 - [#230](https://github.com/vilhelmprytz/pterodactyl-installer/issues/230) panel/wings: Added support for Debian 11 (bullseye) (thanks [@Linux123123](https://github.com/Linux123123) for contributing!).
 
 ## v0.7.1 (released on 2021-07-31)
