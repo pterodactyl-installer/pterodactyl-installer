@@ -167,7 +167,9 @@ rm_panel_files() {
   rm -rf /var/www/pterodactyl /usr/local/bin/composer
   [ "$OS" != "centos" ] && unlink /etc/nginx/sites-enabled/pterodactyl.conf
   [ "$OS" != "centos" ] && rm -f /etc/nginx/sites-available/pterodactyl.conf
+  [ "$OS" != "centos" ] && ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
   [ "$OS" == "centos" ] && rm -f /etc/nginx/conf.d/pterodactyl.conf
+  systemctl restart nginx
   output "Succesfully removed panel files."
 }
 
