@@ -173,6 +173,11 @@ rm_panel_files() {
 
 rm_wings_files() {
   output "Removing wings files..."
+
+  # stop and remove wings service
+  systemctl disable --now wings
+  rm -rf /etc/systemd/system/wings.service
+
   rm -rf /etc/pterodactyl /usr/local/bin/wings /var/lib/pterodactyl
   output "Succesfully removed wings files."
 }
