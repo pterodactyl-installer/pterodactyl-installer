@@ -24,6 +24,8 @@ $cfg['SaveDir'] = 'etc/phpmyadmin/save';
 /**
  * Servers configuration
  */
+
+$cfg['Servers'] = [];
 $i = 0;
 
 /**
