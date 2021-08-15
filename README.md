@@ -35,6 +35,7 @@ List of supported installation setups for panel and Wings (installations support
 | Debian           | 8       | :red_circle: \*    |             |
 |                  | 9       | :white_check_mark: | 8.0         |
 |                  | 10      | :white_check_mark: | 8.0         |
+|                  | 11      | :red_circle: \*\*  |             |
 | CentOS           | 6       | :red_circle:       |             |
 |                  | 7       | :white_check_mark: | 8.0         |
 |                  | 8       | :white_check_mark: | 8.0         |
@@ -50,11 +51,14 @@ List of supported installation setups for panel and Wings (installations support
 | Debian           | 8       | :red_circle:       |
 |                  | 9       | :white_check_mark: |
 |                  | 10      | :white_check_mark: |
+|                  | 11      | :red_circle: \*\*  |
 | CentOS           | 6       | :red_circle:       |
 |                  | 7       | :white_check_mark: |
 |                  | 8       | :white_check_mark: |
 
 _\* Ubuntu 16 and Debian 8 no longer supported since Pterodactyl does not actively support it._
+
+_\*\* Support for Debian 11 is planned._
 
 ## Using the installation scripts
 
