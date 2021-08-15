@@ -2,6 +2,12 @@
 
 This project follows the [semantic versioning](https://semver.org) convention. Changelog points should be divided into fixed, changed, or added.
 
+## next-release
+
+### Added
+
+- [#230](https://github.com/vilhelmprytz/pterodactyl-installer/issues/230) panel/wings: Added support for Debian 11 (bullseye) (thanks [@Linux123123](https://github.com/Linux123123) for contributing!).
+
 ## v0.7.1 (released on 2021-07-31)
 
 ### Fixed
