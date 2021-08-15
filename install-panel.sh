@@ -322,6 +322,7 @@ check_os_comp() {
     PHP_SOCKET="/run/php/php8.0-fpm.sock"
     [ "$OS_VER_MAJOR" == "9" ] && SUPPORTED=true
     [ "$OS_VER_MAJOR" == "10" ] && SUPPORTED=true
+    [ "$OS_VER_MAJOR" == "11" ] && SUPPORTED=true
     ;;
   centos)
     PHP_SOCKET="/var/run/php-fpm/pterodactyl.sock"
@@ -614,7 +615,7 @@ debian_stretch_dep() {
   echo "* Dependencies for Debian 8/9 installed!"
 }
 
-debian_dep() {
+debian_buster_dep() {
   echo "* Installing dependencies for Debian 10.."
 
   # MariaDB need dirmngr
@@ -636,6 +637,30 @@ debian_dep() {
   enable_services_debian_based
 
   echo "* Dependencies for Debian 10 installed!"
+}
+
+debian_dep() {
+  echo "* Installing dependencies for Debian 11.."
+
+  # MariaDB need dirmngr
+  apt -y install dirmngr
+
+  # install PHP 8.0 using sury's repo instead of default 7.2 package (in buster repo)
+  # this guide shows how: https://vilhelmprytz.se/2018/08/22/install-php72-on-Debian-8-and-9.html
+  apt install ca-certificates apt-transport-https lsb-release -y
+  wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
+  echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/php.list
+
+  # Update repositories list
+  apt_update
+
+  # install dependencies
+  apt -y install php8.0 php8.0-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server cron
+
+  # Enable services
+  enable_services_debian_based
+
+  echo "* Dependencies for Debian 11 installed!"
 }
 
 centos7_dep() {
@@ -840,7 +865,8 @@ perform_install() {
       [ "$OS_VER_MAJOR" == "18" ] && ubuntu18_dep
     elif [ "$OS" == "debian" ]; then
       [ "$OS_VER_MAJOR" == "9" ] && debian_stretch_dep
-      [ "$OS_VER_MAJOR" == "10" ] && debian_dep
+      [ "$OS_VER_MAJOR" == "10" ] && debian_buster_dep
+      [ "$OS_VER_MAJOR" == "11" ] && debian_dep
     fi
     ;;
 

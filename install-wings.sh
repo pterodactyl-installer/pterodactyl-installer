@@ -200,6 +200,7 @@ check_os_comp() {
   debian)
     [ "$OS_VER_MAJOR" == "9" ] && SUPPORTED=true
     [ "$OS_VER_MAJOR" == "10" ] && SUPPORTED=true
+    [ "$OS_VER_MAJOR" == "11" ] && SUPPORTED=true
     ;;
   centos)
     [ "$OS_VER_MAJOR" == "7" ] && SUPPORTED=true

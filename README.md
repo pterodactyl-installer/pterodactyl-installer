@@ -11,10 +11,10 @@ Read more about [Pterodactyl](https://pterodactyl.io/) here. This script is not 
 
 ## Features
 
-- Automatic installation of the Pterodactyl Panel (dependencies, database, cronjob, nginx).
-- Automatic installation of the Pterodactyl Wings (Docker, systemd).
-- Panel: (optional) automatic configuration of Let's Encrypt.
-- Panel: (optional) automatic configuration of UFW (firewall for Ubuntu/Debian).
+-   Automatic installation of the Pterodactyl Panel (dependencies, database, cronjob, nginx).
+-   Automatic installation of the Pterodactyl Wings (Docker, systemd).
+-   Panel: (optional) automatic configuration of Let's Encrypt.
+-   Panel: (optional) automatic configuration of Firwall.
 
 ## Help and support
 
@@ -35,7 +35,7 @@ List of supported installation setups for panel and Wings (installations support
 | Debian           | 8       | :red_circle: \*    |             |
 |                  | 9       | :white_check_mark: | 8.0         |
 |                  | 10      | :white_check_mark: | 8.0         |
-|                  | 11      | :red_circle: \*\*  |             |
+|                  | 11      | :white_check_mark: | 8.0         |
 | CentOS           | 6       | :red_circle:       |             |
 |                  | 7       | :white_check_mark: | 8.0         |
 |                  | 8       | :white_check_mark: | 8.0         |
@@ -51,14 +51,12 @@ List of supported installation setups for panel and Wings (installations support
 | Debian           | 8       | :red_circle:       |
 |                  | 9       | :white_check_mark: |
 |                  | 10      | :white_check_mark: |
-|                  | 11      | :red_circle: \*\*  |
+|                  | 11      | :white_check_mark: |
 | CentOS           | 6       | :red_circle:       |
 |                  | 7       | :white_check_mark: |
 |                  | 8       | :white_check_mark: |
 
 _\* Ubuntu 16 and Debian 8 no longer supported since Pterodactyl does not actively support it._
-
-_\*\* Support for Debian 11 is planned._
 
 ## Using the installation scripts
 
@@ -96,12 +94,13 @@ vagrant up <name>
 
 Replace name with one of the following (supported installations).
 
-- `ubuntu_focal`
-- `ubuntu_bionic`
-- `debian_buster`
-- `debian_stretch`
-- `centos_8`
-- `centos_7`
+-   `ubuntu_focal`
+-   `ubuntu_bionic`
+-   `debian_bullseye`
+-   `debian_buster`
+-   `debian_stretch`
+-   `centos_8`
+-   `centos_7`
 
 Then you can use `vagrant ssh <name of machine>` to SSH into the box. The project directory will be mounted in `/vagrant` so you can quickly modify the script locally and then test the changes by running the script from `/vagrant/install_panel.sh` and `/vagrant/install_wings.sh` respectively.
 
