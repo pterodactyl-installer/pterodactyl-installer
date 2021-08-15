@@ -11,10 +11,10 @@ Read more about [Pterodactyl](https://pterodactyl.io/) here. This script is not 
 
 ## Features
 
--   Automatic installation of the Pterodactyl Panel (dependencies, database, cronjob, nginx).
--   Automatic installation of the Pterodactyl Wings (Docker, systemd).
--   Panel: (optional) automatic configuration of Let's Encrypt.
--   Panel: (optional) automatic configuration of Firwall.
+- Automatic installation of the Pterodactyl Panel (dependencies, database, cronjob, nginx).
+- Automatic installation of the Pterodactyl Wings (Docker, systemd).
+- Panel: (optional) automatic configuration of Let's Encrypt.
+- Panel: (optional) automatic configuration of Firewall.
 
 ## Help and support
 
