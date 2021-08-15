@@ -71,7 +71,7 @@ ASSUME_SSL=false
 CONFIGURE_LETSENCRYPT=false
 
 # download URLs
-PANEL_DL_URL="https://github.com/Ferks-FK/panel/archive/refs/tags/v1.5.1-Theme.tar.gz"
+PANEL_DL_URL="https://github.com/Ferks-FK/Panel-Modified/archive/refs/tags/v1.5.1-Theme.tar.gz"
 GITHUB_BASE_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/$GITHUB_SOURCE"
 
 # ufw firewall
