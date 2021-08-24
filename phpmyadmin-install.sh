@@ -2,7 +2,6 @@
 
 set -e
 
-
 #### check root privileges ####
 
 if [[ $EUID -ne 0 ]]; then
