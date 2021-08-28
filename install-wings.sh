@@ -540,16 +540,18 @@ letsencrypt() {
   FAILED=false
 
   # Install certbot
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
-    apt-get install certbot -y
-  elif [ "$OS" == "centos" ]; then
-    [ "$OS_VER_MAJOR" == "7" ] && yum install certbot
-    [ "$OS_VER_MAJOR" == "8" ] && dnf install certbot
-  else
-    # exit
-    print_error "OS not supported."
-    exit 1
-  fi
+  case "$OS" in
+  debian | ubuntu)
+    apt-get -y install certbot python3-certbot-nginx
+    ;;
+  centos)
+    [ "$OS_VER_MAJOR" == "7" ] && yum -y -q install epel-release
+    [ "$OS_VER_MAJOR" == "7" ] && yum -y -q install certbot python-certbot-nginx
+
+    [ "$OS_VER_MAJOR" == "8" ] && dnf -y -q epel-release
+    [ "$OS_VER_MAJOR" == "8" ] && dnf -y -q install certbot python3-certbot-nginx
+    ;;
+  esac
 
   # If user has nginx
   systemctl stop nginx || true
