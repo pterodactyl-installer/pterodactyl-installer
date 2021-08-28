@@ -2,6 +2,12 @@
 
 This project follows the [semantic versioning](https://semver.org) convention. Changelog points should be divided into fixed, changed, or added.
 
+## next-release
+
+### Fixed
+
+- [#238](https://github.com/vilhelmprytz/pterodactyl-installer/issues/238) panel: Fixed a bug that would cause the installation script to fail on CentOS 8 because of invalid reference to `mariadb-secure-installation`.
+
 ## v0.8.0 (released on 2021-08-28)
 
 ### Added
