@@ -548,7 +548,7 @@ letsencrypt() {
     [ "$OS_VER_MAJOR" == "7" ] && yum -y -q install epel-release
     [ "$OS_VER_MAJOR" == "7" ] && yum -y -q install certbot python-certbot-nginx
 
-    [ "$OS_VER_MAJOR" == "8" ] && dnf -y -q epel-release
+    [ "$OS_VER_MAJOR" == "8" ] && dnf -y -q install epel-release
     [ "$OS_VER_MAJOR" == "8" ] && dnf -y -q install certbot python3-certbot-nginx
     ;;
   esac
