@@ -1,5 +1,4 @@
 #!/bin/bash
-# shellcheck disable=SC2034
 
 set -e
 
@@ -59,8 +58,8 @@ error() {
 }
 
 execute() {
-  eval "bash <(curl -s \$$1) | tee -a /var/log/pterodactyl-installer.log"
-  [[ -n ${2} ]] && execute "$2"
+  bash <(curl -s "$1") | tee -a /var/log/pterodactyl-installer.log
+  [[ -n $2 ]] && execute "$2"
 }
 
 done=false
@@ -103,17 +102,17 @@ while [ "$done" == false ]; do
   )
 
   actions=(
-    "PANEL_LATEST"
-    "WINGS_LATEST"
-    "PANEL_LATEST;WINGS_LATEST"
+    "$PANEL_LATEST"
+    "$WINGS_LATEST"
+    "$PANEL_LATEST;$WINGS_LATEST"
 
-    "PANEL_LEGACY"
-    "WINGS_LEGACY"
-    "PANEL_LEGACY;WINGS_LEGACY"
+    "$PANEL_LEGACY"
+    "$WINGS_LEGACY"
+    "$PANEL_LEGACY;$WINGS_LEGACY"
 
-    "PANEL_CANARY"
-    "WINGS_CANARY"
-    "PANEL_CANARY;WINGS_CANARY"
+    "$PANEL_CANARY"
+    "$WINGS_CANARY"
+    "$PANEL_CANARY;$WINGS_CANARY"
   )
 
   output "What would you like to do?"
