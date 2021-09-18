@@ -31,6 +31,8 @@ set -e
 SCRIPT_VERSION="v0.8.1"
 GITHUB_BASE_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer"
 
+LOG_PATH="/var/log/pterodactyl-installer.log"
+
 # exit with error status code if user is not root
 if [[ $EUID -ne 0 ]]; then
   echo "* This script must be executed with root privileges (sudo)." 1>&2
@@ -58,7 +60,9 @@ error() {
 }
 
 execute() {
-  bash <(curl -s "$1") | tee -a /var/log/pterodactyl-installer.log
+  echo -e "\n\n* pterodactyl-installer $(date) \n\n" > $LOG_PATH
+
+  bash <(curl -s "$1") | tee -a $LOG_PATH
   [[ -n $2 ]] && execute "$2"
 }
 
