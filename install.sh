@@ -60,7 +60,7 @@ error() {
 }
 
 execute() {
-  echo -e "\n\n* pterodactyl-installer $(date) \n\n" > $LOG_PATH
+  echo -e "\n\n* pterodactyl-installer $(date) \n\n" >> $LOG_PATH
 
   bash <(curl -s "$1") | tee -a $LOG_PATH
   [[ -n $2 ]] && execute "$2"
