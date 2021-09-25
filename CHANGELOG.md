@@ -4,6 +4,10 @@ This project follows the [semantic versioning](https://semver.org) convention. C
 
 ## next-release
 
+### Added
+
+- [#249](https://github.com/vilhelmprytz/pterodactyl-installer/issues/249) install: Automatically log installation process to `/var/log/pterodactyl-installer.log` (thanks [@Linux123123](https://github.com/Linux123123) for contributing!).
+
 ### Fixed
 
 - [#229](https://github.com/vilhelmprytz/pterodactyl-installer/issues/229) wings: Fixed a bug that would cause the process of obtaining a Let's Encrypt certificate to fail on CentOS 7 and CentOS 8 due to the missing `epel-release` package (thanks [@Linux123123](https://github.com/Linux123123) for reporting!).
