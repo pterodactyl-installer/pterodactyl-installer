@@ -293,7 +293,7 @@ check_os_comp() {
   virt_serv=$(virt-what)
 
   case "$virt_serv" in
-  *openvz* | *lxc*)
+  *openvz* )
     print_warning "Unsupported type of virtualization detected. Please consult with your hosting provider whether your server can run Docker or not. Proceed at your own risk."
     echo -e -n "* Are you sure you want to proceed? (y/N): "
     read -r CONFIRM_PROCEED
