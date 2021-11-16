@@ -11,6 +11,7 @@ This project follows the [semantic versioning](https://semver.org) convention. C
 ### Fixed
 
 - [#229](https://github.com/vilhelmprytz/pterodactyl-installer/issues/229) wings: Fixed a bug that would cause the process of obtaining a Let's Encrypt certificate to fail on CentOS 7 and CentOS 8 due to the missing `epel-release` package (thanks [@Linux123123](https://github.com/Linux123123) for reporting!).
+- [#264](https://github.com/vilhelmprytz/pterodactyl-installer/pull/264) install: Fix incorrectly labeled setup option (thanks [@NoahvdAa](https://github.com/NoahvdAa) for contributing!).
 
 ## v0.8.1 (released on 2021-08-28)
 
