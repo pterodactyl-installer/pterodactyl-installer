@@ -99,6 +99,24 @@ valid_email() {
   [[ $1 =~ ${regex} ]]
 }
 
+required_input() {
+  local __resultvar=$1
+  local result=''
+
+  while [ -z "$result" ]; do
+    echo -n "* ${2}"
+    read -r result
+
+    if [ -z "${3}" ]; then
+      [ -z "$result" ] && result="${4}"
+    else
+      [ -z "$result" ] && print_error "${3}"
+    fi
+  done
+
+  eval "$__resultvar="'$result'""
+}
+
 password_input() {
   local __resultvar=$1
   local result=''
@@ -639,10 +657,11 @@ main() {
       INSTALL_MARIADB=true
     fi
 
-    echo -n "* Database host username (pterodactyluser): "
-    read -r MYSQL_DBHOST_USER_INPUT
-
-    [ -z "$MYSQL_DBHOST_USER_INPUT" ] || MYSQL_DBHOST_USER=$MYSQL_DBHOST_USER_INPUT
+    MYSQL_DBHOST_USER="-"
+    while [[ "$MYSQL_DBHOST_USER" == *"-"* ]]; do
+      required_input MYSQL_DBHOST_USER "Database host username (pterodactyluser): " "" "pterodactyluser"
+      [[ "$MYSQL_DBHOST_USER" == *"-"* ]] && print_error "Database user cannot contain hyphens"
+    done
 
     password_input MYSQL_DBHOST_PASSWORD "Database host password: " "Password cannot be empty"
   fi
