@@ -2,6 +2,31 @@
 
 This project follows the [semantic versioning](https://semver.org) convention. Changelog points should be divided into fixed, changed, or added.
 
+## v0.9.0 (released on 2021-12-05)
+
+### Added
+
+- [#249](https://github.com/vilhelmprytz/pterodactyl-installer/issues/249) install: Automatically log installation process to `/var/log/pterodactyl-installer.log` (thanks [@Linux123123](https://github.com/Linux123123) for contributing!).
+
+### Fixed
+
+- [#229](https://github.com/vilhelmprytz/pterodactyl-installer/issues/229) wings: Fixed a bug that would cause the process of obtaining a Let's Encrypt certificate to fail on CentOS 7 and CentOS 8 due to the missing `epel-release` package (thanks [@Linux123123](https://github.com/Linux123123) for reporting!).
+- [#264](https://github.com/vilhelmprytz/pterodactyl-installer/pull/264) install: Fix incorrectly labeled setup option (thanks [@NoahvdAa](https://github.com/NoahvdAa) for contributing!).
+- [#266](https://github.com/vilhelmprytz/pterodactyl-installer/issues/266) panel/wings: Usage of hyphens in database names/usernames is not supported by the script. The script now checks if the credentials provided by the user contain a hyphen (thanks [@GoudronViande24](https://github.com/GoudronViande24) for reporting!).
+
+## v0.8.1 (released on 2021-08-28)
+
+### Fixed
+
+- [#238](https://github.com/vilhelmprytz/pterodactyl-installer/issues/238) panel: Fixed a bug that would cause the installation script to fail on CentOS 8 because of invalid reference to `mariadb-secure-installation`.
+
+## v0.8.0 (released on 2021-08-28)
+
+### Added
+
+- [#220](https://github.com/vilhelmprytz/pterodactyl-installer/issues/220) wings: Add a feature that lets the user automatically create a user for "database host" (thanks [@sinjs](https://github.com/sinjs) for contributing!).
+- [#230](https://github.com/vilhelmprytz/pterodactyl-installer/issues/230) panel/wings: Added support for Debian 11 (bullseye) (thanks [@Linux123123](https://github.com/Linux123123) for contributing!).
+
 ## v0.7.1 (released on 2021-07-31)
 
 ### Fixed

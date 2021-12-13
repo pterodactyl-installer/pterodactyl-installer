@@ -152,7 +152,11 @@ required_input() {
     echo -n "* ${2}"
     read -r result
 
-    [ -z "$result" ] && print_error "${3}"
+    if [ -z "${3}" ]; then
+      [ -z "$result" ] && result="${4}"
+    else
+      [ -z "$result" ] && print_error "${3}"
+    fi
   done
 
   eval "$__resultvar="'$result'""
@@ -322,6 +326,7 @@ check_os_comp() {
     PHP_SOCKET="/run/php/php8.0-fpm.sock"
     [ "$OS_VER_MAJOR" == "9" ] && SUPPORTED=true
     [ "$OS_VER_MAJOR" == "10" ] && SUPPORTED=true
+    [ "$OS_VER_MAJOR" == "11" ] && SUPPORTED=true
     ;;
   centos)
     PHP_SOCKET="/var/run/php-fpm/pterodactyl.sock"
@@ -382,7 +387,8 @@ create_database() {
     echo "* Reload privilege tables now? [Y/n] Y"
     echo "*"
 
-    mariadb-secure-installation
+    [ "$OS_VER_MAJOR" == "7" ] && mariadb-secure-installation
+    [ "$OS_VER_MAJOR" == "8" ] && mysql_secure_installation
 
     echo "* The script should have asked you to set the MySQL root password earlier (not to be confused with the pterodactyl database user password)"
     echo "* MySQL will now ask you to enter the password before each command."
@@ -614,7 +620,7 @@ debian_stretch_dep() {
   echo "* Dependencies for Debian 8/9 installed!"
 }
 
-debian_dep() {
+debian_buster_dep() {
   echo "* Installing dependencies for Debian 10.."
 
   # MariaDB need dirmngr
@@ -636,6 +642,30 @@ debian_dep() {
   enable_services_debian_based
 
   echo "* Dependencies for Debian 10 installed!"
+}
+
+debian_dep() {
+  echo "* Installing dependencies for Debian 11.."
+
+  # MariaDB need dirmngr
+  apt -y install dirmngr
+
+  # install PHP 8.0 using sury's repo instead of default 7.2 package (in buster repo)
+  # this guide shows how: https://vilhelmprytz.se/2018/08/22/install-php72-on-Debian-8-and-9.html
+  apt install ca-certificates apt-transport-https lsb-release -y
+  wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
+  echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/php.list
+
+  # Update repositories list
+  apt_update
+
+  # install dependencies
+  apt -y install php8.0 php8.0-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server cron
+
+  # Enable services
+  enable_services_debian_based
+
+  echo "* Dependencies for Debian 11 installed!"
 }
 
 centos7_dep() {
@@ -840,7 +870,8 @@ perform_install() {
       [ "$OS_VER_MAJOR" == "18" ] && ubuntu18_dep
     elif [ "$OS" == "debian" ]; then
       [ "$OS_VER_MAJOR" == "9" ] && debian_stretch_dep
-      [ "$OS_VER_MAJOR" == "10" ] && debian_dep
+      [ "$OS_VER_MAJOR" == "10" ] && debian_buster_dep
+      [ "$OS_VER_MAJOR" == "11" ] && debian_dep
     fi
     ;;
 
@@ -907,15 +938,17 @@ main() {
   echo "* before running this script, the script will do that for you."
   echo ""
 
-  echo -n "* Database name (panel): "
-  read -r MYSQL_DB_INPUT
+  MYSQL_DB="-"
+  while [[ "$MYSQL_DB" == *"-"* ]]; do
+    required_input MYSQL_DB "Database name (panel): " "" "panel"
+    [[ "$MYSQL_DB" == *"-"* ]] && print_error "Database name cannot contain hyphens"
+  done
 
-  [ -z "$MYSQL_DB_INPUT" ] && MYSQL_DB="panel" || MYSQL_DB=$MYSQL_DB_INPUT
-
-  echo -n "* Username (pterodactyl): "
-  read -r MYSQL_USER_INPUT
-
-  [ -z "$MYSQL_USER_INPUT" ] && MYSQL_USER="pterodactyl" || MYSQL_USER=$MYSQL_USER_INPUT
+  MYSQL_USER="-"
+  while [[ "$MYSQL_USER" == *"-"* ]]; do
+    required_input MYSQL_USER "Database username (pterodactyl): " "" "pterodactyl"
+    [[ "$MYSQL_USER" == *"-"* ]] && print_error "Database user cannot contain hyphens"
+  done
 
   # MySQL password input
   rand_pw=$(

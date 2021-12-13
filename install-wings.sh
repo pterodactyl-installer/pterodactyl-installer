@@ -72,6 +72,11 @@ CONFIGURE_LETSENCRYPT=false
 FQDN=""
 EMAIL=""
 
+# Database host
+CONFIGURE_DBHOST=false
+MYSQL_DBHOST_USER="pterodactyluser"
+MYSQL_DBHOST_PASSWORD="password"
+
 # regex for email input
 regex="^(([A-Za-z0-9]+((\.|\-|\_|\+)?[A-Za-z0-9]?)*[A-Za-z0-9]+)|[A-Za-z0-9]+)@(([A-Za-z0-9]+)+((\.|\-|\_)?([A-Za-z0-9]+)+)*)+\.([A-Za-z]{2,})+$"
 
@@ -92,6 +97,60 @@ WINGS_VERSION="$(get_latest_release "pterodactyl/wings")"
 
 valid_email() {
   [[ $1 =~ ${regex} ]]
+}
+
+required_input() {
+  local __resultvar=$1
+  local result=''
+
+  while [ -z "$result" ]; do
+    echo -n "* ${2}"
+    read -r result
+
+    if [ -z "${3}" ]; then
+      [ -z "$result" ] && result="${4}"
+    else
+      [ -z "$result" ] && print_error "${3}"
+    fi
+  done
+
+  eval "$__resultvar="'$result'""
+}
+
+password_input() {
+  local __resultvar=$1
+  local result=''
+  local default="$4"
+
+  while [ -z "$result" ]; do
+    echo -n "* ${2}"
+
+    # modified from https://stackoverflow.com/a/22940001
+    while IFS= read -r -s -n1 char; do
+      [[ -z $char ]] && {
+        printf '\n'
+        break
+      }                               # ENTER pressed; output \n and break.
+      if [[ $char == $'\x7f' ]]; then # backspace was pressed
+        # Only if variable is not empty
+        if [ -n "$result" ]; then
+          # Remove last char from output variable.
+          [[ -n $result ]] && result=${result%?}
+          # Erase '*' to the left.
+          printf '\b \b'
+        fi
+      else
+        # Add typed char to output variable.
+        result+=$char
+        # Print '*' in its stead.
+        printf '*'
+      fi
+    done
+    [ -z "$result" ] && [ -n "$default" ] && result="$default"
+    [ -z "$result" ] && print_error "${3}"
+  done
+
+  eval "$__resultvar="'$result'""
 }
 
 #################################
@@ -200,6 +259,7 @@ check_os_comp() {
   debian)
     [ "$OS_VER_MAJOR" == "9" ] && SUPPORTED=true
     [ "$OS_VER_MAJOR" == "10" ] && SUPPORTED=true
+    [ "$OS_VER_MAJOR" == "11" ] && SUPPORTED=true
     ;;
   centos)
     [ "$OS_VER_MAJOR" == "7" ] && SUPPORTED=true
@@ -396,6 +456,40 @@ install_mariadb() {
   systemctl start mariadb
 }
 
+ask_database_user() {
+  echo -n "* Do you want to automatically configure a user for database hosts? (y/N): "
+  read -r CONFIRM_DBHOST
+
+  if [[ "$CONFIRM_DBHOST" =~ [Yy] ]]; then
+    CONFIGURE_DBHOST=true
+  fi
+}
+
+configure_mysql() {
+  echo "* Performing MySQL queries.."
+
+  echo "* Creating MySQL user..."
+  mysql -u root -e "CREATE USER '${MYSQL_DBHOST_USER}'@'127.0.0.1' IDENTIFIED BY '${MYSQL_DBHOST_PASSWORD}';"
+
+  echo "* Granting privileges.."
+  mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO '${MYSQL_DBHOST_USER}'@'127.0.0.1' WITH GRANT OPTION;"
+
+  echo "* Flushing privileges.."
+  mysql -u root -e "FLUSH PRIVILEGES;"
+
+  echo "* Changing MySQL bind address.."
+  case "$OS" in
+  debian | ubuntu)
+    sed -ne 's/^bind-address            = 127.0.0.1$/bind-address=0.0.0.0/' /etc/mysql/mariadb.conf.d/50-server.cnf
+    ;;
+  centos)
+    sed -ne 's/^#bind-address=0.0.0.0$/bind-address=0.0.0.0/' /etc/my.cnf.d/mariadb-server.cnf
+    ;;
+  esac
+
+  echo "* MySQL configured!"
+}
+
 #################################
 ##### OS SPECIFIC FUNCTIONS #####
 #################################
@@ -464,16 +558,18 @@ letsencrypt() {
   FAILED=false
 
   # Install certbot
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
-    apt-get install certbot -y
-  elif [ "$OS" == "centos" ]; then
-    [ "$OS_VER_MAJOR" == "7" ] && yum install certbot
-    [ "$OS_VER_MAJOR" == "8" ] && dnf install certbot
-  else
-    # exit
-    print_error "OS not supported."
-    exit 1
-  fi
+  case "$OS" in
+  debian | ubuntu)
+    apt-get -y install certbot python3-certbot-nginx
+    ;;
+  centos)
+    [ "$OS_VER_MAJOR" == "7" ] && yum -y -q install epel-release
+    [ "$OS_VER_MAJOR" == "7" ] && yum -y -q install certbot python-certbot-nginx
+
+    [ "$OS_VER_MAJOR" == "8" ] && dnf -y -q install epel-release
+    [ "$OS_VER_MAJOR" == "8" ] && dnf -y -q install certbot python3-certbot-nginx
+    ;;
+  esac
 
   # If user has nginx
   systemctl stop nginx || true
@@ -504,6 +600,7 @@ perform_install() {
   ptdl_dl
   systemd_file
   [ "$INSTALL_MARIADB" == true ] && install_mariadb
+  [ "$CONFIGURE_DBHOST" == true ] && configure_mysql
   [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
 
   # return true if script has made it this far
@@ -551,12 +648,23 @@ main() {
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: this script will not enable swap (for docker)."
   print_brake 42
 
-  # Only ask if MySQL is not detected
-  type mysql >/dev/null 2>&1 && ASK_MYSQL=false || ASK_MYSQL=true
+  ask_database_user
 
-  $ASK_MYSQL && echo -n "* Would you like to install MariaDB (MySQL) server on the daemon as well? (y/N): "
-  $ASK_MYSQL && read -r CONFIRM_INSTALL_MARIADB
-  $ASK_MYSQL && [[ "$CONFIRM_INSTALL_MARIADB" =~ [Yy] ]] && INSTALL_MARIADB=true
+  if [ "$CONFIGURE_DBHOST" == true ]; then
+    type mysql >/dev/null 2>&1 && HAS_MYSQL=true || HAS_MYSQL=false
+
+    if [ "$HAS_MYSQL" == false ]; then
+      INSTALL_MARIADB=true
+    fi
+
+    MYSQL_DBHOST_USER="-"
+    while [[ "$MYSQL_DBHOST_USER" == *"-"* ]]; do
+      required_input MYSQL_DBHOST_USER "Database host username (pterodactyluser): " "" "pterodactyluser"
+      [[ "$MYSQL_DBHOST_USER" == *"-"* ]] && print_error "Database user cannot contain hyphens"
+    done
+
+    password_input MYSQL_DBHOST_PASSWORD "Database host password: " "Password cannot be empty"
+  fi
 
   # UFW is available for Ubuntu/Debian
   if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then

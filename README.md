@@ -14,7 +14,7 @@ Read more about [Pterodactyl](https://pterodactyl.io/) here. This script is not 
 - Automatic installation of the Pterodactyl Panel (dependencies, database, cronjob, nginx).
 - Automatic installation of the Pterodactyl Wings (Docker, systemd).
 - Panel: (optional) automatic configuration of Let's Encrypt.
-- Panel: (optional) automatic configuration of UFW (firewall for Ubuntu/Debian).
+- Panel: (optional) automatic configuration of firewall.
 
 ## Help and support
 
@@ -35,6 +35,7 @@ List of supported installation setups for panel and Wings (installations support
 | Debian           | 8       | :red_circle: \*    |             |
 |                  | 9       | :white_check_mark: | 8.0         |
 |                  | 10      | :white_check_mark: | 8.0         |
+|                  | 11      | :white_check_mark: | 8.0         |
 | CentOS           | 6       | :red_circle:       |             |
 |                  | 7       | :white_check_mark: | 8.0         |
 |                  | 8       | :white_check_mark: | 8.0         |
@@ -50,6 +51,7 @@ List of supported installation setups for panel and Wings (installations support
 | Debian           | 8       | :red_circle:       |
 |                  | 9       | :white_check_mark: |
 |                  | 10      | :white_check_mark: |
+|                  | 11      | :white_check_mark: |
 | CentOS           | 6       | :red_circle:       |
 |                  | 7       | :white_check_mark: |
 |                  | 8       | :white_check_mark: |
@@ -94,6 +96,7 @@ Replace name with one of the following (supported installations).
 
 - `ubuntu_focal`
 - `ubuntu_bionic`
+- `debian_bullseye`
 - `debian_buster`
 - `debian_stretch`
 - `centos_8`
