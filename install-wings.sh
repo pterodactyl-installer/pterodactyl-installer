@@ -74,6 +74,8 @@ EMAIL=""
 
 # Database host
 CONFIGURE_DBHOST=false
+CONFIGURE_DBEXTERNAL=false
+CONFIGURE_DBEXTERNAL_HOST="%"
 MYSQL_DBHOST_USER="pterodactyluser"
 MYSQL_DBHOST_PASSWORD="password"
 
@@ -461,31 +463,59 @@ ask_database_user() {
   read -r CONFIRM_DBHOST
 
   if [[ "$CONFIRM_DBHOST" =~ [Yy] ]]; then
+    ask_database_external
     CONFIGURE_DBHOST=true
+  fi
+}
+
+ask_database_external() {
+  echo -n "* Do you want to configure MySQL to be accessed externally? (y/N): "
+  read -r CONFIRM_DBEXTERNAL
+
+  if [[ "$CONFIRM_DBEXTERNAL" =~ [Yy] ]]; then
+    echo -n "* Enter the panel address (blank for any address): "
+    read -r CONFIRM_DBEXTERNAL_HOST
+    if [ "$CONFIRM_DBEXTERNAL_HOST" != "" ]; then
+      CONFIGURE_DBEXTERNAL_HOST="$CONFIRM_DBEXTERNAL_HOST"
+    fi
+    CONFIGURE_DBEXTERNAL=true
   fi
 }
 
 configure_mysql() {
   echo "* Performing MySQL queries.."
 
-  echo "* Creating MySQL user..."
-  mysql -u root -e "CREATE USER '${MYSQL_DBHOST_USER}'@'127.0.0.1' IDENTIFIED BY '${MYSQL_DBHOST_PASSWORD}';"
+  if [ "$CONFIGURE_DBEXTERNAL" == true ]; then
+    echo "* Creating MySQL user..."
+    mysql -u root -e "CREATE USER '${MYSQL_DBHOST_USER}'@'${CONFIGURE_DBEXTERNAL_HOST}' IDENTIFIED BY '${MYSQL_DBHOST_PASSWORD}';"
 
-  echo "* Granting privileges.."
-  mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO '${MYSQL_DBHOST_USER}'@'127.0.0.1' WITH GRANT OPTION;"
+    echo "* Granting privileges.."
+    mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO '${MYSQL_DBHOST_USER}'@'${CONFIGURE_DBEXTERNAL_HOST}' WITH GRANT OPTION;"
+  else
+    echo "* Creating MySQL user..."
+    mysql -u root -e "CREATE USER '${MYSQL_DBHOST_USER}'@'127.0.0.1' IDENTIFIED BY '${MYSQL_DBHOST_PASSWORD}';"
+
+    echo "* Granting privileges.."
+    mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO '${MYSQL_DBHOST_USER}'@'127.0.0.1' WITH GRANT OPTION;"
+  fi
 
   echo "* Flushing privileges.."
   mysql -u root -e "FLUSH PRIVILEGES;"
 
   echo "* Changing MySQL bind address.."
-  case "$OS" in
-  debian | ubuntu)
-    sed -ne 's/^bind-address            = 127.0.0.1$/bind-address=0.0.0.0/' /etc/mysql/mariadb.conf.d/50-server.cnf
-    ;;
-  centos)
-    sed -ne 's/^#bind-address=0.0.0.0$/bind-address=0.0.0.0/' /etc/my.cnf.d/mariadb-server.cnf
-    ;;
-  esac
+
+  if [ "$CONFIGURE_DBEXTERNAL" == true ]; then
+    case "$OS" in
+    debian | ubuntu)
+      sed -ne 's/^bind-address            = 127.0.0.1$/bind-address=0.0.0.0/' /etc/mysql/mariadb.conf.d/50-server.cnf
+      ;;
+    centos)
+      sed -ne 's/^#bind-address=0.0.0.0$/bind-address=0.0.0.0/' /etc/my.cnf.d/mariadb-server.cnf
+      ;;
+    esac
+  
+    systemctl restart mysqld
+  fi
 
   echo "* MySQL configured!"
 }
