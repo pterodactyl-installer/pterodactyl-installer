@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck source=/dev/null
 
 set -e
 
@@ -40,6 +41,19 @@ MYSQL_PASSWORD=""
 
 PMA_URL="https://files.phpmyadmin.net/phpMyAdmin/$PMA_VERSION/phpMyAdmin-$PMA_VERSION-all-languages.tar.gz"
 
+# Assume SSL, will fetch different config if true
+ASSUME_SSL=false
+CONFIGURE_LETSENCRYPT=false
+
+# ufw firewall
+CONFIGURE_UFW=false
+
+# firewall_cmd
+CONFIGURE_FIREWALL_CMD=false
+
+# firewall status
+CONFIGURE_FIREWALL=false
+
 #### Visual functions ####
 
 
@@ -76,6 +90,42 @@ print_brake() {
 
 hyperlink() {
   echo -e "\e]8;;${1}\a${1}\e]8;;\a"
+}
+
+password_input() {
+  local __resultvar=$1
+  local result=''
+  local default="$4"
+
+  while [ -z "$result" ]; do
+    echo -n "* ${2}"
+
+    # modified from https://stackoverflow.com/a/22940001
+    while IFS= read -r -s -n1 char; do
+      [[ -z $char ]] && {
+        printf '\n'
+        break
+      }                               # ENTER pressed; output \n and break.
+      if [[ $char == $'\x7f' ]]; then # backspace was pressed
+        # Only if variable is not empty
+        if [ -n "$result" ]; then
+          # Remove last char from output variable.
+          [[ -n $result ]] && result=${result%?}
+          # Erase '*' to the left.
+          printf '\b \b'
+        fi
+      else
+        # Add typed char to output variable.
+        result+=$char
+        # Print '*' in its stead.
+        printf '*'
+      fi
+    done
+    [ -z "$result" ] && [ -n "$default" ] && result="$default"
+    [ -z "$result" ] && print_error "${3}"
+  done
+
+  eval "$__resultvar="'$result'""
 }
 
 #### OS check funtions ####
@@ -158,40 +208,129 @@ cd "$DEFAULT_DIR"
 rm -r phpMyAdmin-"${PMA_VERSION}"-all-languages.tar.gz && rm -r phpMyAdmin-"${PMA_VERSION}"-all-languages && rm -r config.sample.inc.php
 }
 
+main() {
 
-#### Create MySQL User ####
-create_credentials() {
+# check if we can detect an already existing installation
+  if [ -d "/var/www/phpmyadmin" ]; then
+    print_warning "The script has detected that you already have PMA panel on your system! You cannot run the script multiple times, it will fail!"
+    echo -e -n "* Are you sure you want to proceed? (y/N): "
+    read -r CONFIRM_PROCEED
+    if [[ ! "$CONFIRM_PROCEED" =~ [Yy] ]]; then
+      print_error "Installation aborted!"
+      exit 1
+    fi
+  fi
+
+#### detect distro ####
+
+detect_distro
+
+#### Set FQDN ####
+
+while [ -z "$FQDN" ]; do
+  echo -n "* Enter the FQDN here to access your PMA (pma.mydomain.com): "
+  read -r FQDN
+  [ -z "$FQDN" ] && print_error "FQDN cannot be empty"
+done
+
+#### Create Credentials ####
+
 echo
 print_brake 52
 echo "* Let's create a login user on the phpMyAdmin page."
 print_brake 52
 echo
-echo -n "* Username (${YELLOW}admin${reset}): "
+echo -n -e "* Username (${YELLOW}admin${reset}): "
 read -r MYSQL_USER_INPUT
 [ -z "$MYSQL_USER_INPUT" ] && MYSQL_USER="admin" || MYSQL_USER=$MYSQL_USER_INPUT
 
 echo
-echo -n "* Password (${YELLOW}pmapassword${reset}): "
+echo -n -e "* Password (${YELLOW}pmapassword${reset}): "
 read -r MYSQL_PASS_INPUT
 [ -z "$MYSQL_PASS_INPUT" ] && MYSQL_PASSWORD="pmapassword" || MYSQL_PASSWORD=$MYSQL_PASSWORD_INPUT
-echo
-if [ "$MYSQL_PASS_INPUT" == "pmapassword" ]; then
+if [ "$MYSQL_PASSWORD" == "pmapassword" ]; then
   print_warning "You are using the default password for PMA access, are you sure you want to continue with this password? (Y/N)"
   read -r UPDATE_MYSQL_PASS
     if [[ "$UPDATE_MYSQL_PASS" =~ [Yy] ]]; then
         echo
       else
-        while [ -z "$MYSQL_PASS_INPUT" ]; do
-          echo
-          echo -n "* New Password: "
-          read -r MYSQL_PASS_INPUT
-          if [ "$MYSQL_PASS_INPUT" == "" ]; then
-            print_error "Password cannot be empty!"
-          fi
-          [ -z "$MYSQL_PASS_INPUT" ] && MYSQL_PASSWORD="pmapassword" || MYSQL_PASSWORD=$MYSQL_PASS_INPUT
-        done
+        update_password
     fi
 fi
+
+#### Ask Firewall ####
+
+ask_firewall
+
+#### Ask Letsencrypt ####
+
+ask_letsencrypt
+
+# If it's already true, this should be a no-brainer
+[ "$CONFIGURE_LETSENCRYPT" == false ] && ask_assume_ssl
+}
+
+update_password() {
+while [ -z "$MYSQL_PASS_INPUT" ]; do
+echo -e "New Password: "
+#password_input MYSQL_PASS_INPUT "New Password: " "The password cannot be empty!"
+read -r MYSQL_PASS_INPUT
+if [ "$MYSQL_PASSWORD" == "pmapassword" ]; then
+  print_warning "You need to enter a new password to continue!"
+fi
+[ -z "$MYSQL_PASS_INPUT" ] && MYSQL_PASSWORD="pmapassword" || MYSQL_PASSWORD=$MYSQL_PASSWORD_INPUT
+echo
+done
+}
+
+ask_letsencrypt() {
+  if [ "$CONFIGURE_UFW" == false ] && [ "$CONFIGURE_FIREWALL_CMD" == false ]; then
+    print_warning "Let's Encrypt requires port 80/443 to be opened! You have opted out of the automatic firewall configuration; use this at your own risk (if port 80/443 is closed, the script will fail)!"
+  fi
+
+  print_warning "You cannot use Let's Encrypt with your hostname as an IP address! It must be a FQDN (e.g. panel.example.org)."
+
+  echo -e -n "* Do you want to automatically configure HTTPS using Let's Encrypt? (y/N): "
+  read -r CONFIRM_SSL
+
+  if [[ "$CONFIRM_SSL" =~ [Yy] ]]; then
+    CONFIGURE_LETSENCRYPT=true
+    ASSUME_SSL=false
+  fi
+}
+
+ask_assume_ssl() {
+  echo "* Let's Encrypt is not going to be automatically configured by this script (user opted out)."
+  echo "* You can 'assume' Let's Encrypt, which means the script will download a nginx configuration that is configured to use a Let's Encrypt certificate but the script won't obtain the certificate for you."
+  echo "* If you assume SSL and do not obtain the certificate, your installation will not work."
+  echo -n "* Assume SSL or not? (y/N): "
+  read -r ASSUME_SSL_INPUT
+
+  [[ "$ASSUME_SSL_INPUT" =~ [Yy] ]] && ASSUME_SSL=true
+  true
+}
+
+ask_firewall() {
+  case "$OS" in
+  ubuntu | debian)
+    echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
+    read -r CONFIRM_UFW
+
+    if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
+      CONFIGURE_UFW=true
+      CONFIGURE_FIREWALL=true
+    fi
+    ;;
+  centos)
+    echo -e -n "* Do you want to automatically configure firewall-cmd (firewall)? (y/N): "
+    read -r CONFIRM_FIREWALL_CMD
+
+    if [[ "$CONFIRM_FIREWALL_CMD" =~ [Yy] ]]; then
+      CONFIGURE_FIREWALL_CMD=true
+      CONFIGURE_FIREWALL=true
+    fi
+    ;;
+  esac
 }
 
 #### Create a databse with user ####
@@ -246,7 +385,7 @@ create_database() {
 
 #### Exec Script ####
 
-detect_distro
+main
 create_folders
 define_permisions
 pma_dl
