@@ -112,7 +112,7 @@ When the release is published, push another commit which revers the changes you 
 
 ## Contributors ✨
 
-Copyright (C) 2018 - 2021, Vilhelm Prytz, <vilhelm@prytznet.se>
+Copyright (C) 2018 - 2022, Vilhelm Prytz, <vilhelm@prytznet.se>
 
 Created and maintained by [Vilhelm Prytz](https://github.com/vilhelmprytz).
 
