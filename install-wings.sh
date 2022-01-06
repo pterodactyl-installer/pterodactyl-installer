@@ -365,9 +365,6 @@ install_docker() {
     # Add docker gpg key
     curl -fsSL https://download.docker.com/linux/"$OS"/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
 
-    # Show fingerprint to user
-    apt-key fingerprint 0EBFCD88
-
     # Add docker repo
     echo \
       "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/"$OS" \
