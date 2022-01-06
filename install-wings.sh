@@ -485,7 +485,8 @@ ask_database_external() {
 }
 
 ask_database_firewall() {
-  echo -n "* Do you want to allow port 3306 threw the firewall? (y/N): "
+  print_warning "Allow incoming traffic to port 3306 (MySQL) can potentially be a security risk, unless you know what you are doing!"
+  echo -n "* Would you like to allow incoming traffic to port 3306? (y/N): "
   read -r CONFIRM_DB_FIREWALL
   if [[ "$CONFIRM_DB_FIREWALL" =~ [Yy] ]]; then
     CONFIGURE_DB_FIREWALL=true
