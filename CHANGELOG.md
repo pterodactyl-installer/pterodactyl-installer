@@ -8,6 +8,10 @@ This project follows the [semantic versioning](https://semver.org) convention. C
 
 - [#285](https://github.com/vilhelmprytz/pterodactyl-installer/issues/285) panel: Fix Nginx configuration files so that Nginx listens to IPv6 as well by default.
 
+### Changed
+
+- [#289](https://github.com/vilhelmprytz/pterodactyl-installer/issues/289) Replace old references to "daemon" with Wings.
+
 ## v0.9.0 (released on 2021-12-05)
 
 ### Added
