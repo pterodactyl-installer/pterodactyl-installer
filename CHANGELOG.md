@@ -10,6 +10,7 @@ This project follows the [semantic versioning](https://semver.org) convention. C
 
 ### Changed
 
+- [#267](https://github.com/vilhelmprytz/pterodactyl-installer/issues/267) wings: Rewrite some of the database host functionality to work with remote MySQL clients (thanks [@Linux123123](https://github.com/Linux123123) for contributing!).
 - [#289](https://github.com/vilhelmprytz/pterodactyl-installer/issues/289) Replace old references to "daemon" with Wings.
 
 ## v0.9.0 (released on 2021-12-05)
