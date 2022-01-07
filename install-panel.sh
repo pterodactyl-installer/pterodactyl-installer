@@ -51,7 +51,7 @@ SCRIPT_RELEASE="canary"
 
 # Main Variables #
 
-SUPPORT_LINK="https://pterodactyl-installer.se/discord"
+#SUPPORT_LINK="https://pterodactyl-installer.se/discord"
 PMA_VERSION="5.1.1"
 
 FQDN=""
