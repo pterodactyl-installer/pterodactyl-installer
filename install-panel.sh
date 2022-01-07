@@ -934,9 +934,9 @@ while [ -z "$PMA_FQDN" ]; do
 done
 
 if [ $ASSUME_SSL == true ] && [ $CONFIGURE_LETSENCRYPT == false ]; then
-    PMA_FILE="pma_ssl.conf"
+    PMA_FILE="nginx_ssl.conf"
   else
-    PMA_FILE="pma.conf"
+    PMA_FILE="nginx.conf"
 fi
 
 if [ "$OS" == "centos" ]; then
@@ -949,6 +949,9 @@ if [ "$OS" == "centos" ]; then
 
   # replace all <php_socket> places with correct socket "path"
   sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" /etc/nginx/conf.d/phpmyadmin.conf
+
+  # Replace /var/www/pterodactyl/public with the phpmyadmin directory
+  sed -i -e "s@/var/www/pterodactyl/public@$DEFAULT_DIR@g" /etc/nginx/conf.d/phpmyadmin.conf
 else
   # remove default config
   rm -rf /etc/nginx/sites-enabled/default
@@ -961,6 +964,9 @@ else
 
   # replace all <php_socket> places with correct socket "path"
   sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" /etc/nginx/sites-available/phpmyadmin.conf
+
+  # Replace /var/www/pterodactyl/public with the phpmyadmin directory
+  sed -i -e "s@/var/www/pterodactyl/public@$DEFAULT_DIR@g" /etc/nginx/sites-available/phpmyadmin.conf
 
   # on debian 9, TLS v1.3 is not supported (see #76)
   [ "$OS" == "debian" ] && [ "$OS_VER_MAJOR" == "9" ] && sed -i 's/ TLSv1.3//' /etc/nginx/sites-available/phpmyadmin.conf
