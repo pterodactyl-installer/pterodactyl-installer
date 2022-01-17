@@ -366,16 +366,12 @@ install_docker() {
       software-properties-common
 
     # Add docker gpg key
-    curl -fsSL https://download.docker.com/linux/"$OS"/gpg | apt-key add -
-
-    # Show fingerprint to user
-    apt-key fingerprint 0EBFCD88
+    curl -fsSL https://download.docker.com/linux/"$OS"/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
 
     # Add docker repo
-    add-apt-repository \
-      "deb [arch=$ARCH] https://download.docker.com/linux/$OS \
-    $(lsb_release -cs) \
-    stable"
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/$OS \
+      $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
 
     # Install docker
     apt_update
