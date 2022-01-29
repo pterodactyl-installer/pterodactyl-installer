@@ -916,7 +916,7 @@ centos)
 esac
 FILE="$DEFAULT_DIR/config.inc.php"
 if [ -f "$FILE" ]; then
-  KEY="$(openssl rand -base64 32)"
+  KEY="$(tr -dc 'A-Za-z0-9!"#$%&()*+,-./:;<=>?@[\]^_`{|}~' </dev/urandom | head -c 32)"
   sed -i -e "s@<key>@$KEY@g" "$FILE"
   sed -i -e "s@<user>@$MYSQL_USER@g" "$FILE"
   sed -i -e "s@<password>@$MYSQL_PASSWORD@g" "$FILE"
