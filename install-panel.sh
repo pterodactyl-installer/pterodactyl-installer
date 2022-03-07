@@ -86,7 +86,6 @@ CONFIGURE_FIREWALL=false
 
 # input validation regex's
 email_regex="^(([A-Za-z0-9]+((\.|\-|\_|\+)?[A-Za-z0-9]?)*[A-Za-z0-9]+)|[A-Za-z0-9]+)@(([A-Za-z0-9]+)+((\.|\-|\_)?([A-Za-z0-9]+)+)*)+\.([A-Za-z]{2,})+$"
-ip_regex="^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)(\.(?!$)|$)){4}$"
 
 ####### Version checking ########
 
@@ -114,8 +113,9 @@ valid_email() {
   [[ $1 =~ ${email_regex} ]]
 }
 
-valid_ip() {
-  [[ $1 =~ ${ip_regex} ]]
+invalid_ip() {
+  ip route get "$1" > /dev/null 2>&1
+  echo $?
 }
 
 ####### Visual functions ########
@@ -244,11 +244,11 @@ ask_assume_ssl() {
 }
 
 check_FQDN_SSL() {
-  if valid_ip "$FQDN" == true; then
+  if [[ $(invalid_ip "$FQDN") == 1 && $FQDN != 'localhost' ]]; then
+    SSL_AVAILABLE=true
+  else
     print_warning "* Let's Encrypt will not be available for IP addresses."
     echo "* To use Let's Encrypt, you must use a valid domain name."
-  else
-    SSL_AVAILABLE=true
   fi
 }
 
