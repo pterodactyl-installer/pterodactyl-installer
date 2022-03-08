@@ -1,5 +1,4 @@
 #!/bin/bash
-#shellcheck source=/dev/null
 
 set -e
 
