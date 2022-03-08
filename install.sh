@@ -82,8 +82,6 @@ PANEL_LATEST="$GITHUB_BASE_URL/$SCRIPT_VERSION/install-panel.sh"
 
 WINGS_LATEST="$GITHUB_BASE_URL/$SCRIPT_VERSION/install-wings.sh"
 
-PMA_LATEST="$GITHUB_BASE_URL/$SCRIPT_VERSION/install-pma.sh"
-
 PANEL_LEGACY="$GITHUB_BASE_URL/$SCRIPT_VERSION/legacy/panel_0.7.sh"
 
 WINGS_LEGACY="$GITHUB_BASE_URL/$SCRIPT_VERSION/legacy/daemon_0.6.sh"
@@ -97,7 +95,6 @@ while [ "$done" == false ]; do
     "Install the panel"
     "Install Wings"
     "Install both [0] and [1] on the same machine (wings script runs after panel)\n"
-    "Install PhpMyAdmin"
 
     "Install 0.7 version of panel (unsupported, no longer maintained!)"
     "Install 0.6 version of daemon (works with panel 0.7, no longer maintained!)"
