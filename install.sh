@@ -109,7 +109,6 @@ while [ "$done" == false ]; do
     "$PANEL_LATEST"
     "$WINGS_LATEST"
     "$PANEL_LATEST;$WINGS_LATEST"
-    "$PMA_LATEST"
 
     "$PANEL_LEGACY"
     "$WINGS_LEGACY"
