@@ -841,23 +841,22 @@ mkdir -p /etc/phpmyadmin/save
 mkdir -p /etc/phpmyadmin/tmp
 mkdir -p /var/www/phpmyadmin/tmp
 
-
 # Define permisions
 chmod -R 660  /etc/phpmyadmin/*
 chmod -R 777 /var/www/phpmyadmin/tmp
 case "$OS" in
-debian | ubuntu)
+  debian | ubuntu)
     chown -R www-data.www-data /var/www/phpmyadmin/*
     chown -R www-data.www-data /etc/phpmyadmin/*
-;;
-centos)
+  ;;
+  centos)
     chown -R nginx:nginx /var/www/phpmyadmin/*
     chown -R nginx:nginx /etc/phpmyadmin/*
-;;
+  ;;
 esac
+}
 
-# Download All Files
-
+download_pma_files() {
 echo "* Downloading the phpmyadmin files..."
 
 curl -Lo $PMA_DIR/phpMyAdmin-"${PMA_VERSION}"-all-languages.tar.gz "$PMA_URL"
@@ -865,33 +864,33 @@ tar -xzvf $PMA_DIR/phpMyAdmin-"${PMA_VERSION}"-all-languages.tar.gz
 cd phpMyAdmin-"${PMA_VERSION}"-all-languages
 mv -- * "$PMA_DIR"
 rm -rf $PMA_DIR/phpMyAdmin-"${PMA_VERSION}"-all-languages.tar.gz $PMA_DIR/phpMyAdmin-"${PMA_VERSION}"-all-languages $PMA_DIR/config.sample.inc.php
+}
 
-# Create Database
-
+configure_pma_db() {
 case "$OS" in
-debian | ubuntu)
+  debian | ubuntu)
 
-  mysql -u root -e "CREATE USER '${PMA_MYSQL_USER}'@'%' IDENTIFIED BY '${PMA_MYSQL_PASSWORD}';"
-  mysql -u root -e "CREATE DATABASE ${PMA_MYSQL_DB};"
-  mysql -u root -e "GRANT ALL PRIVILEGES ON ${PMA_MYSQL_DB}.* TO '${PMA_MYSQL_USER}'@'%';"
-  mysql -u root -e "FLUSH PRIVILEGES;"
-  mysql -u root "$PMA_MYSQL_DB" < $PMA_DIR/sql/create_tables.sql
-  mysql -u root "$PMA_MYSQL_DB" < $PMA_DIR/sql/upgrade_tables_mysql_4_1_2+.sql
-  mysql -u root "$PMA_MYSQL_DB" < $PMA_DIR/sql/upgrade_tables_4_7_0+.sql
-;;
-centos)
-  # This is commenting to test the removal of this in the future, it was discussed in discord a while ago. #
-  #[ "$OS_VER_MAJOR" == "7" ] && mariadb-secure-installation
-  #[ "$OS_VER_MAJOR" == "8" ] && mysql_secure_installation
+    mysql -u root -e "CREATE USER '${PMA_MYSQL_USER}'@'%' IDENTIFIED BY '${PMA_MYSQL_PASSWORD}';"
+    mysql -u root -e "CREATE DATABASE ${PMA_MYSQL_DB};"
+    mysql -u root -e "GRANT ALL PRIVILEGES ON ${PMA_MYSQL_DB}.* TO '${PMA_MYSQL_USER}'@'%';"
+    mysql -u root -e "FLUSH PRIVILEGES;"
+    mysql -u root "$PMA_MYSQL_DB" < $PMA_DIR/sql/create_tables.sql
+    mysql -u root "$PMA_MYSQL_DB" < $PMA_DIR/sql/upgrade_tables_mysql_4_1_2+.sql
+    mysql -u root "$PMA_MYSQL_DB" < $PMA_DIR/sql/upgrade_tables_4_7_0+.sql
+  ;;
+  centos)
+    # This is commenting to test the removal of this in the future, it was discussed in discord a while ago.
+    #[ "$OS_VER_MAJOR" == "7" ] && mariadb-secure-installation
+    #[ "$OS_VER_MAJOR" == "8" ] && mysql_secure_installation
 
-  mysql -u root -e "CREATE USER '${MYSQL_USER}'@'%' IDENTIFIED BY '${PMA_MYSQL_PASSWORD}';"
-  mysql -u root -e "CREATE DATABASE ${PMA_MYSQL_DB};"
-  mysql -u root -e "GRANT ALL PRIVILEGES ON ${PMA_MYSQL_DB}.* TO '${MYSQL_USER}'@'%';"
-  mysql -u root -e "FLUSH PRIVILEGES;"
-  mysql -u root "$PMA_MYSQL_DB" < $PMA_DIR/sql/create_tables.sql
-  mysql -u root "$PMA_MYSQL_DB" < $PMA_DIR/sql/upgrade_tables_mysql_4_1_2+.sql
-  mysql -u root "$PMA_MYSQL_DB" < $PMA_DIR/sql/upgrade_tables_4_7_0+.sql
-;;
+    mysql -u root -e "CREATE USER '${MYSQL_USER}'@'%' IDENTIFIED BY '${PMA_MYSQL_PASSWORD}';"
+    mysql -u root -e "CREATE DATABASE ${PMA_MYSQL_DB};"
+    mysql -u root -e "GRANT ALL PRIVILEGES ON ${PMA_MYSQL_DB}.* TO '${MYSQL_USER}'@'%';"
+    mysql -u root -e "FLUSH PRIVILEGES;"
+    mysql -u root "$PMA_MYSQL_DB" < $PMA_DIR/sql/create_tables.sql
+    mysql -u root "$PMA_MYSQL_DB" < $PMA_DIR/sql/upgrade_tables_mysql_4_1_2+.sql
+    mysql -u root "$PMA_MYSQL_DB" < $PMA_DIR/sql/upgrade_tables_4_7_0+.sql
+  ;;
 esac
 if [ -f "$PMA_DIR/config.inc.php" ]; then
   KEY="$(tr -dc 'A-Za-z0-9!"#$%&()*+,-./:;<=>?@[\]^_`{|}~' </dev/urandom | head -c 32)"
@@ -901,7 +900,7 @@ if [ -f "$PMA_DIR/config.inc.php" ]; then
 fi
 }
 
-phpmyadmin() {
+configure_pma_nginx() {
 echo -e "* Configuring PhpMyAdmin..."
 
 if [ $ASSUME_SSL == true ] && [ $CONFIGURE_LETSENCRYPT == false ]; then
@@ -1040,7 +1039,12 @@ perform_install() {
   configure_nginx
   [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
   true
-  [ "$INSTALL_PHPMYADMIN" == true ] && configure_pma && phpmyadmin
+  if [ "$INSTALL_PHPMYADMIN" == true ]; then
+    configure_pma
+    download_pma_files
+    configure_pma_db
+    configure_pma_nginx
+  fi
 }
 
 main() {
