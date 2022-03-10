@@ -1212,7 +1212,7 @@ summary() {
   echo "* Configure PhpMyAdmin? $INSTALL_PHPMYADMIN"
   [ "$INSTALL_PHPMYADMIN" == true ] && echo "* Hostname/FQDN PhpMyAdmin: $PMA_FQDN"
   [ "$INSTALL_PHPMYADMIN" == true ] && echo "* PhpMyAdmin Username: $PMA_MYSQL_USER"
-  [ "$INSTALL_PHPMYADMIN" == true ] && echo "* phpmyadmin Password: $PMA_MYSQL_PASSWORD"
+  [ "$INSTALL_PHPMYADMIN" == true ] && echo "* Phpmyadmin Password: (censored)"
   print_brake 62
 }
 
