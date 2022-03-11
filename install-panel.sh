@@ -50,8 +50,6 @@ GITHUB_SOURCE="master"
 SCRIPT_RELEASE="canary"
 
 # Main Variables #
-
-#SUPPORT_LINK="https://pterodactyl-installer.se/discord"
 PMA_VERSION="5.1.3"
 
 FQDN=""
@@ -132,7 +130,6 @@ valid_email() {
 print_error() {
   COLOR_RED='\033[0;31m'
   COLOR_NC='\033[0m'
-  COLOR_DEFAULT='\e[0m'
 
   echo ""
   echo -e "* ${COLOR_RED}ERROR${COLOR_NC}: $1"
@@ -798,6 +795,7 @@ firewall_firewalld() {
 
 letsencrypt() {
   FAILED=false
+  PMA_FAILED=false
 
   # Install certbot
   case "$OS" in
@@ -814,11 +812,15 @@ letsencrypt() {
   certbot --nginx --redirect --no-eff-email --email "$email" -d "$FQDN" || FAILED=true
 
   if [ "$CONFIGURE_SSL_PMA" == true ]; then
-    certbot --nginx --redirect --no-eff-email --email "$email" -d "$PMA_FQDN" || FAILED=true
+    certbot --nginx --redirect --no-eff-email --email "$email" -d "$PMA_FQDN" || PMA_FAILED=true
+
+    if [ ! -d "/etc/letsencrypt/live/$PMA_FQDN" ] || [ "$PMA_FAILED" == true ]; then
+      print_warning "The process of getting the certificate for domain $PMA_FQDN failed, try doing it manually."
+    fi
   fi
 
   # Check if it succeded
-  if [ ! -d "/etc/letsencrypt/live/$FQDN/" ] && [ ! -d "/etc/letsencrypt/live/$PMA_FQDN/" ] || [ "$FAILED" == true ]; then
+  if [ ! -d "/etc/letsencrypt/live/$FQDN/" ] || [ "$FAILED" == true ]; then
     print_warning "The process of obtaining a Let's Encrypt certificate failed!"
     echo -n "* Still assume SSL? (y/N): "
     read -r CONFIGURE_SSL
