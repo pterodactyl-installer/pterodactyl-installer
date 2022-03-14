@@ -4,6 +4,10 @@ This project follows the [semantic versioning](https://semver.org) convention. C
 
 ## next-release
 
+### Added
+
+- [#300](https://github.com/vilhelmprytz/pterodactyl-installer/pull/300) panel: Check if FQDN is IP and skip asking for Let's Encrypt certificate if FQDN is IP (thanks [@Linux123123](https://github.com/Linux123123) for contributing!).
+
 ### Fixed
 
 - [#285](https://github.com/vilhelmprytz/pterodactyl-installer/issues/285) panel: Fix Nginx configuration files so that Nginx listens to IPv6 as well by default.
