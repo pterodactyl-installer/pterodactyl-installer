@@ -6,7 +6,7 @@ set -e
 #                                                                           #
 # Project 'pterodactyl-installer' for panel                                 #
 #                                                                           #
-# Copyright (C) 2018 - 2021, Vilhelm Prytz, <vilhelm@prytznet.se>           #
+# Copyright (C) 2018 - 2022, Vilhelm Prytz, <vilhelm@prytznet.se>           #
 #                                                                           #
 #   This program is free software: you can redistribute it and/or modify    #
 #   it under the terms of the GNU General Public License as published by    #
@@ -76,6 +76,7 @@ user_lastname=""
 user_password=""
 
 # Assume SSL, will fetch different config if true
+SSL_AVAILABLE=false
 ASSUME_SSL=false
 CONFIGURE_LETSENCRYPT=false
 
@@ -96,8 +97,8 @@ CONFIGURE_FIREWALL=false
 # PhpMyAdmin
 INSTALL_PHPMYADMIN=false
 
-# regex for email input
-regex="^(([A-Za-z0-9]+((\.|\-|\_|\+)?[A-Za-z0-9]?)*[A-Za-z0-9]+)|[A-Za-z0-9]+)@(([A-Za-z0-9]+)+((\.|\-|\_)?([A-Za-z0-9]+)+)*)+\.([A-Za-z]{2,})+$"
+# input validation regex's
+email_regex="^(([A-Za-z0-9]+((\.|\-|\_|\+)?[A-Za-z0-9]?)*[A-Za-z0-9]+)|[A-Za-z0-9]+)@(([A-Za-z0-9]+)+((\.|\-|\_)?([A-Za-z0-9]+)+)*)+\.([A-Za-z]{2,})+$"
 
 ####### Version checking ########
 
@@ -122,7 +123,12 @@ array_contains_element() {
 }
 
 valid_email() {
-  [[ $1 =~ ${regex} ]]
+  [[ $1 =~ ${email_regex} ]]
+}
+
+invalid_ip() {
+  ip route get "$1" > /dev/null 2>&1
+  echo $?
 }
 
 ####### Visual functions ########
@@ -230,8 +236,6 @@ ask_letsencrypt() {
     print_warning "Let's Encrypt requires port 80/443 to be opened! You have opted out of the automatic firewall configuration; use this at your own risk (if port 80/443 is closed, the script will fail)!"
   fi
 
-  print_warning "You cannot use Let's Encrypt with your hostname as an IP address! It must be a FQDN (e.g. panel.example.org)."
-
   echo -e -n "* Do you want to automatically configure HTTPS using Let's Encrypt? (y/N): "
   read -r CONFIRM_SSL
 
@@ -250,6 +254,15 @@ ask_assume_ssl() {
 
   [[ "$ASSUME_SSL_INPUT" =~ [Yy] ]] && ASSUME_SSL=true
   true
+}
+
+check_FQDN_SSL() {
+  if [[ $(invalid_ip "$FQDN") == 1 && $FQDN != 'localhost' ]]; then
+    SSL_AVAILABLE=true
+  else
+    print_warning "* Let's Encrypt will not be available for IP addresses."
+    echo "* To use Let's Encrypt, you must use a valid domain name."
+  fi
 }
 
 ask_firewall() {
@@ -1067,7 +1080,7 @@ main() {
   print_brake 70
   echo "* Pterodactyl panel installation script @ $SCRIPT_RELEASE"
   echo "*"
-  echo "* Copyright (C) 2018 - 2021, Vilhelm Prytz, <vilhelm@prytznet.se>"
+  echo "* Copyright (C) 2018 - 2022, Vilhelm Prytz, <vilhelm@prytznet.se>"
   echo "* https://github.com/vilhelmprytz/pterodactyl-installer"
   echo "*"
   echo "* This script is not associated with the official Pterodactyl Project."
@@ -1136,14 +1149,19 @@ main() {
     [ -z "$FQDN" ] && print_error "FQDN cannot be empty"
   done
 
+  # Check if SSL is available
+  check_FQDN_SSL
+
   # Ask if firewall is needed
   ask_firewall
 
-  # Ask if letsencrypt is needed
-  ask_letsencrypt
-
-  # If it's already true, this should be a no-brainer
-  [ "$CONFIGURE_LETSENCRYPT" == false ] && ask_assume_ssl
+  # Only ask about SSL if it is available
+  if [ "$SSL_AVAILABLE" == true ]; then
+    # Ask if letsencrypt is needed
+    ask_letsencrypt
+    # If it's already true, this should be a no-brainer
+    [ "$CONFIGURE_LETSENCRYPT" == false ] && ask_assume_ssl
+  fi
 
   # verify FQDN if user has selected to assume SSL or configure Let's Encrypt
   [ "$CONFIGURE_LETSENCRYPT" == true ] || [ "$ASSUME_SSL" == true ] && bash <(curl -s $GITHUB_BASE_URL/lib/verify-fqdn.sh) "$FQDN" "$OS"
