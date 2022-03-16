@@ -311,6 +311,8 @@ check_os_comp() {
     exit 1
   fi
 
+  export PATH="$PATH:/sbin:/usr/sbin"
+
   virt_serv=$(virt-what)
 
   case "$virt_serv" in
