@@ -35,4 +35,12 @@ Vagrant.configure("2") do |config|
   config.vm.define "centos_8" do |centos_8|
     centos_8.vm.box = "centos/8"
   end
+
+  config.vm.define "almalinux_8" do |almalinux_8|
+    almalinux_8.vm.box = "almalinux/8"
+  end
+
+  config.vm.define "rockylinux_8" do |rockylinux_8|
+    rockylinux_8.vm.box = "rockylinux/8"
+  end
 end

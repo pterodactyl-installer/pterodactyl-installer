@@ -29,8 +29,8 @@ set -e
 #############################################################################
 
 SCRIPT_VERSION="v0.10.0"
-GITHUB_BASE_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer"
-
+# TODO: Download script and replace version in it
+# LIB_PATH="/tmp/lib.sh"
 LOG_PATH="/var/log/pterodactyl-installer.log"
 
 # exit with error status code if user is not root

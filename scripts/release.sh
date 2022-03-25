@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# TODO: Make this work
+
 RELEASE=$1
 DATE=$(date +%F)
 
