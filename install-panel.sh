@@ -1012,6 +1012,9 @@ main() {
       exit 1
     fi
   fi
+  
+  # choose version/branch
+  choose_branch
 
   # detect distro
   detect_distro
@@ -1157,6 +1160,5 @@ goodbye() {
 }
 
 # run script
-choose_branch
 main
 goodbye
