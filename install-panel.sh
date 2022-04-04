@@ -99,12 +99,6 @@ get_latest_release() {
     sed -E 's/.*"([^"]+)".*/\1/'                                    # Pluck JSON value
 }
 
-get_all_branches() {
-  curl --silent \
-  -H "Accept: application/vnd.github.v3+json" \
-  https://api.github.com/repos/pterodactyl/panel/branches
-}
-
 # pterodactyl version
 echo "* Retrieving release information.."
 PTERODACTYL_VERSION="$(get_latest_release "pterodactyl/panel")"
