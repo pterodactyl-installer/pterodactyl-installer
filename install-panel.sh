@@ -49,21 +49,12 @@ fi
 GITHUB_SOURCE="master"
 SCRIPT_RELEASE="canary"
 
-# Main Variables #
-PMA_VERSION="5.1.3"
-
 FQDN=""
-PMA_FQDN="-"
 
 # Default MySQL credentials
 MYSQL_DB="pterodactyl"
 MYSQL_USER="pterodactyl"
 MYSQL_PASSWORD=""
-PMA_MYSQL_DB="pma"
-PMA_MYSQL_PASSWORD=""
-
-# Default PMA Dir
-PMA_DIR="/var/www/phpmyadmin"
 
 # Environment
 email=""
@@ -83,7 +74,6 @@ CONFIGURE_LETSENCRYPT=false
 # download URLs
 PANEL_DL_URL="https://github.com/pterodactyl/panel/releases/latest/download/panel.tar.gz"
 GITHUB_BASE_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/$GITHUB_SOURCE"
-PMA_URL="https://files.phpmyadmin.net/phpMyAdmin/$PMA_VERSION/phpMyAdmin-$PMA_VERSION-all-languages.tar.gz"
 
 # ufw firewall
 CONFIGURE_UFW=false
@@ -93,9 +83,6 @@ CONFIGURE_FIREWALL_CMD=false
 
 # firewall status
 CONFIGURE_FIREWALL=false
-
-# PhpMyAdmin
-INSTALL_PHPMYADMIN=false
 
 # input validation regex's
 email_regex="^(([A-Za-z0-9]+((\.|\-|\_|\+)?[A-Za-z0-9]?)*[A-Za-z0-9]+)|[A-Za-z0-9]+)@(([A-Za-z0-9]+)+((\.|\-|\_)?([A-Za-z0-9]+)+)*)+\.([A-Za-z]{2,})+$"
@@ -286,16 +273,6 @@ ask_firewall() {
     fi
     ;;
   esac
-}
-
-ask_phpmyadmin() {
-echo
-echo -n "* Would you like to install PhpMyAdmin together with Pterodactyl? (y/N): "
-read -r ASK_PHPMYADMIN
-
-if [[ "$ASK_PHPMYADMIN" =~ [Yy] ]]; then
-  INSTALL_PHPMYADMIN=true
-fi
 }
 
 ####### OS check funtions #######
@@ -808,7 +785,6 @@ firewall_firewalld() {
 
 letsencrypt() {
   FAILED=false
-  PMA_FAILED=false
 
   # Install certbot
   case "$OS" in
@@ -823,14 +799,6 @@ letsencrypt() {
 
   # Obtain certificate
   certbot --nginx --redirect --no-eff-email --email "$email" -d "$FQDN" || FAILED=true
-
-  if [ "$CONFIGURE_SSL_PMA" == true ]; then
-    certbot --nginx --redirect --no-eff-email --email "$email" -d "$PMA_FQDN" || PMA_FAILED=true
-
-    if [ ! -d "/etc/letsencrypt/live/$PMA_FQDN" ] || [ "$PMA_FAILED" == true ]; then
-      print_warning "The process of getting the certificate for domain $PMA_FQDN failed, try doing it manually."
-    fi
-  fi
 
   # Check if it succeded
   if [ ! -d "/etc/letsencrypt/live/$FQDN/" ] || [ "$FAILED" == true ]; then
@@ -847,118 +815,6 @@ letsencrypt() {
       CONFIGURE_LETSENCRYPT=false
     fi
   fi
-}
-
-configure_pma() {
-# Create all necessary folders
-mkdir -p /etc/phpmyadmin/upload
-mkdir -p /etc/phpmyadmin/save
-mkdir -p /etc/phpmyadmin/tmp
-mkdir -p /var/www/phpmyadmin/tmp
-
-# Define permisions
-chmod -R 660  /etc/phpmyadmin/*
-chmod -R 777 /var/www/phpmyadmin/tmp
-case "$OS" in
-  debian | ubuntu)
-    chown -R www-data.www-data /var/www/phpmyadmin/*
-    chown -R www-data.www-data /etc/phpmyadmin/*
-  ;;
-  centos)
-    chown -R nginx:nginx /var/www/phpmyadmin/*
-    chown -R nginx:nginx /etc/phpmyadmin/*
-  ;;
-esac
-}
-
-download_pma_files() {
-echo "* Downloading the phpmyadmin files..."
-
-curl -Lo $PMA_DIR/phpMyAdmin-"${PMA_VERSION}"-all-languages.tar.gz "$PMA_URL"
-tar -xzvf $PMA_DIR/phpMyAdmin-"${PMA_VERSION}"-all-languages.tar.gz
-cd phpMyAdmin-"${PMA_VERSION}"-all-languages
-mv -- * "$PMA_DIR"
-rm -rf $PMA_DIR/phpMyAdmin-"${PMA_VERSION}"-all-languages.tar.gz $PMA_DIR/phpMyAdmin-"${PMA_VERSION}"-all-languages $PMA_DIR/config.sample.inc.php
-}
-
-configure_pma_db() {
-case "$OS" in
-  debian | ubuntu)
-
-    mysql -u root -e "CREATE USER '${PMA_MYSQL_USER}'@'%' IDENTIFIED BY '${PMA_MYSQL_PASSWORD}';"
-    mysql -u root -e "CREATE DATABASE ${PMA_MYSQL_DB};"
-    mysql -u root -e "GRANT ALL PRIVILEGES ON ${PMA_MYSQL_DB}.* TO '${PMA_MYSQL_USER}'@'%';"
-    mysql -u root -e "FLUSH PRIVILEGES;"
-    mysql -u root "$PMA_MYSQL_DB" < $PMA_DIR/sql/create_tables.sql
-    mysql -u root "$PMA_MYSQL_DB" < $PMA_DIR/sql/upgrade_tables_mysql_4_1_2+.sql
-    mysql -u root "$PMA_MYSQL_DB" < $PMA_DIR/sql/upgrade_tables_4_7_0+.sql
-  ;;
-  centos)
-    # This is commenting to test the removal of this in the future, it was discussed in discord a while ago.
-    #[ "$OS_VER_MAJOR" == "7" ] && mariadb-secure-installation
-    #[ "$OS_VER_MAJOR" == "8" ] && mysql_secure_installation
-
-    mysql -u root -e "CREATE USER '${MYSQL_USER}'@'%' IDENTIFIED BY '${PMA_MYSQL_PASSWORD}';"
-    mysql -u root -e "CREATE DATABASE ${PMA_MYSQL_DB};"
-    mysql -u root -e "GRANT ALL PRIVILEGES ON ${PMA_MYSQL_DB}.* TO '${MYSQL_USER}'@'%';"
-    mysql -u root -e "FLUSH PRIVILEGES;"
-    mysql -u root "$PMA_MYSQL_DB" < $PMA_DIR/sql/create_tables.sql
-    mysql -u root "$PMA_MYSQL_DB" < $PMA_DIR/sql/upgrade_tables_mysql_4_1_2+.sql
-    mysql -u root "$PMA_MYSQL_DB" < $PMA_DIR/sql/upgrade_tables_4_7_0+.sql
-  ;;
-esac
-if [ -f "$PMA_DIR/config.inc.php" ]; then
-  KEY="$(tr -dc 'A-Za-z0-9!"#$%&()*+,-./:;<=>?@[\]^_`{|}~' </dev/urandom | head -c 32)"
-  sed -i -e "s@<key>@$KEY@g" "$PMA_DIR/config.inc.php"
-  sed -i -e "s@<user>@$MYSQL_USER@g" "$PMA_DIR/config.inc.php"
-  sed -i -e "s@<password>@$MYSQL_PASSWORD@g" "$PMA_DIR/config.inc.php"
-fi
-}
-
-configure_pma_nginx() {
-echo -e "* Configuring PhpMyAdmin..."
-
-if [ $ASSUME_SSL == true ] && [ $CONFIGURE_LETSENCRYPT == false ]; then
-    PMA_FILE="nginx_ssl.conf"
-  else
-    PMA_FILE="nginx.conf"
-fi
-
-if [ "$OS" == "centos" ]; then
-  
-  # download new config
-  curl -o /etc/nginx/conf.d/phpmyadmin.conf $GITHUB_BASE_URL/configs/$PMA_FILE
-
-  # replace all <domain> places with the correct domain
-  sed -i -e "s@<domain>@${PMA_FQDN}@g" /etc/nginx/conf.d/phpmyadmin.conf
-
-  # replace all <php_socket> places with correct socket "path"
-  sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" /etc/nginx/conf.d/phpmyadmin.conf
-
-  # Replace /var/www/pterodactyl/public with the phpmyadmin directory
-  sed -i -e "s@/var/www/pterodactyl/public@$DEFAULT_DIR@g" /etc/nginx/conf.d/phpmyadmin.conf
-else
-  # remove default config
-  rm -rf /etc/nginx/sites-enabled/default
-
-  # download new config
-  curl -o /etc/nginx/sites-available/phpmyadmin.conf $GITHUB_BASE_URL/configs/$PMA_FILE
-
-  # replace all <domain> places with the correct domain
-  sed -i -e "s@<domain>@${PMA_FQDN}@g" /etc/nginx/sites-available/phpmyadmin.conf
-
-  # replace all <php_socket> places with correct socket "path"
-  sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" /etc/nginx/sites-available/phpmyadmin.conf
-
-  # Replace /var/www/pterodactyl/public with the phpmyadmin directory
-  sed -i -e "s@/var/www/pterodactyl/public@$DEFAULT_DIR@g" /etc/nginx/sites-available/phpmyadmin.conf
-
-  # on debian 9, TLS v1.3 is not supported (see #76)
-  [ "$OS" == "debian" ] && [ "$OS_VER_MAJOR" == "9" ] && sed -i 's/ TLSv1.3//' /etc/nginx/sites-available/phpmyadmin.conf
-
-  # enable phpmyadmin
-  ln -sf /etc/nginx/sites-available/phpmyadmin.conf /etc/nginx/sites-enabled/phpmyadmin.conf
-fi
 }
 
 ##### WEBSERVER CONFIGURATION FUNCTIONS #####
@@ -1054,12 +910,6 @@ perform_install() {
   configure_nginx
   [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
   true
-  if [ "$INSTALL_PHPMYADMIN" == true ]; then
-    configure_pma
-    download_pma_files
-    configure_pma_db
-    configure_pma_nginx
-  fi
 }
 
 main() {
@@ -1166,37 +1016,6 @@ main() {
   # verify FQDN if user has selected to assume SSL or configure Let's Encrypt
   [ "$CONFIGURE_LETSENCRYPT" == true ] || [ "$ASSUME_SSL" == true ] && bash <(curl -s $GITHUB_BASE_URL/lib/verify-fqdn.sh) "$FQDN" "$OS"
 
-  # Ask if you want to install PhpMyAdmin #
-  ask_phpmyadmin
-
-  # Login and FQDN for phpmyadmin #
-  if [ "$INSTALL_PHPMYADMIN" == true ]; then
-    while [ -z "$PMA_FQDN" ] || [ "$FQDN" == "$PMA_FQDN" ]; do
-      echo -n "* Enter the FQDN for phpmyadmin (pma.example.com): "
-      read -r PMA_FQDN
-      [ -z "$PMA_FQDN" ] && print_error "FQDN cannot be empty"
-      [ "$FQDN" == "$PMA_FQDN" ] && print_error "The pterodactyl panels domain cannot be the same as PhpMyAdmins!"
-    done
-      if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
-        echo -n "* You have chosen to generate SSL certificates for the domain $FQDN, would you like to do the same for $PMA_FQDN? (y/N): "
-        read -r CONFIGURE_LETSENCRYPT_PMA
-        if [[ "$CONFIGURE_LETSENCRYPT_PMA" =~ [Yy] ]]; then
-          CONFIGURE_SSL_PMA=true
-        fi
-      fi
-      echo "* Let's create a login user on the phpMyAdmin page."
-      echo
-      echo -ne "* Username (${YELLOW}admin${COLOR_DEFAULT}): "
-      read -r PMA_MYSQL_USER
-      [ -z "$PMA_MYSQL_USER" ] && PMA_MYSQL_USER="admin"
-
-      echo
-      while [ -z "$PMA_MYSQL_PASSWORD" ]; do
-        echo -ne "* Password (${YELLOW}pmapassword${COLOR_DEFAULT}): "
-        password_input PMA_MYSQL_PASSWORD "Password: " "Password cannot by empty!"
-      done
-  fi
-
   # summary
   summary
 
@@ -1229,10 +1048,6 @@ summary() {
   echo "* Configure Firewall? $CONFIGURE_FIREWALL"
   echo "* Configure Let's Encrypt? $CONFIGURE_LETSENCRYPT"
   echo "* Assume SSL? $ASSUME_SSL"
-  echo "* Configure PhpMyAdmin? $INSTALL_PHPMYADMIN"
-  [ "$INSTALL_PHPMYADMIN" == true ] && echo "* Hostname/FQDN PhpMyAdmin: $PMA_FQDN"
-  [ "$INSTALL_PHPMYADMIN" == true ] && echo "* PhpMyAdmin Username: $PMA_MYSQL_USER"
-  [ "$INSTALL_PHPMYADMIN" == true ] && echo "* Phpmyadmin Password: (censored)"
   print_brake 62
 }
 
