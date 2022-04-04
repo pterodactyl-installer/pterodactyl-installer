@@ -84,6 +84,9 @@ CONFIGURE_FIREWALL_CMD=false
 # firewall status
 CONFIGURE_FIREWALL=false
 
+# build panel
+BUILD_PANEL=false
+
 # input validation regex's
 email_regex="^(([A-Za-z0-9]+((\.|\-|\_|\+)?[A-Za-z0-9]?)*[A-Za-z0-9]+)|[A-Za-z0-9]+)@(([A-Za-z0-9]+)+((\.|\-|\_)?([A-Za-z0-9]+)+)*)+\.([A-Za-z]{2,})+$"
 
@@ -94,6 +97,12 @@ get_latest_release() {
   curl --silent "https://api.github.com/repos/$1/releases/latest" | # Get latest release from GitHub api
     grep '"tag_name":' |                                            # Get tag line
     sed -E 's/.*"([^"]+)".*/\1/'                                    # Pluck JSON value
+}
+
+get_all_branches() {
+  curl --silent \
+  -H "Accept: application/vnd.github.v3+json" \
+  https://api.github.com/repos/pterodactyl/panel/branches
 }
 
 # pterodactyl version
@@ -376,8 +385,16 @@ ptdl_dl() {
   mkdir -p /var/www/pterodactyl
   cd /var/www/pterodactyl || exit
 
-  curl -Lo panel.tar.gz "$PANEL_DL_URL"
-  tar -xzvf panel.tar.gz
+  if [ "$PTERODACTYL_VERSION" == "development" ] || [ "$PTERODACTYL_VERSION" == "v2" ]; then
+      git clone -b "$PTERODACTYL_VERSION" $PANEL_DL_URL
+      mv -- panel/* /var/www/pterodactyl
+      rm -rf panel
+      BUILD_PANEL=true
+    else
+      curl -Lo panel.tar.gz "$PANEL_DL_URL"
+      tar -xzvf panel.tar.gz
+  fi
+
   chmod -R 755 storage/* bootstrap/cache/
 
   cp .env.example .env
@@ -867,6 +884,31 @@ configure_nginx() {
   echo "* nginx configured!"
 }
 
+build_panel() {
+  echo "* Building your panel..."
+
+  # Check if nodejs is already installed
+  if node -v &>/dev/null; then
+      echo "* The dependencies are already installed, skipping this step..."
+    else
+      case "$OS" in
+        debian | ubuntu)
+          curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash - && apt-get install -y nodejs
+        ;;
+        centos)
+          [ "$OS_VER_MAJOR" == "7" ] && curl -sL https://rpm.nodesource.com/setup_14.x | sudo -E bash - && sudo yum install -y nodejs yarn
+          [ "$OS_VER_MAJOR" == "8" ] && curl -sL https://rpm.nodesource.com/setup_14.x | sudo -E bash - && sudo dnf install -y nodejs
+        ;;
+      esac
+    fi
+    
+    # Install yarn and build the panel
+    print_warning "This process takes a few minutes, please do not cancel it."
+    npm i -g yarn
+    yarn --cwd /var/www/pterodactyl install
+    yarn --cwd /var/www/pterodactyl build:production
+}
+
 ##### MAIN FUNCTIONS #####
 
 perform_install() {
@@ -909,7 +951,60 @@ perform_install() {
   install_pteroq
   configure_nginx
   [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
+  [ "$BUILD_PANEL" == true ] && build_panel
   true
+}
+
+choose_branch() {
+  echo -ne "* Would you like to choose a specific version/branch to be installed? (y/N): "
+  read -r CUSTOM_VERSION
+
+  if [[ "$CUSTOM_VERSION" =~ [Yy] ]]; then
+    list_branches
+    update_links
+  fi
+}
+
+list_branches() {
+echo -ne "* Choose a branch to install:
+1) $PTERODACTYL_VERSION (${YELLOW}Default${RESET})
+2) release/v1.6.0
+3) release/v1.6.6
+4) development
+5) v2
+"
+read -r PTERODACTYL_VERSION
+case "$PTERODACTYL_VERSION" in
+  "" | 1)
+    true
+  ;;
+  2)
+    PTERODACTYL_VERSION="v1.6.0"
+  ;;
+  3)
+    PTERODACTYL_VERSION="v1.6.6"
+  ;;
+  4)
+    PTERODACTYL_VERSION="development"
+  ;;
+  5)
+    PTERODACTYL_VERSION="v2"
+  ;;
+  *)
+    print_error "Invalid option!"
+    list_branches
+  ;;
+esac
+}
+
+update_links() {
+if [ "$PTERODACTYL_VERSION" == "v1.6.0" ]; then
+    PANEL_DL_URL="https://github.com/pterodactyl/panel/releases/download/v1.6.0/panel.tar.gz"
+  elif [ "$PTERODACTYL_VERSION" == "v1.6.6" ]; then
+    PANEL_DL_URL="https://github.com/pterodactyl/panel/releases/download/v1.6.6/panel.tar.gz"
+  elif [ "$PTERODACTYL_VERSION" == "development" ] || [ "$PTERODACTYL_VERSION" == "v2" ]; then
+    PANEL_DL_URL="https://github.com/pterodactyl/panel.git"
+fi
 }
 
 main() {
@@ -1068,5 +1163,6 @@ goodbye() {
 }
 
 # run script
+choose_branch
 main
 goodbye
