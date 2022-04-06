@@ -381,6 +381,7 @@ ptdl_dl() {
 
   if [ "$PTERODACTYL_VERSION" == "develop" ] || [ "$PTERODACTYL_VERSION" == "v2" ]; then
       git clone -b "$PTERODACTYL_VERSION" $PANEL_DL_URL
+      curl -o https://raw.githubusercontent.com/pterodactyl/panel/develop/.env.example # the git command does not download hidden files.
       mv -- panel/* /var/www/pterodactyl
       rm -rf panel
       BUILD_PANEL=true
