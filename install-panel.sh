@@ -379,7 +379,7 @@ ptdl_dl() {
   mkdir -p /var/www/pterodactyl
   cd /var/www/pterodactyl || exit
 
-  if [ "$PTERODACTYL_VERSION" == "development" ] || [ "$PTERODACTYL_VERSION" == "v2" ]; then
+  if [ "$PTERODACTYL_VERSION" == "develop" ] || [ "$PTERODACTYL_VERSION" == "v2" ]; then
       git clone -b "$PTERODACTYL_VERSION" $PANEL_DL_URL
       mv -- panel/* /var/www/pterodactyl
       rm -rf panel
@@ -949,37 +949,51 @@ perform_install() {
   true
 }
 
+get_branch() {
+  curl --silent \
+    -H "Accept: application/vnd.github.v3+json" \
+    https://api.github.com/repos/pterodactyl/panel/releases |
+    grep '"tag_name":' |
+    sed -E 's/.*"([^"]+)".*/\1/'
+}
+
 choose_branch() {
   echo -ne "* Would you like to choose a specific version/branch to be installed? (y/N): "
   read -r CUSTOM_VERSION
 
   if [[ "$CUSTOM_VERSION" =~ [Yy] ]]; then
+    CREATE_ARRAY=$'\n' read -d "\034" -r -a array <<< "$(get_branch)\034" # See: https://unix.stackexchange.com/questions/628527/split-string-on-newline-and-write-it-into-array-using-read
+    PENULTIMATE_VERSION="${array[2]}"
+    ANTIPENULTIMATE_VERSION="${array[1]}"
     list_branches
     update_links
   fi
 }
 
+# Remove V2 as soon as it is officially released.
 list_branches() {
 echo -ne "* Choose a branch to install:
-1) $PTERODACTYL_VERSION (${YELLOW}Default${RESET})
-2) release/v1.6.0
-3) release/v1.6.6
+1) release/$PTERODACTYL_VERSION (${COLOR_YELLOW}Latest${COLOR_NC})
+2) release/$PENULTIMATE_VERSION
+3) release/$ANTIPENULTIMATE_VERSION
 4) development
 5) v2
 "
+echo
+echo -n "* Input: "
 read -r PTERODACTYL_VERSION
 case "$PTERODACTYL_VERSION" in
   "" | 1)
     true
   ;;
   2)
-    PTERODACTYL_VERSION="v1.6.0"
+    PTERODACTYL_VERSION="$PENULTIMATE_VERSION"
   ;;
   3)
-    PTERODACTYL_VERSION="v1.6.6"
+    PTERODACTYL_VERSION="$ANTIPENULTIMATE_VERSION"
   ;;
   4)
-    PTERODACTYL_VERSION="development"
+    PTERODACTYL_VERSION="develop"
   ;;
   5)
     PTERODACTYL_VERSION="v2"
@@ -992,11 +1006,11 @@ esac
 }
 
 update_links() {
-if [ "$PTERODACTYL_VERSION" == "v1.6.0" ]; then
-    PANEL_DL_URL="https://github.com/pterodactyl/panel/releases/download/v1.6.0/panel.tar.gz"
-  elif [ "$PTERODACTYL_VERSION" == "v1.6.6" ]; then
-    PANEL_DL_URL="https://github.com/pterodactyl/panel/releases/download/v1.6.6/panel.tar.gz"
-  elif [ "$PTERODACTYL_VERSION" == "development" ] || [ "$PTERODACTYL_VERSION" == "v2" ]; then
+if [ "$PTERODACTYL_VERSION" == "$PENULTIMATE_VERSION" ]; then
+    PANEL_DL_URL="https://github.com/pterodactyl/panel/releases/download/$PENULTIMATE_VERSION/panel.tar.gz"
+  elif [ "$PTERODACTYL_VERSION" == "$ANTIPENULTIMATE_VERSION" ]; then
+    PANEL_DL_URL="https://github.com/pterodactyl/panel/releases/download/$ANTIPENULTIMATE_VERSION/panel.tar.gz"
+  elif [ "$PTERODACTYL_VERSION" == "develop" ] || [ "$PTERODACTYL_VERSION" == "v2" ]; then
     PANEL_DL_URL="https://github.com/pterodactyl/panel.git"
 fi
 }
