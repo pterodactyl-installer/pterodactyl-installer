@@ -87,6 +87,9 @@ CONFIGURE_FIREWALL=false
 # build panel
 BUILD_PANEL=false
 
+# Default PHP Version
+PHP_VERSION="8.0"
+
 # input validation regex's
 email_regex="^(([A-Za-z0-9]+((\.|\-|\_|\+)?[A-Za-z0-9]?)*[A-Za-z0-9]+)|[A-Za-z0-9]+)@(([A-Za-z0-9]+)+((\.|\-|\_)?([A-Za-z0-9]+)+)*)+\.([A-Za-z]{2,})+$"
 
@@ -381,8 +384,7 @@ ptdl_dl() {
 
   if [ "$PTERODACTYL_VERSION" == "develop" ] || [ "$PTERODACTYL_VERSION" == "v2" ]; then
       git clone -b "$PTERODACTYL_VERSION" $PANEL_DL_URL
-      curl -O https://raw.githubusercontent.com/pterodactyl/panel/develop/.env.example # the git command does not download hidden files.
-      mv -- panel/* /var/www/pterodactyl
+      cp -rf -- panel/* panel/.[a-zA-Z0-9]* /var/www/pterodactyl # Copy everything that is hidden.
       rm -rf panel
       BUILD_PANEL=true
     else
@@ -584,7 +586,7 @@ ubuntu20_dep() {
   apt_update
 
   # Install Dependencies
-  apt -y install php8.0 php8.0-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis cron
+  apt -y install php"$PHP_VERSION" php"$PHP_VERSION"-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis cron
 
   # Enable services
   enable_services_debian_based
@@ -611,7 +613,7 @@ ubuntu18_dep() {
   apt_update
 
   # Install Dependencies
-  apt -y install php8.0 php8.0-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis cron
+  apt -y install php"$PHP_VERSION" php"$PHP_VERSION"-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis cron
 
   # Enable services
   enable_services_debian_based
@@ -637,7 +639,7 @@ debian_stretch_dep() {
   apt_update
 
   # Install Dependencies
-  apt -y install php8.0 php8.0-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server cron
+  apt -y install php"$PHP_VERSION" php"$PHP_VERSION"-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server cron
 
   # Enable services
   enable_services_debian_based
@@ -661,7 +663,7 @@ debian_buster_dep() {
   apt_update
 
   # install dependencies
-  apt -y install php8.0 php8.0-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server cron
+  apt -y install php"$PHP_VERSION" php"$PHP_VERSION"-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server cron
 
   # Enable services
   enable_services_debian_based
@@ -685,7 +687,7 @@ debian_dep() {
   apt_update
 
   # install dependencies
-  apt -y install php8.0 php8.0-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server cron
+  apt -y install php"$PHP_VERSION" php"$PHP_VERSION"-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server cron
 
   # Enable services
   enable_services_debian_based
@@ -702,8 +704,9 @@ centos7_dep() {
   # Add remi repo (php8.0)
   yum install -y epel-release http://rpms.remirepo.net/enterprise/remi-release-7.rpm
   yum install -y yum-utils
+  yum remove php-* -y
   yum-config-manager -y --disable remi-php54
-  yum-config-manager -y --enable remi-php80
+  yum-config-manager -y --enable remi-php"$PHP_VERSION"
   yum_update
 
   # Install MariaDB
@@ -729,7 +732,7 @@ centos8_dep() {
 
   # add remi repo (php8.0)
   dnf install -y epel-release http://rpms.remirepo.net/enterprise/remi-release-8.rpm
-  dnf module enable -y php:remi-8.0
+  dnf module enable -y php:remi-"$PHP_VERSION"
   dnf_update
 
   dnf install -y php php-common php-fpm php-cli php-json php-mysqlnd php-gd php-mbstring php-pdo php-zip php-bcmath php-dom php-opcache
@@ -899,9 +902,18 @@ build_panel() {
     
     # Install yarn and build the panel
     print_warning "This process takes a few minutes, please do not cancel it."
-    npm i -g yarn
-    yarn --cwd /var/www/pterodactyl install
-    yarn --cwd /var/www/pterodactyl build:production
+    if [ "$PTERODACTYL_VERSION" == "v2" ]; then
+        npm i -g yarn
+        cd /var/www/pterodactyl
+        yarn install
+        yarn add @emotion/react
+        yarn build
+      else
+        npm i -g yarn
+        yarn --cwd /var/www/pterodactyl install
+        yarn --cwd /var/www/pterodactyl add @emotion/react
+        yarn --cwd /var/www/pterodactyl build:production
+    fi
 }
 
 ##### MAIN FUNCTIONS #####
@@ -1034,6 +1046,26 @@ main() {
   # detect distro
   detect_distro
 
+  # checks if the system is compatible with this installation script
+  check_os_comp
+
+  if [[ "$CUSTOM_VERSION" =~ [Yy] ]] && [ "$PTERODACTYL_VERSION" == "v2" ]; then
+      if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
+          PHP_VERSION="8.1"
+          PHP_SOCKET="/run/php/php8.1-fpm.sock"
+        elif [ "$OS" == "centos" ] && [ "$OS_VER_MAJOR" == "7" ]; then
+          PHP_VERSION="81"
+        else
+          PHP_VERSION="8.1"
+      fi
+    elif [[ "$CUSTOM_VERSION" =~ [Yy] ]] && [ "$PTERODACTYL_VERSION" == "develop" ]; then
+      if [ "$OS" == "centos" ] && [ "$OS_VER_MAJOR" == "7" ]; then
+          PHP_VERSION="80"
+        else
+          PHP_VERSION="8.0"
+      fi
+  fi
+
   print_brake 70
   echo "* Pterodactyl panel installation script @ $SCRIPT_RELEASE"
   echo "*"
@@ -1045,9 +1077,6 @@ main() {
   echo "* Running $OS version $OS_VER."
   echo "* Latest pterodactyl/panel is $PTERODACTYL_VERSION"
   print_brake 70
-
-  # checks if the system is compatible with this installation script
-  check_os_comp
 
   # set database credentials
   print_brake 72
