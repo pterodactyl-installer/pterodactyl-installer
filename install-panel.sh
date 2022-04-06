@@ -357,6 +357,11 @@ check_os_comp() {
     ;;
   esac
 
+  # Upgrade PHP if the branch is different
+  if [[ "$CUSTOM_VERSION" =~ [Yy] ]]; then
+    configure_dependencies
+  fi
+
   # exit if not supported
   if [ "$SUPPORTED" == true ]; then
     echo "* $OS $OS_VER is supported."
@@ -364,6 +369,25 @@ check_os_comp() {
     echo "* $OS $OS_VER is not supported"
     print_error "Unsupported OS"
     exit 1
+  fi
+}
+
+configure_dependencies() {
+  if [ "$PTERODACTYL_VERSION" == "v2" ]; then
+    if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
+        PHP_VERSION="8.1"
+        PHP_SOCKET="/run/php/php8.1-fpm.sock"
+      elif [ "$OS" == "centos" ] && [ "$OS_VER_MAJOR" == "7" ]; then
+        PHP_VERSION="81"
+      else
+        PHP_VERSION="8.1"
+    fi
+    elif [ "$PTERODACTYL_VERSION" == "develop" ]; then
+    if [ "$OS" == "centos" ] && [ "$OS_VER_MAJOR" == "7" ]; then
+        PHP_VERSION="80"
+      else
+        PHP_VERSION="8.0"
+    fi
   fi
 }
 
@@ -383,9 +407,7 @@ ptdl_dl() {
   cd /var/www/pterodactyl || exit
 
   if [ "$PTERODACTYL_VERSION" == "develop" ] || [ "$PTERODACTYL_VERSION" == "v2" ]; then
-      git clone -b "$PTERODACTYL_VERSION" $PANEL_DL_URL
-      cp -rf -- panel/* panel/.[a-zA-Z0-9]* /var/www/pterodactyl # Copy everything that is hidden.
-      rm -rf panel
+      git clone -b "$PTERODACTYL_VERSION" $PANEL_DL_URL /var/www/pterodactyl
       BUILD_PANEL=true
     else
       curl -Lo panel.tar.gz "$PANEL_DL_URL"
@@ -902,18 +924,12 @@ build_panel() {
     
     # Install yarn and build the panel
     print_warning "This process takes a few minutes, please do not cancel it."
-    if [ "$PTERODACTYL_VERSION" == "v2" ]; then
-        npm i -g yarn
-        cd /var/www/pterodactyl
-        yarn install
-        yarn add @emotion/react
-        yarn build
-      else
-        npm i -g yarn
-        yarn --cwd /var/www/pterodactyl install
-        yarn --cwd /var/www/pterodactyl add @emotion/react
-        yarn --cwd /var/www/pterodactyl build:production
-    fi
+
+    npm i -g yarn
+    cd /var/www/pterodactyl
+    yarn install
+    yarn add @emotion/react
+    yarn build
 }
 
 ##### MAIN FUNCTIONS #####
@@ -1048,23 +1064,6 @@ main() {
 
   # checks if the system is compatible with this installation script
   check_os_comp
-
-  if [[ "$CUSTOM_VERSION" =~ [Yy] ]] && [ "$PTERODACTYL_VERSION" == "v2" ]; then
-      if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
-          PHP_VERSION="8.1"
-          PHP_SOCKET="/run/php/php8.1-fpm.sock"
-        elif [ "$OS" == "centos" ] && [ "$OS_VER_MAJOR" == "7" ]; then
-          PHP_VERSION="81"
-        else
-          PHP_VERSION="8.1"
-      fi
-    elif [[ "$CUSTOM_VERSION" =~ [Yy] ]] && [ "$PTERODACTYL_VERSION" == "develop" ]; then
-      if [ "$OS" == "centos" ] && [ "$OS_VER_MAJOR" == "7" ]; then
-          PHP_VERSION="80"
-        else
-          PHP_VERSION="8.0"
-      fi
-  fi
 
   print_brake 70
   echo "* Pterodactyl panel installation script @ $SCRIPT_RELEASE"
