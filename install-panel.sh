@@ -1056,11 +1056,11 @@ main() {
     fi
   fi
   
-  # choose version/branch
-  choose_branch
-
   # detect distro
   detect_distro
+  
+  # choose version/branch
+  choose_branch
 
   # checks if the system is compatible with this installation script
   check_os_comp
