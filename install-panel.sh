@@ -334,7 +334,9 @@ check_os_comp() {
       exit 1
     fi
   fi
+}
 
+configure_php() {
   case "$OS" in
   ubuntu)
     PHP_SOCKET="/run/php/php8.0-fpm.sock"
@@ -356,12 +358,7 @@ check_os_comp() {
     SUPPORTED=false
     ;;
   esac
-
-  # Upgrade PHP if the branch is different
-  if [[ "$CUSTOM_VERSION" =~ [Yy] ]]; then
-    configure_dependencies
-  fi
-
+  
   # exit if not supported
   if [ "$SUPPORTED" == true ]; then
     echo "* $OS $OS_VER is supported."
@@ -369,6 +366,11 @@ check_os_comp() {
     echo "* $OS $OS_VER is not supported"
     print_error "Unsupported OS"
     exit 1
+  fi
+
+  # Upgrade PHP if the branch is different
+  if [[ "$CUSTOM_VERSION" =~ [Yy] ]]; then
+    configure_dependencies
   fi
 }
 
@@ -1064,6 +1066,9 @@ main() {
 
   # checks if the system is compatible with this installation script
   check_os_comp
+  
+  # configure php dependecie
+  configure_php
 
   print_brake 70
   echo "* Pterodactyl panel installation script @ $SCRIPT_RELEASE"
@@ -1074,7 +1079,7 @@ main() {
   echo "* This script is not associated with the official Pterodactyl Project."
   echo "*"
   echo "* Running $OS version $OS_VER."
-  echo "* Latest pterodactyl/panel is $PTERODACTYL_VERSION"
+  echo "* Pterodactyl/panel is $PTERODACTYL_VERSION"
   print_brake 70
 
   # set database credentials
