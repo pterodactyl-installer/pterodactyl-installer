@@ -520,7 +520,7 @@ configure_mysql() {
       sed -ne 's/^#bind-address=0.0.0.0$/bind-address=0.0.0.0/' /etc/my.cnf.d/mariadb-server.cnf
       ;;
     esac
-  
+
     systemctl restart mysqld
   fi
 

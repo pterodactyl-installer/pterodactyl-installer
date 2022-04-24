@@ -120,7 +120,7 @@ valid_email() {
 }
 
 invalid_ip() {
-  ip route get "$1" > /dev/null 2>&1
+  ip route get "$1" >/dev/null 2>&1
   echo $?
 }
 
@@ -358,7 +358,7 @@ configure_php() {
     SUPPORTED=false
     ;;
   esac
-  
+
   # exit if not supported
   if [ "$SUPPORTED" == true ]; then
     echo "* $OS $OS_VER is supported."
@@ -377,18 +377,18 @@ configure_php() {
 configure_dependencies() {
   if [ "$PTERODACTYL_VERSION" == "v2" ]; then
     if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
-        PHP_VERSION="8.1"
-        PHP_SOCKET="/run/php/php8.1-fpm.sock"
-      elif [ "$OS" == "centos" ] && [ "$OS_VER_MAJOR" == "7" ]; then
-        PHP_VERSION="81"
-      else
-        PHP_VERSION="8.1"
+      PHP_VERSION="8.1"
+      PHP_SOCKET="/run/php/php8.1-fpm.sock"
+    elif [ "$OS" == "centos" ] && [ "$OS_VER_MAJOR" == "7" ]; then
+      PHP_VERSION="81"
+    else
+      PHP_VERSION="8.1"
     fi
-    elif [ "$PTERODACTYL_VERSION" == "develop" ]; then
+  elif [ "$PTERODACTYL_VERSION" == "develop" ]; then
     if [ "$OS" == "centos" ] && [ "$OS_VER_MAJOR" == "7" ]; then
-        PHP_VERSION="80"
-      else
-        PHP_VERSION="8.0"
+      PHP_VERSION="80"
+    else
+      PHP_VERSION="8.0"
     fi
   fi
 }
@@ -409,11 +409,11 @@ ptdl_dl() {
   cd /var/www/pterodactyl || exit
 
   if [ "$PTERODACTYL_VERSION" == "develop" ] || [ "$PTERODACTYL_VERSION" == "v2" ]; then
-      git clone -b "$PTERODACTYL_VERSION" $PANEL_DL_URL /var/www/pterodactyl
-      BUILD_PANEL=true
-    else
-      curl -Lo panel.tar.gz "$PANEL_DL_URL"
-      tar -xzvf panel.tar.gz
+    git clone -b "$PTERODACTYL_VERSION" $PANEL_DL_URL /var/www/pterodactyl
+    BUILD_PANEL=true
+  else
+    curl -Lo panel.tar.gz "$PANEL_DL_URL"
+    tar -xzvf panel.tar.gz
   fi
 
   chmod -R 755 storage/* bootstrap/cache/
@@ -911,27 +911,27 @@ build_panel() {
 
   # Check if nodejs is already installed
   if node -v &>/dev/null; then
-      echo "* The dependencies are already installed, skipping this step..."
-    else
-      case "$OS" in
-        debian | ubuntu)
-          curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash - && apt-get install -y nodejs
-        ;;
-        centos)
-          [ "$OS_VER_MAJOR" == "7" ] && curl -sL https://rpm.nodesource.com/setup_14.x | sudo -E bash - && sudo yum install -y nodejs
-          [ "$OS_VER_MAJOR" == "8" ] && curl -sL https://rpm.nodesource.com/setup_14.x | sudo -E bash - && sudo dnf install -y nodejs
-        ;;
-      esac
-    fi
-    
-    # Install yarn and build the panel
-    print_warning "This process takes a few minutes, please do not cancel it."
+    echo "* The dependencies are already installed, skipping this step..."
+  else
+    case "$OS" in
+    debian | ubuntu)
+      curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash - && apt-get install -y nodejs
+      ;;
+    centos)
+      [ "$OS_VER_MAJOR" == "7" ] && curl -sL https://rpm.nodesource.com/setup_14.x | sudo -E bash - && sudo yum install -y nodejs
+      [ "$OS_VER_MAJOR" == "8" ] && curl -sL https://rpm.nodesource.com/setup_14.x | sudo -E bash - && sudo dnf install -y nodejs
+      ;;
+    esac
+  fi
 
-    npm i -g yarn
-    cd /var/www/pterodactyl
-    yarn install
-    yarn add @emotion/react
-    yarn build
+  # Install yarn and build the panel
+  print_warning "This process takes a few minutes, please do not cancel it."
+
+  npm i -g yarn
+  cd /var/www/pterodactyl
+  yarn install
+  yarn add @emotion/react
+  yarn build
 }
 
 ##### MAIN FUNCTIONS #####
@@ -993,7 +993,7 @@ choose_branch() {
   read -r CUSTOM_VERSION
 
   if [[ "$CUSTOM_VERSION" =~ [Yy] ]]; then
-    CREATE_ARRAY=$'\n' read -d "\034" -r -a array <<< "$(get_branch)\034" # See: https://unix.stackexchange.com/questions/628527/split-string-on-newline-and-write-it-into-array-using-read
+    CREATE_ARRAY=$'\n' read -d "\034" -r -a array <<<"$(get_branch)\034" # See: https://unix.stackexchange.com/questions/628527/split-string-on-newline-and-write-it-into-array-using-read
     PENULTIMATE_VERSION="${array[2]}"
     ANTIPENULTIMATE_VERSION="${array[1]}"
     list_branches
@@ -1003,47 +1003,47 @@ choose_branch() {
 
 # Remove V2 as soon as it is officially released.
 list_branches() {
-echo -ne "* Choose a branch to install:
+  echo -ne "* Choose a branch to install:
 1) release/$PTERODACTYL_VERSION (${COLOR_YELLOW}Latest${COLOR_NC})
 2) release/$PENULTIMATE_VERSION
 3) release/$ANTIPENULTIMATE_VERSION
 4) development
 5) v2
 "
-echo
-echo -n "* Input: "
-read -r PTERODACTYL_VERSION
-case "$PTERODACTYL_VERSION" in
+  echo
+  echo -n "* Input: "
+  read -r PTERODACTYL_VERSION
+  case "$PTERODACTYL_VERSION" in
   "" | 1)
     true
-  ;;
+    ;;
   2)
     PTERODACTYL_VERSION="$PENULTIMATE_VERSION"
-  ;;
+    ;;
   3)
     PTERODACTYL_VERSION="$ANTIPENULTIMATE_VERSION"
-  ;;
+    ;;
   4)
     PTERODACTYL_VERSION="develop"
-  ;;
+    ;;
   5)
     PTERODACTYL_VERSION="v2"
-  ;;
+    ;;
   *)
     print_error "Invalid option!"
     list_branches
-  ;;
-esac
+    ;;
+  esac
 }
 
 update_links() {
-if [ "$PTERODACTYL_VERSION" == "$PENULTIMATE_VERSION" ]; then
+  if [ "$PTERODACTYL_VERSION" == "$PENULTIMATE_VERSION" ]; then
     PANEL_DL_URL="https://github.com/pterodactyl/panel/releases/download/$PENULTIMATE_VERSION/panel.tar.gz"
   elif [ "$PTERODACTYL_VERSION" == "$ANTIPENULTIMATE_VERSION" ]; then
     PANEL_DL_URL="https://github.com/pterodactyl/panel/releases/download/$ANTIPENULTIMATE_VERSION/panel.tar.gz"
   elif [ "$PTERODACTYL_VERSION" == "develop" ] || [ "$PTERODACTYL_VERSION" == "v2" ]; then
     PANEL_DL_URL="https://github.com/pterodactyl/panel.git"
-fi
+  fi
 }
 
 main() {
@@ -1057,16 +1057,16 @@ main() {
       exit 1
     fi
   fi
-  
+
   # detect distro
   detect_distro
-  
+
   # choose version/branch
   choose_branch
 
   # checks if the system is compatible with this installation script
   check_os_comp
-  
+
   # configure php dependecie
   configure_php
 
