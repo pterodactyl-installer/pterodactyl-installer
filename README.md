@@ -57,7 +57,7 @@ List of supported installation setups for panel and Wings (installations support
 |                  | 8       | :red_circle: \*\*  |
 
 _\* Ubuntu 16 and Debian 8 no longer supported since Pterodactyl does not actively support it._
-_\*\* Centos 8 is EOL._
+_\*\* CentOS 8 is EOL._
 
 ## Using the installation scripts
 

@@ -28,6 +28,12 @@ set -e
 #                                                                           #
 #############################################################################
 
+# TODO: Change to something like
+# source /tmp/lib.sh || source <(curl -sL https://raw.githubuserc.com/vilhelmprytz/pterodactyl-installer/master/lib.sh)
+# When released
+# shellcheck source=lib.sh
+source lib.sh
+
 CHECKIP_URL="https://checkip.pterodactyl-installer.se"
 DNS_SERVER="8.8.8.8"
 
@@ -36,26 +42,6 @@ if [[ $EUID -ne 0 ]]; then
   echo "* This script must be executed with root privileges (sudo)." 1>&2
   exit 1
 fi
-
-# check for curl
-if ! [ -x "$(command -v curl)" ]; then
-  echo "* curl is required in order for this script to work."
-  echo "* install using apt (Debian and derivatives) or yum/dnf (CentOS)"
-  exit 1
-fi
-
-output() {
-  echo "* $1"
-}
-
-error() {
-  COLOR_RED='\033[0;31m'
-  COLOR_NC='\033[0m'
-
-  echo ""
-  echo -e "* ${COLOR_RED}ERROR${COLOR_NC}: $1"
-  echo ""
-}
 
 fail() {
   output "The DNS record ($dns_record) does not match your server IP. Please make sure the FQDN $fqdn is pointing to the IP of your server, $ip"
@@ -69,9 +55,8 @@ fail() {
 }
 
 dep_install() {
-  [ "$os" == "centos" ] && yum install -q -y bind-utils
-  [ "$os" == "debian" ] && apt-get install -y dnsutils -qq
-  [ "$os" == "ubuntu" ] && apt-get install -y dnsutils -qq
+  [ "$OS" == "centos" ] && install_packages "bind-utils" true
+  [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ] && install_packages "dnsutils" true
   return 0
 }
 
@@ -96,7 +81,6 @@ dns_verify() {
 
 main() {
   fqdn="$1"
-  os="$2"
   dep_install
   confirm
   dns_verify

@@ -171,57 +171,33 @@ ptdl_dl() {
   output "Downloaded pterodactyl panel files & installed composer dependencies!"
 }
 
-# Create a databse with user
+# Create a database with user
 create_database() {
-  if [ "$OS" == "centos" ]; then
-    # secure MariaDB
-    output "MariaDB secure installation. The following are safe defaults."
-    output "Set root password? [Y/n] Y"
-    output "Remove anonymous users? [Y/n] Y"
-    output "Disallow root login remotely? [Y/n] Y"
-    output "Remove test database and access to it? [Y/n] Y"
-    output "Reload privilege tables now? [Y/n] Y"
-    output ""
+  local db_name="$1";
+  local db_user_name="$2";
+  local db_user_password="$3";
+  local db_host="${4:-'127.0.0.0'}"
 
-    [ "$OS_VER_MAJOR" == "7" ] && mariadb-secure-installation
-    [ "$OS_VER_MAJOR" == "8" ] && mysql_secure_installation
+  output "Creating database $db_name with user $db_user_name..."
 
-    output "The script should have asked you to set the MySQL root password earlier (not to be confused with the pterodactyl database user password)"
-    output "MySQL will now ask you to enter the password before each command."
+  output "Creating MySQL user.."
+  mysql -u root -e "CREATE USER '$db_user_name'@'$db_host' IDENTIFIED BY '$db_user_password';"
 
-    output "Create MySQL user."
-    mysql -u root -p -e "CREATE USER '${MYSQL_USER}'@'127.0.0.1' IDENTIFIED BY '${MYSQL_PASSWORD}';"
+  output "Creating database.."
+  mysql -u root -e "CREATE DATABASE $db_name;"
 
-    output "Create database."
-    mysql -u root -p -e "CREATE DATABASE ${MYSQL_DB};"
+  output "Granting privileges.."
+  mysql -u root -e "GRANT ALL PRIVILEGES ON $db_name.* TO '$db_user_name'@'$db_host' WITH GRANT OPTION;"
 
-    output "Grant privileges."
-    mysql -u root -p -e "GRANT ALL PRIVILEGES ON ${MYSQL_DB}.* TO '${MYSQL_USER}'@'127.0.0.1' WITH GRANT OPTION;"
+  output "Flushing privileges.."
+  mysql -u root -e "FLUSH PRIVILEGES;"
 
-    output "Flush privileges."
-    mysql -u root -p -e "FLUSH PRIVILEGES;"
-  else
-    output "Performing MySQL queries.."
-
-    output "Creating MySQL user.."
-    mysql -u root -e "CREATE USER '${MYSQL_USER}'@'127.0.0.1' IDENTIFIED BY '${MYSQL_PASSWORD}';"
-
-    output "Creating database.."
-    mysql -u root -e "CREATE DATABASE ${MYSQL_DB};"
-
-    output "Granting privileges.."
-    mysql -u root -e "GRANT ALL PRIVILEGES ON ${MYSQL_DB}.* TO '${MYSQL_USER}'@'127.0.0.1' WITH GRANT OPTION;"
-
-    output "Flushing privileges.."
-    mysql -u root -e "FLUSH PRIVILEGES;"
-
-    output "MySQL database created & configured!"
-  fi
+  output "MySQL database created & configured!"
 }
 
 # Configure environment
 configure() {
-  app_url="http://$FQDN"
+  local app_url="http://$FQDN"
   [ "$ASSUME_SSL" == true ] && app_url="https://$FQDN"
   [ "$CONFIGURE_LETSENCRYPT" == true ] && app_url="https://$FQDN"
 
@@ -330,9 +306,6 @@ selinux_allow() {
 }
 
 ubuntu_dep() {
-  # Update before installing anything
-  update_repos
-
   # Install deps for adding repos
   install_packages "software-properties-common curl apt-transport-https ca-certificates gnupg"
 
@@ -349,9 +322,6 @@ ubuntu_dep() {
 }
 
 debian_dep() {
-  # Update before installing anything
-  update_repos
-
   # Install deps for adding repos
   install_packages "dirmngr ca-certificates apt-transport-https lsb-release"
 
@@ -388,25 +358,19 @@ alma_rocky_dep() {
   # add remi repo (php8.0)
   install_packages "epel-release http://rpms.remirepo.net/enterprise/remi-release-8.rpm"
   dnf module enable -y php:remi-8.0
-
-  # MariaDB (use from official repo)
-  install_packages "mariadb mariadb-server"
-
-  # Other dependencies
-  install_packages "nginx curl tar zip unzip git redis"
-
 }
 
 dep_install() {
   output "Installing dependencies for $OS $OS_VER..."
+
+  # Update repos before installing
+  update_repos
+
   case "$OS" in
   ubuntu | debian)
     [ "$CONFIGURE_UFW" == true ] && firewall_ufw
     [ "$OS" == "ubuntu" ] && ubuntu_dep
     [ "$OS" == "debian" ] && debian_dep
-
-    # Update repos before installing
-    update_repos
 
     # Install dependencies
     install_packages "php8.0 php8.0-{cli,common,gd,mysql,mbstring,bcmath,xml,fpm,curl,zip} \
@@ -451,18 +415,17 @@ php_fpm_conf() {
 }
 
 firewall_ufw() {
-  update_repos
   install_packages "ufw"
 
   echo -e "\n* Enabling Uncomplicated Firewall (UFW)"
   output "Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
 
   # pointing to /dev/null silences the command output
-  ufw allow ssh >/dev/null
-  ufw allow http >/dev/null
-  ufw allow https >/dev/null
+  ufw allow ssh > /dev/null   # Port 22
+  ufw allow http > /dev/null  # Port 80
+  ufw allow https > /dev/null # Port 443
 
-  ufw --force enable
+  ufw --force enable          # Enable firewall
   ufw --force reload
   ufw status numbered | sed '/v6/d'
 }
@@ -475,7 +438,7 @@ firewall_firewalld() {
   install_packages "firewalld"
 
   # Enable
-  systemctl --now enable firewalld >/dev/null # Enable and start
+  systemctl --now enable firewalld > /dev/null # Enable and start
 
   # Configure
   firewall-cmd --add-service=http --permanent -q  # Port 80
@@ -573,7 +536,7 @@ perform_install() {
   dep_install
   install_composer
   ptdl_dl
-  create_database
+  create_database "$MYSQL_DB"" $MYSQL_USER" "$MYSQL_PASSWORD"
   configure
   set_folder_permissions
   insert_cronjob
@@ -635,7 +598,7 @@ main() {
   rand_pw=$(gen_passwd 64)
   password_input MYSQL_PASSWORD "Password (press enter to use randomly generated password): " "MySQL password cannot be empty" "$rand_pw"
 
-  readarray -t valid_timezones <<<"$(curl -s "$GITHUB_BASE_URL"/configs/valid_timezones.txt)"
+  readarray -t valid_timezones <<< "$(curl -s "$GITHUB_BASE_URL"/configs/valid_timezones.txt)"
   output "List of valid timezones here $(hyperlink "https://www.php.net/manual/en/timezones.php")"
 
   while [ -z "$timezone" ]; do
@@ -679,7 +642,7 @@ main() {
   fi
 
   # verify FQDN if user has selected to assume SSL or configure Let's Encrypt
-  [ "$CONFIGURE_LETSENCRYPT" == true ] || [ "$ASSUME_SSL" == true ] && bash <(curl -s $GITHUB_BASE_URL/lib/verify-fqdn.sh) "$FQDN" "$OS"
+  [ "$CONFIGURE_LETSENCRYPT" == true ] || [ "$ASSUME_SSL" == true ] && bash <(curl -s "$GITHUB_BASE_URL"/lib/verify-fqdn.sh) "$FQDN"
 
   # summary
   summary
