@@ -6,7 +6,7 @@ set -e
 #                                                                           #
 # Project 'pterodactyl-installer' for wings                                 #
 #                                                                           #
-# Copyright (C) 2018 - 2021, Vilhelm Prytz, <vilhelm@prytznet.se>           #
+# Copyright (C) 2018 - 2022, Vilhelm Prytz, <vilhelm@prytznet.se>           #
 #                                                                           #
 #   This program is free software: you can redistribute it and/or modify    #
 #   it under the terms of the GNU General Public License as published by    #
@@ -74,6 +74,9 @@ EMAIL=""
 
 # Database host
 CONFIGURE_DBHOST=false
+CONFIGURE_DBEXTERNAL=false
+CONFIGURE_DBEXTERNAL_HOST="%"
+CONFIGURE_DB_FIREWALL=false
 MYSQL_DBHOST_USER="pterodactyluser"
 MYSQL_DBHOST_PASSWORD="password"
 
@@ -308,6 +311,8 @@ check_os_comp() {
     exit 1
   fi
 
+  export PATH="$PATH:/sbin:/usr/sbin"
+
   virt_serv=$(virt-what)
 
   case "$virt_serv" in
@@ -363,16 +368,12 @@ install_docker() {
       software-properties-common
 
     # Add docker gpg key
-    curl -fsSL https://download.docker.com/linux/"$OS"/gpg | apt-key add -
-
-    # Show fingerprint to user
-    apt-key fingerprint 0EBFCD88
+    curl -fsSL https://download.docker.com/linux/"$OS"/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
 
     # Add docker repo
-    add-apt-repository \
-      "deb [arch=$ARCH] https://download.docker.com/linux/$OS \
-    $(lsb_release -cs) \
-    stable"
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/$OS \
+      $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
 
     # Install docker
     apt_update
@@ -461,31 +462,69 @@ ask_database_user() {
   read -r CONFIRM_DBHOST
 
   if [[ "$CONFIRM_DBHOST" =~ [Yy] ]]; then
+    ask_database_external
     CONFIGURE_DBHOST=true
+  fi
+}
+
+ask_database_external() {
+  echo -n "* Do you want to configure MySQL to be accessed externally? (y/N): "
+  read -r CONFIRM_DBEXTERNAL
+
+  if [[ "$CONFIRM_DBEXTERNAL" =~ [Yy] ]]; then
+    echo -n "* Enter the panel address (blank for any address): "
+    read -r CONFIRM_DBEXTERNAL_HOST
+    if [ "$CONFIRM_DBEXTERNAL_HOST" != "" ]; then
+      CONFIGURE_DBEXTERNAL_HOST="$CONFIRM_DBEXTERNAL_HOST"
+    fi
+    [ "$CONFIGURE_FIREWALL" == true ] && ask_database_firewall
+    CONFIGURE_DBEXTERNAL=true
+  fi
+}
+
+ask_database_firewall() {
+  print_warning "Allow incoming traffic to port 3306 (MySQL) can potentially be a security risk, unless you know what you are doing!"
+  echo -n "* Would you like to allow incoming traffic to port 3306? (y/N): "
+  read -r CONFIRM_DB_FIREWALL
+  if [[ "$CONFIRM_DB_FIREWALL" =~ [Yy] ]]; then
+    CONFIGURE_DB_FIREWALL=true
   fi
 }
 
 configure_mysql() {
   echo "* Performing MySQL queries.."
 
-  echo "* Creating MySQL user..."
-  mysql -u root -e "CREATE USER '${MYSQL_DBHOST_USER}'@'127.0.0.1' IDENTIFIED BY '${MYSQL_DBHOST_PASSWORD}';"
+  if [ "$CONFIGURE_DBEXTERNAL" == true ]; then
+    echo "* Creating MySQL user..."
+    mysql -u root -e "CREATE USER '${MYSQL_DBHOST_USER}'@'${CONFIGURE_DBEXTERNAL_HOST}' IDENTIFIED BY '${MYSQL_DBHOST_PASSWORD}';"
 
-  echo "* Granting privileges.."
-  mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO '${MYSQL_DBHOST_USER}'@'127.0.0.1' WITH GRANT OPTION;"
+    echo "* Granting privileges.."
+    mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO '${MYSQL_DBHOST_USER}'@'${CONFIGURE_DBEXTERNAL_HOST}' WITH GRANT OPTION;"
+  else
+    echo "* Creating MySQL user..."
+    mysql -u root -e "CREATE USER '${MYSQL_DBHOST_USER}'@'127.0.0.1' IDENTIFIED BY '${MYSQL_DBHOST_PASSWORD}';"
+
+    echo "* Granting privileges.."
+    mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO '${MYSQL_DBHOST_USER}'@'127.0.0.1' WITH GRANT OPTION;"
+  fi
 
   echo "* Flushing privileges.."
   mysql -u root -e "FLUSH PRIVILEGES;"
 
   echo "* Changing MySQL bind address.."
-  case "$OS" in
-  debian | ubuntu)
-    sed -ne 's/^bind-address            = 127.0.0.1$/bind-address=0.0.0.0/' /etc/mysql/mariadb.conf.d/50-server.cnf
-    ;;
-  centos)
-    sed -ne 's/^#bind-address=0.0.0.0$/bind-address=0.0.0.0/' /etc/my.cnf.d/mariadb-server.cnf
-    ;;
-  esac
+
+  if [ "$CONFIGURE_DBEXTERNAL" == true ]; then
+    case "$OS" in
+    debian | ubuntu)
+      sed -i 's/127.0.0.1/0.0.0.0/g' /etc/mysql/mariadb.conf.d/50-server.cnf
+      ;;
+    centos)
+      sed -ne 's/^#bind-address=0.0.0.0$/bind-address=0.0.0.0/' /etc/my.cnf.d/mariadb-server.cnf
+      ;;
+    esac
+  
+    systemctl restart mysqld
+  fi
 
   echo "* MySQL configured!"
 }
@@ -513,7 +552,7 @@ firewall_ufw() {
   apt install ufw -y
 
   echo -e "\n* Enabling Uncomplicated Firewall (UFW)"
-  echo "* Opening port 22 (SSH), 8080 (Daemon Port), 2022 (Daemon SFTP Port)"
+  echo "* Opening port 22 (SSH), 8080 (Wings Port), 2022 (Wings SFTP Port)"
 
   # pointing to /dev/null silences the command output
   ufw allow ssh >/dev/null
@@ -522,6 +561,7 @@ firewall_ufw() {
 
   [ "$CONFIGURE_LETSENCRYPT" == true ] && ufw allow http >/dev/null
   [ "$CONFIGURE_LETSENCRYPT" == true ] && ufw allow https >/dev/null
+  [ "$CONFIGURE_DB_FIREWALL" == true ] && ufw allow 3306 >/dev/null
 
   ufw --force enable
   ufw --force reload
@@ -530,7 +570,7 @@ firewall_ufw() {
 
 firewall_firewalld() {
   echo -e "\n* Enabling firewall_cmd (firewalld)"
-  echo "* Opening port 22 (SSH), 8080 (Daemon Port), 2022 (Daemon SFTP Port)"
+  echo "* Opening port 22 (SSH), 8080 (Wings Port), 2022 (Wings SFTP Port)"
 
   # Install
   [ "$OS_VER_MAJOR" == "7" ] && yum -y -q install firewalld >/dev/null
@@ -545,6 +585,7 @@ firewall_firewalld() {
   firewall-cmd --add-port 2022/tcp --permanent -q                                         # Port 2022
   [ "$CONFIGURE_LETSENCRYPT" == true ] && firewall-cmd --add-service=http --permanent -q  # Port 80
   [ "$CONFIGURE_LETSENCRYPT" == true ] && firewall-cmd --add-service=https --permanent -q # Port 443
+  [ "$CONFIGURE_DB_FIREWALL" == true ] && firewall-cmd --add-service=mysql --permanent -q # Port 3306
 
   firewall-cmd --permanent --zone=trusted --change-interface=pterodactyl0 -q
   firewall-cmd --zone=trusted --add-masquerade --permanent
@@ -625,7 +666,7 @@ main() {
   print_brake 70
   echo "* Pterodactyl Wings installation script @ $SCRIPT_RELEASE"
   echo "*"
-  echo "* Copyright (C) 2018 - 2021, Vilhelm Prytz, <vilhelm@prytznet.se>"
+  echo "* Copyright (C) 2018 - 2022, Vilhelm Prytz, <vilhelm@prytznet.se>"
   echo "* https://github.com/vilhelmprytz/pterodactyl-installer"
   echo "*"
   echo "* This script is not associated with the official Pterodactyl Project."
@@ -648,6 +689,26 @@ main() {
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: this script will not enable swap (for docker)."
   print_brake 42
 
+  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
+    echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
+    read -r CONFIRM_UFW
+
+    if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
+      CONFIGURE_UFW=true
+      CONFIGURE_FIREWALL=true
+    fi
+  fi
+
+  if [ "$OS" == "centos" ]; then
+    echo -e -n "* Do you want to automatically configure firewall-cmd (firewall)? (y/N): "
+    read -r CONFIRM_FIREWALL_CMD
+
+    if [[ "$CONFIRM_FIREWALL_CMD" =~ [Yy] ]]; then
+      CONFIGURE_FIREWALL_CMD=true
+      CONFIGURE_FIREWALL=true
+    fi
+  fi
+
   ask_database_user
 
   if [ "$CONFIGURE_DBHOST" == true ]; then
@@ -664,28 +725,6 @@ main() {
     done
 
     password_input MYSQL_DBHOST_PASSWORD "Database host password: " "Password cannot be empty"
-  fi
-
-  # UFW is available for Ubuntu/Debian
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
-    echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
-    read -r CONFIRM_UFW
-
-    if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
-      CONFIGURE_UFW=true
-      CONFIGURE_FIREWALL=true
-    fi
-  fi
-
-  # Firewall-cmd is available for CentOS
-  if [ "$OS" == "centos" ]; then
-    echo -e -n "* Do you want to automatically configure firewall-cmd (firewall)? (y/N): "
-    read -r CONFIRM_FIREWALL_CMD
-
-    if [[ "$CONFIRM_FIREWALL_CMD" =~ [Yy] ]]; then
-      CONFIGURE_FIREWALL_CMD=true
-      CONFIGURE_FIREWALL=true
-    fi
   fi
 
   ask_letsencrypt
