@@ -114,7 +114,7 @@ valid_email() {
 }
 
 invalid_ip() {
-  ip route get "$1" > /dev/null 2>&1
+  ip route get "$1" >/dev/null 2>&1
   echo $?
 }
 
@@ -334,6 +334,7 @@ check_os_comp() {
     PHP_SOCKET="/run/php/php8.0-fpm.sock"
     [ "$OS_VER_MAJOR" == "18" ] && SUPPORTED=true
     [ "$OS_VER_MAJOR" == "20" ] && SUPPORTED=true
+    [ "$OS_VER_MAJOR" == "22" ] && SUPPORTED=true
     ;;
   debian)
     PHP_SOCKET="/run/php/php8.0-fpm.sock"
@@ -554,6 +555,30 @@ selinux_allow() {
   setsebool -P httpd_can_network_connect 1 || true # these commands can fail OK
   setsebool -P httpd_execmem 1 || true
   setsebool -P httpd_unified 1 || true
+}
+
+ubuntu22_dep() {
+  echo "* Installing dependencies for Ubuntu 22.."
+
+  # Add "add-apt-repository" command
+  apt -y install software-properties-common curl apt-transport-https ca-certificates gnupg
+
+  # Ubuntu universe repo
+  add-apt-repository universe
+
+  # Add PPA for PHP (we need 8.0 and focal only has 7.4)
+  LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php
+
+  # Update repositories list
+  apt_update
+
+  # Install Dependencies
+  apt -y install php8.0 php8.0-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis cron
+
+  # Enable services
+  enable_services_debian_based
+
+  echo "* Dependencies for Ubuntu installed!"
 }
 
 ubuntu20_dep() {
@@ -879,6 +904,7 @@ perform_install() {
     [ "$CONFIGURE_UFW" == true ] && firewall_ufw
 
     if [ "$OS" == "ubuntu" ]; then
+      [ "$OS_VER_MAJOR" == "22" ] && ubuntu22_dep
       [ "$OS_VER_MAJOR" == "20" ] && ubuntu20_dep
       [ "$OS_VER_MAJOR" == "18" ] && ubuntu18_dep
     elif [ "$OS" == "debian" ]; then

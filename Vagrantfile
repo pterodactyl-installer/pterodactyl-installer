@@ -6,6 +6,10 @@ Vagrant.configure("2") do |config|
   config.vm.network "public_network"
 
   # ubuntu
+  config.vm.define "ubuntu_jammy" do |ubuntu_jammy|
+    ubuntu_jammy.vm.box = "ubuntu/jammy64"
+  end
+
   config.vm.define "ubuntu_focal" do |ubuntu_focal|
     ubuntu_focal.vm.box = "ubuntu/focal64"
   end
