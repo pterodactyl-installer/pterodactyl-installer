@@ -96,6 +96,7 @@ vagrant up <name>
 
 Replace name with one of the following (supported installations).
 
+- `ubuntu_jammy`
 - `ubuntu_focal`
 - `ubuntu_bionic`
 - `debian_bullseye`
