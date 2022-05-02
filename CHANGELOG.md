@@ -4,6 +4,10 @@ This project follows the [semantic versioning](https://semver.org) convention. C
 
 ## next-release
 
+### Added
+
+- [#322](https://github.com/vilhelmprytz/pterodactyl-installer/issues/322) panel/wings: Added support for Ubuntu 22.04.
+
 ### Fixed
 
 - [#262](https://github.com/vilhelmprytz/pterodactyl-installer/issues/262) wings: Fix a bug that would cause the script to fail because /usr/sbin missing in $PATH when the script tries to run virt-what (thanks [@Linux123123](https://github.com/Linux123123) for contributing!).
