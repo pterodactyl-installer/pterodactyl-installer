@@ -96,6 +96,12 @@ get_latest_versions() {
   export PTERODACTYL_WINGS_VERSION
 }
 
+run_installer() {
+  # In prod
+  # bash <(curl -s -S -L "$GITHUB_BASE_URL/$SCRIPT_VERSION/installers/$1.sh") 
+  bash ../installers/"$1".sh
+}
+
 array_contains_element() {
   local e match="$1"
   shift
@@ -328,6 +334,7 @@ case "$OS" in
 ubuntu)
   [ "$OS_VER_MAJOR" == "18" ] && SUPPORTED=true
   [ "$OS_VER_MAJOR" == "20" ] && SUPPORTED=true
+  [ "$OS_VER_MAJOR" == "22" ] && SUPPORTED=true
   ;;
 debian)
   [ "$OS_VER_MAJOR" == "9" ] && SUPPORTED=true
@@ -357,4 +364,5 @@ if ! [ -x "$(command -v curl)" ]; then
   output "Installing curl..."
   update_repos true
   install_packages "curl" true
+  output "Installed curl"
 fi

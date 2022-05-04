@@ -40,13 +40,12 @@ source ../lib/lib.sh
 export FQDN=""
 
 # Default MySQL credentials
-export MYSQL_DB="panel"
-export MYSQL_USER="pterodactyl"
-MYSQL_PASSWORD="$(gen_passwd 64)"
-export MYSQL_PASSWORD
+export MYSQL_DB=""
+export MYSQL_USER=""
+export MYSQL_PASSWORD=""
  
 # Environment
-export timezone="Europe/Stockholm"
+export timezone=""
 export email=""
  
 # Initial admin account
@@ -135,6 +134,8 @@ main() {
       exit 1
     fi
   fi
+
+  get_latest_versions
 
   print_brake 70
   output "Pterodactyl panel installation script @ $SCRIPT_RELEASE"
@@ -229,9 +230,8 @@ main() {
   echo -e -n "\n* Initial configuration completed. Continue with installation? (y/N): "
   read -r CONFIRM
   if [[ "$CONFIRM" =~ [Yy] ]]; then
-    perform_install
+    run_installer "panel"
   else
-    # run welcome script again
     error "Installation aborted."
     exit 1
   fi
@@ -262,9 +262,9 @@ goodbye() {
   output "Panel installation completed"
   output ""
 
-  [ "$CONFIGURE_LETSENCRYPT" == true ] && output "Your panel should be accessible from $(hyperlink "$app_url")"
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && output "Your panel should be accessible from $(hyperlink "$FQDN")"
   [ "$ASSUME_SSL" == true ] && [ "$CONFIGURE_LETSENCRYPT" == false ] && output "You have opted in to use SSL, but not via Let's Encrypt automatically. Your panel will not work until SSL has been configured."
-  [ "$ASSUME_SSL" == false ] && [ "$CONFIGURE_LETSENCRYPT" == false ] && output "Your panel should be accessible from $(hyperlink "$app_url")"
+  [ "$ASSUME_SSL" == false ] && [ "$CONFIGURE_LETSENCRYPT" == false ] && output "Your panel should be accessible from $(hyperlink "$FQDN")"
 
   output ""
   output "Installation is using nginx on $OS"

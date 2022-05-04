@@ -32,7 +32,7 @@ set -e
 # source /tmp/lib.sh || source <(curl -sL https://raw.githubuserc.com/vilhelmprytz/pterodactyl-installer/master/lib.sh)
 # When released
 # shellcheck source=../lib.sh
-source ../lib.sh
+source ../lib/lib.sh
 
 # ------------------ Variables ----------------- #
 
@@ -179,7 +179,6 @@ set_folder_permissions() {
   esac
 }
 
-# insert cronjob
 insert_cronjob() {
   output "Installing cronjob.. "
 
@@ -234,6 +233,13 @@ selinux_allow() {
   setsebool -P httpd_can_network_connect 1 || true # these commands can fail OK
   setsebool -P httpd_execmem 1 || true
   setsebool -P httpd_unified 1 || true
+}
+
+php_fpm_conf() {
+  curl -o /etc/php-fpm.d/www-pterodactyl.conf "$GITHUB_BASE_URL"/configs/www-pterodactyl.conf
+
+  systemctl enable php-fpm
+  systemctl start php-fpm
 }
 
 ubuntu_dep() {
@@ -337,13 +343,6 @@ dep_install() {
 }
 
 ##### OTHER OS SPECIFIC FUNCTIONS #####
-
-php_fpm_conf() {
-  curl -o /etc/php-fpm.d/www-pterodactyl.conf "$GITHUB_BASE_URL"/configs/www-pterodactyl.conf
-
-  systemctl enable php-fpm
-  systemctl start php-fpm
-}
 
 firewall_ufw() {
   install_packages "ufw"
@@ -476,3 +475,5 @@ perform_install() {
   [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
   true
 }
+
+# perform_install
