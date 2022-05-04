@@ -32,6 +32,7 @@ List of supported installation setups for panel and Wings (installations support
 |                  | 16.04   | :red_circle: \*    |             |
 |                  | 18.04   | :white_check_mark: | 8.0         |
 |                  | 20.04   | :white_check_mark: | 8.0         |
+|                  | 22.04   | :white_check_mark: | 8.0         |
 | Debian           | 8       | :red_circle: \*    |             |
 |                  | 9       | :white_check_mark: | 8.0         |
 |                  | 10      | :white_check_mark: | 8.0         |
@@ -48,6 +49,7 @@ List of supported installation setups for panel and Wings (installations support
 |                  | 16.04   | :red_circle: \*    |
 |                  | 18.04   | :white_check_mark: |
 |                  | 20.04   | :white_check_mark: |
+|                  | 22.04   | :white_check_mark: |
 | Debian           | 8       | :red_circle: \*    |
 |                  | 9       | :white_check_mark: |
 |                  | 10      | :white_check_mark: |
@@ -95,6 +97,7 @@ vagrant up <name>
 
 Replace name with one of the following (supported installations).
 
+- `ubuntu_jammy`
 - `ubuntu_focal`
 - `ubuntu_bionic`
 - `debian_bullseye`
