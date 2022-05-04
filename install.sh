@@ -28,36 +28,12 @@ set -e
 #                                                                           #
 #############################################################################
 
-SCRIPT_VERSION="v0.10.0"
-# TODO: Download script and replace version in it
-# LIB_PATH="/tmp/lib.sh"
+export GITHUB_SOURCE="v0.10.0"
+export SCRIPT_RELEASE="v0.10.0"
+
+source lib/lib.sh
+
 LOG_PATH="/var/log/pterodactyl-installer.log"
-
-# exit with error status code if user is not root
-if [[ $EUID -ne 0 ]]; then
-  echo "* This script must be executed with root privileges (sudo)." 1>&2
-  exit 1
-fi
-
-# check for curl
-if ! [ -x "$(command -v curl)" ]; then
-  echo "* curl is required in order for this script to work."
-  echo "* install using apt (Debian and derivatives) or yum/dnf (CentOS)"
-  exit 1
-fi
-
-output() {
-  echo -e "* ${1}"
-}
-
-error() {
-  COLOR_RED='\033[0;31m'
-  COLOR_NC='\033[0m'
-
-  echo ""
-  echo -e "* ${COLOR_RED}ERROR${COLOR_NC}: $1"
-  echo ""
-}
 
 execute() {
   echo -e "\n\n* pterodactyl-installer $(date) \n\n" >>$LOG_PATH

@@ -30,10 +30,6 @@ set -e
 
 # ------------------ Variables ----------------- #
 
-# Versioning
-export GITHUB_SOURCE="master"
-export SCRIPT_RELEASE="canary"
-
 # OS
 export OS=""
 export OS_VER_MAJOR=""
@@ -124,6 +120,37 @@ gen_passwd() {
       password=$(echo "$password""$(head -c 100 /dev/urandom | LC_ALL=C tr -dc "$password_charset")" | fold -w "$length" | head -n 1)
   done
   echo "$password"
+}
+
+# -------------------- MYSQL ------------------- #
+
+# Create a database user
+create_db_user() {
+  local db_user_name="$1"
+  local db_user_password="$2"
+  local db_host="${3:-'127.0.0.0'}"
+
+  output "Creating database user $db_user_name..."
+
+  mysql -u root -e "CREATE USER '$db_user_name'@'$db_host' IDENTIFIED BY '$db_user_password';"
+  mysql -u root -e "FLUSH PRIVILEGES;"
+
+  output "Database user $db_user_name created"
+}
+
+# Create the database
+create_db() {
+  local db_name="$1"
+  local db_user_name="$2"
+  local db_host="${3:-'127.0.0.0'}"
+
+  output "Creating database $db_name..."
+
+  mysql -u root -e "CREATE DATABASE $db_name;"
+  mysql -u root -e "GRANT ALL PRIVILEGES ON $db_name.* TO '$db_user_name'@'$db_host' WITH GRANT OPTION;"
+  mysql -u root -e "FLUSH PRIVILEGES;"
+
+  output "Database $db_name created"
 }
 
 # --------------- Package Manager -------------- #
@@ -244,6 +271,21 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
+check_os_comp() {
+  if [ "${CPU_ARCHITECTURE}" != "x86_64" ]; then # check the architecture
+    warning "Detected CPU architecture $CPU_ARCHITECTURE"
+    warning "Using any other architecture than 64 bit (x86_64) will cause problems."
+
+    echo -e -n "* Are you sure you want to proceed? (y/N):"
+    read -r choice
+
+    if [[ ! "$choice" =~ [Yy] ]]; then
+      error "Installation aborted!"
+      exit 1
+    fi
+  fi
+}
+
 # Detect OS
 if [ -f /etc/os-release ]; then
   # freedesktop.org and systemd
@@ -304,18 +346,15 @@ rocky | almalinux)
 esac
 
 # exit if not supported
-if [ "$SUPPORTED" == true ]; then
-  output "$OS $OS_VER is supported."
-else
+if [ "$SUPPORTED" == false ]; then
   output "$OS $OS_VER is not supported"
   error "Unsupported OS"
   exit 1
 fi
 
+# Check for curl and install it if not found
 if ! [ -x "$(command -v curl)" ]; then
   output "Installing curl..."
   update_repos true
   install_packages "curl" true
 fi
-
-get_latest_versions
