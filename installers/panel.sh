@@ -32,7 +32,7 @@ set -e
 # source /tmp/lib.sh || source <(curl -sL https://raw.githubuserc.com/vilhelmprytz/pterodactyl-installer/master/lib.sh)
 # When released
 # shellcheck source=../lib.sh
-source ../lib/lib.sh
+source lib/lib.sh
 
 # ------------------ Variables ----------------- #
 
@@ -45,15 +45,7 @@ MYSQL_USER="${MYSQL_USER:-pterodactyl}"
 MYSQL_PASSWORD="${MYSQL_PASSWORD:-$(gen_passwd 64)}"
 
 # Environment
-email="${email:-}"
 timezone="${timezone:-Europe/Stockholm}"
-
-# Initial admin account
-user_email="${user_email:-}"
-user_username="${user_username:-}"
-user_firstname="${user_firstname:-}"
-user_lastname="${user_lastname:-}"
-user_password="${user_password:-}"
 
 # Assume SSL, will fetch different config if true
 ASSUME_SSL="${ASSUME_SSL:-false}"
@@ -64,12 +56,12 @@ CONFIGURE_UFW="${CONFIGURE_UFW:-false}"
 CONFIGURE_FIREWALL_CMD="${CONFIGURE_FIREWALL_CMD:-false}"
 
 # Must be assigned to work
-# email
-# user_email
-# user_username
-# user_firstname
-# user_lastname
-# user_password
+email="${email:-}"
+user_email="${user_email:-}"
+user_username="${user_username:-}"
+user_firstname="${user_firstname:-}"
+user_lastname="${user_lastname:-}"
+user_password="${user_password:-}"
 
 if [[ -z "${email}" ]]; then
     error "Email is required"
@@ -193,7 +185,7 @@ insert_cronjob() {
 install_pteroq() {
   output "Installing pteroq service.."
 
-  curl -o /etc/systemd/system/pteroq.service "$GITHUB_BASE_URL"/configs/pteroq.service
+  curl -o /etc/systemd/system/pteroq.service "$GITHUB_BASE_URL"configs/pteroq.service
 
   case "$OS" in
   debian | ubuntu)
@@ -247,7 +239,7 @@ ubuntu_dep() {
   install_packages "software-properties-common curl apt-transport-https ca-certificates gnupg"
 
   # Add Ubuntu universe repo
-  add-apt-repository universe
+  add-apt-repository universe -y
 
   # Add PPA for PHP (we need 8.0)
   LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php
@@ -466,7 +458,8 @@ perform_install() {
   dep_install
   install_composer
   ptdl_dl
-  create_database "$MYSQL_DB""$MYSQL_USER" "$MYSQL_PASSWORD"
+  create_db_user "$MYSQL_USER" "$MYSQL_PASSWORD"
+  create_db "$MYSQL_DB" "$MYSQL_USER"
   configure
   set_folder_permissions
   insert_cronjob
@@ -476,4 +469,4 @@ perform_install() {
   true
 }
 
-# perform_install
+perform_install

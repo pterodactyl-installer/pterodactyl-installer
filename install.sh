@@ -31,6 +31,10 @@ set -e
 export GITHUB_SOURCE="v0.10.0"
 export SCRIPT_RELEASE="v0.10.0"
 
+# TODO: Change to something like
+# source /tmp/lib.sh || source <(curl -sL https://raw.githubuserc.com/vilhelmprytz/pterodactyl-installer/master/lib.sh)
+# When released
+# shellcheck source=lib/lib.sh
 source lib/lib.sh
 
 LOG_PATH="/var/log/pterodactyl-installer.log"
@@ -38,30 +42,15 @@ LOG_PATH="/var/log/pterodactyl-installer.log"
 execute() {
   echo -e "\n\n* pterodactyl-installer $(date) \n\n" >>$LOG_PATH
 
-  bash <(curl -s "$1") | tee -a $LOG_PATH
+  [[ "$1" == *"canary"* ]] && export GITHUB_SOURCE="master" && export SCRIPT_RELEASE="canary"
+
+  run_ui "${1//_canary/}" | tee -a $LOG_PATH
   [[ -n $2 ]] && execute "$2"
 }
 
+welcome
+
 done=false
-
-output "Pterodactyl installation script @ $SCRIPT_VERSION"
-output
-output "Copyright (C) 2018 - 2022, Vilhelm Prytz, <vilhelm@prytznet.se>"
-output "https://github.com/vilhelmprytz/pterodactyl-installer"
-output
-output "Sponsoring/Donations: https://github.com/vilhelmprytz/pterodactyl-installer?sponsor=1"
-output "This script is not associated with the official Pterodactyl Project."
-
-output
-
-PANEL_LATEST="$GITHUB_BASE_URL/$SCRIPT_VERSION/install-panel.sh"
-
-WINGS_LATEST="$GITHUB_BASE_URL/$SCRIPT_VERSION/install-wings.sh"
-
-PANEL_CANARY="$GITHUB_BASE_URL/master/install-panel.sh"
-
-WINGS_CANARY="$GITHUB_BASE_URL/master/install-wings.sh"
-
 while [ "$done" == false ]; do
   options=(
     "Install the panel"
@@ -74,13 +63,13 @@ while [ "$done" == false ]; do
   )
 
   actions=(
-    "$PANEL_LATEST"
-    "$WINGS_LATEST"
-    "$PANEL_LATEST;$WINGS_LATEST"
+    "panel"
+    "wings"
+    "panel;wings"
 
-    "$PANEL_CANARY"
-    "$WINGS_CANARY"
-    "$PANEL_CANARY;$WINGS_CANARY"
+    "panel_canary"
+    "wings_canary"
+    "panel_canary;wings_canary"
   )
 
   output "What would you like to do?"

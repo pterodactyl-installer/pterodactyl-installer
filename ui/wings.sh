@@ -468,17 +468,7 @@ main() {
   # detect distro
   detect_distro
 
-  print_brake 70
-  echo "* Pterodactyl Wings installation script @ $SCRIPT_RELEASE"
-  echo "*"
-  echo "* Copyright (C) 2018 - 2022, Vilhelm Prytz, <vilhelm@prytznet.se>"
-  echo "* https://github.com/vilhelmprytz/pterodactyl-installer"
-  echo "*"
-  echo "* This script is not associated with the official Pterodactyl Project."
-  echo "*"
-  echo "* Running $OS version $OS_VER."
-  echo "* Latest pterodactyl/wings is $WINGS_VERSION"
-  print_brake 70
+  welcome "wings"
 
   # checks if the system is compatible with this installation script
   check_os_comp

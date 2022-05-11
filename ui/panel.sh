@@ -32,7 +32,7 @@ set -e
 # source /tmp/lib.sh || source <(curl -sL https://raw.githubuserc.com/vilhelmprytz/pterodactyl-installer/master/lib.sh)
 # When released
 # shellcheck source=lib.sh
-source ../lib/lib.sh
+source lib/lib.sh
 
 # ------------------ Variables ----------------- #
 
@@ -124,6 +124,8 @@ ask_firewall() {
 }
 
 main() {
+  check_os_x86_64
+
   # check if we can detect an already existing installation
   if [ -d "/var/www/pterodactyl" ]; then
     warning "The script has detected that you already have Pterodactyl panel on your system! You cannot run the script multiple times, it will fail!"
@@ -135,25 +137,9 @@ main() {
     fi
   fi
 
-  get_latest_versions
-
-  print_brake 70
-  output "Pterodactyl panel installation script @ $SCRIPT_RELEASE"
-  output ""
-  output "Copyright (C) 2018 - 2022, Vilhelm Prytz, <vilhelm@prytznet.se>"
-  output "https://github.com/vilhelmprytz/pterodactyl-installer"
-  output ""
-  output "This script is not associated with the official Pterodactyl Project."
-  output ""
-  output "Running $OS version $OS_VER."
-  output "Latest pterodactyl/panel is $PTERODACTYL_PANEL_VERSION"
-  print_brake 70
-
-  # checks if the system is compatible with this installation script
-  check_os_comp
+  welcome "panel"
 
   # set database credentials
-  print_brake 72
   output "Database configuration."
   output ""
   output "This will be the credentials used for communication between the MySQL"
@@ -176,6 +162,8 @@ main() {
   # MySQL password input
   rand_pw=$(gen_passwd 64)
   password_input MYSQL_PASSWORD "Password (press enter to use randomly generated password): " "MySQL password cannot be empty" "$rand_pw"
+
+  echo "$MYSQL_PASSWORD"
 
   readarray -t valid_timezones <<< "$(curl -s "$GITHUB_BASE_URL"/configs/valid_timezones.txt)"
   output "List of valid timezones here $(hyperlink "https://www.php.net/manual/en/timezones.php")"

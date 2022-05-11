@@ -30,6 +30,10 @@ set -e
 
 # ------------------ Variables ----------------- #
 
+# Versioning
+export GITHUB_SOURCE=${GITHUB_SOURCE:-master}
+export SCRIPT_RELEASE=${SCRIPT_RELEASE:-canary}
+
 # OS
 export OS=""
 export OS_VER_MAJOR=""
@@ -80,6 +84,27 @@ hyperlink() {
   echo -e "\e]8;;${1}\a${1}\e]8;;\a"
 }
 
+# First argument is wings / panel / neither
+welcome() {
+  get_latest_versions
+
+  print_brake 70
+  output "Pterodactyl panel installation script @ $SCRIPT_RELEASE"
+  output ""
+  output "Copyright (C) 2018 - 2022, Vilhelm Prytz, <vilhelm@prytznet.se>"
+  output "https://github.com/vilhelmprytz/pterodactyl-installer"
+  output ""
+  output "This script is not associated with the official Pterodactyl Project."
+  output ""
+  output "Running $OS version $OS_VER."
+  if [ "$1" == "panel" ]; then
+    output "Latest pterodactyl/panel is $PTERODACTYL_PANEL_VERSION"
+  elif [ "$1" == "wings" ]; then
+    output "Latest pterodactyl/wings is $PTERODACTYL_WINGS_VERSION"
+  fi
+  print_brake 70
+}
+
 # ---------------- Lib functions --------------- #
 
 get_latest_release() {
@@ -92,14 +117,18 @@ get_latest_versions() {
   output "Retrieving release information..."
   PTERODACTYL_PANEL_VERSION=$(get_latest_release "pterodactyl/panel")
   PTERODACTYL_WINGS_VERSION=$(get_latest_release "pterodactyl/wings")
-  export PTERODACTYL_PANEL_VERSION
-  export PTERODACTYL_WINGS_VERSION
 }
 
 run_installer() {
   # In prod
   # bash <(curl -s -S -L "$GITHUB_BASE_URL/$SCRIPT_VERSION/installers/$1.sh") 
-  bash ../installers/"$1".sh
+  bash installers/"$1".sh
+}
+
+run_ui() {
+  # In prod
+  # bash <(curl -s -S -L "$GITHUB_BASE_URL/$SCRIPT_VERSION/ui/$1.sh")
+  bash ui/"$1".sh
 }
 
 array_contains_element() {
@@ -107,6 +136,10 @@ array_contains_element() {
   shift
   for e; do [[ "$e" == "$match" ]] && return 0; done
   return 1
+}
+
+sanitize() {
+  LC_ALL=C sed -e 's/[^a-zA-Z0-9,._+@%/-]/\\&/g; 1{$s/^$/""/}; 1!s/^/"/; $!s/$/"/' <<< "$1"
 }
 
 valid_email() {
@@ -125,7 +158,7 @@ gen_passwd() {
   do
       password=$(echo "$password""$(head -c 100 /dev/urandom | LC_ALL=C tr -dc "$password_charset")" | fold -w "$length" | head -n 1)
   done
-  echo "$password"
+  sanitize "$password"
 }
 
 # -------------------- MYSQL ------------------- #
@@ -134,7 +167,7 @@ gen_passwd() {
 create_db_user() {
   local db_user_name="$1"
   local db_user_password="$2"
-  local db_host="${3:-'127.0.0.0'}"
+  local db_host="${3:-127.0.0.1}"
 
   output "Creating database user $db_user_name..."
 
@@ -148,7 +181,7 @@ create_db_user() {
 create_db() {
   local db_name="$1"
   local db_user_name="$2"
-  local db_host="${3:-'127.0.0.0'}"
+  local db_host="${3:-127.0.0.1}"
 
   output "Creating database $db_name..."
 
@@ -216,6 +249,8 @@ required_input() {
     fi
   done
 
+  result=$(sanitize "$result")
+
   eval "$__resultvar="'$result'""
 }
 
@@ -229,6 +264,8 @@ email_input() {
 
     valid_email "$result" || error "${3}"
   done
+
+  result=$(sanitize "$result")
 
   eval "$__resultvar="'$result'""
 }
@@ -256,7 +293,7 @@ password_input() {
           printf '\b \b'
         fi
       else
-        # Add typed char to output variable.
+        # Add typed char to output variable.  [ -z "$result" ] && [ -n "
         result+=$char
         # Print '*' in its stead.
         printf '*'
@@ -265,6 +302,8 @@ password_input() {
     [ -z "$result" ] && [ -n "$default" ] && result="$default"
     [ -z "$result" ] && error "${3}"
   done
+
+  result=$(sanitize "$result")
 
   eval "$__resultvar="'$result'""
 }
@@ -276,21 +315,6 @@ if [[ $EUID -ne 0 ]]; then
   error "This script must be executed with root privileges."
   exit 1
 fi
-
-check_os_comp() {
-  if [ "${CPU_ARCHITECTURE}" != "x86_64" ]; then # check the architecture
-    warning "Detected CPU architecture $CPU_ARCHITECTURE"
-    warning "Using any other architecture than 64 bit (x86_64) will cause problems."
-
-    echo -e -n "* Are you sure you want to proceed? (y/N):"
-    read -r choice
-
-    if [[ ! "$choice" =~ [Yy] ]]; then
-      error "Installation aborted!"
-      exit 1
-    fi
-  fi
-}
 
 # Detect OS
 if [ -f /etc/os-release ]; then
@@ -351,6 +375,22 @@ rocky | almalinux)
   SUPPORTED=false
   ;;
 esac
+
+# panel x86_64 check
+check_os_x86_64() {
+  if [ "${CPU_ARCHITECTURE}" != "x86_64" ]; then # check the architecture
+    warning "Detected CPU architecture $CPU_ARCHITECTURE"
+    warning "Using any other architecture than 64 bit (x86_64) will cause problems."
+
+    echo -e -n "* Are you sure you want to proceed? (y/N):"
+    read -r choice
+
+    if [[ ! "$choice" =~ [Yy] ]]; then
+      error "Installation aborted!"
+      exit 1
+    fi
+  fi
+}
 
 # exit if not supported
 if [ "$SUPPORTED" == false ]; then
