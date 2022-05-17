@@ -239,7 +239,7 @@ check_os_comp() {
   aarch64)
     print_warning "Detected architecture arm64"
     print_warning "You will need to use Docker images made specifically for arm64"
-    echo -e -n "* Are you sure you want to proceed? (y/N):"
+    echo -e -n "* Are you sure you want to proceed? (y/N): "
     read -r choice
 
     if [[ ! "$choice" =~ [Yy] ]]; then

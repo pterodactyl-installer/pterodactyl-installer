@@ -320,7 +320,7 @@ check_os_comp() {
     print_warning "Detected CPU architecture $CPU_ARCHITECTURE"
     print_warning "Using any other architecture than 64 bit (x86_64) will cause problems."
 
-    echo -e -n "* Are you sure you want to proceed? (y/N):"
+    echo -e -n "* Are you sure you want to proceed? (y/N): "
     read -r choice
 
     if [[ ! "$choice" =~ [Yy] ]]; then
