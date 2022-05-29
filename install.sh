@@ -94,7 +94,7 @@ while [ "$done" == false ]; do
 
     "Install panel with canary version of the script (the versions that lives in master, may be broken!)"
     "Install Wings with canary version of the script (the versions that lives in master, may be broken!)"
-    "Install both [6] and [7] on the same machine (wings script runs after panel)"
+    "Install both [3] and [4] on the same machine (wings script runs after panel)"
   )
 
   actions=(
