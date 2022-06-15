@@ -34,112 +34,6 @@ set -e
 # shellcheck source=lib.sh
 source lib.sh
 
-# ------------------ Variables ----------------- #
-
-INSTALL_MARIADB=false
-
-# firewall
-CONFIGURE_FIREWALL=false
-CONFIGURE_UFW=false
-CONFIGURE_FIREWALL_CMD=false
-
-# SSL (Let's Encrypt)
-CONFIGURE_LETSENCRYPT=false
-FQDN=""
-EMAIL=""
-
-# Database host
-CONFIGURE_DBHOST=false
-CONFIGURE_DBEXTERNAL=false
-CONFIGURE_DBEXTERNAL_HOST="%"
-CONFIGURE_DB_FIREWALL=false
-MYSQL_DBHOST_USER="pterodactyluser"
-MYSQL_DBHOST_PASSWORD="password"
-
-
-# -------------- OS check funtions ------------- #
-
-check_os_comp() {
-  SUPPORTED=false
-
-  MACHINE_TYPE=$(uname -m)
-  case "$MACHINE_TYPE" in
-  x86_64)
-    ARCH=amd64
-    ;;
-  arm64) ;&
-    # fallthrough
-  aarch64)
-    print_warning "Detected architecture arm64"
-    print_warning "You will need to use Docker images made specifically for arm64"
-    echo -e -n "* Are you sure you want to proceed? (y/N):"
-    read -r choice
-
-    if [[ ! "$choice" =~ [Yy] ]]; then
-      print_error "Installation aborted!"
-      exit 1
-    fi
-    ARCH=arm64
-    ;;
-  *)
-    print_error "Only x86_64 and arm64 are supported for Wings"
-    exit 1
-    ;;
-  esac
-
-  # check virtualization
-  echo -e "* Installing virt-what..."
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
-    # silence dpkg output
-    export DEBIAN_FRONTEND=noninteractive
-
-    # install virt-what
-    apt-get -y update -qq
-    apt-get install -y virt-what -qq
-
-    # unsilence
-    unset DEBIAN_FRONTEND
-  elif [ "$OS" == "centos" ]; then
-    if [ "$OS_VER_MAJOR" == "7" ]; then
-      yum -q -y update
-
-      # install virt-what
-      yum -q -y install virt-what
-    elif [ "$OS_VER_MAJOR" == "8" ]; then
-      dnf -y -q update
-
-      # install virt-what
-      dnf install -y -q virt-what
-    fi
-  else
-    print_error "Invalid OS."
-    exit 1
-  fi
-
-  export PATH="$PATH:/sbin:/usr/sbin"
-
-  virt_serv=$(virt-what)
-
-  case "$virt_serv" in
-  *openvz* | *lxc*)
-    print_warning "Unsupported type of virtualization detected. Please consult with your hosting provider whether your server can run Docker or not. Proceed at your own risk."
-    echo -e -n "* Are you sure you want to proceed? (y/N): "
-    read -r CONFIRM_PROCEED
-    if [[ ! "$CONFIRM_PROCEED" =~ [Yy] ]]; then
-      print_error "Installation aborted!"
-      exit 1
-    fi
-    ;;
-  *)
-    [ "$virt_serv" != "" ] && print_warning "Virtualization: $virt_serv detected."
-    ;;
-  esac
-
-  if uname -r | grep -q "xxxx"; then
-    print_error "Unsupported kernel detected."
-    exit 1
-  fi
-}
 
 ############################
 ## INSTALLATION FUNCTIONS ##
@@ -542,7 +436,7 @@ main() {
       ASK=false
 
       [ -z "$FQDN" ] && print_error "FQDN cannot be empty"                                                            # check if FQDN is empty
-      bash <(curl -s $GITHUB_BASE_URL/lib/verify-fqdn.sh) "$FQDN" "$OS" || ASK=true                                   # check if FQDN is valid
+      bash <(curl -s "$GITHUB_BASE_URL"/lib/verify-fqdn.sh) "$FQDN" "$OS" || ASK=true                                   # check if FQDN is valid
       [ -d "/etc/letsencrypt/live/$FQDN/" ] && print_error "A certificate with this FQDN already exists!" && ASK=true # check if cert exists
 
       [ "$ASK" == true ] && FQDN=""

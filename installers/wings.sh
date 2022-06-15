@@ -31,5 +31,83 @@ set -e
 # TODO: Change to something like
 # source /tmp/lib.sh || source <(curl -sL https://raw.githubuserc.com/vilhelmprytz/pterodactyl-installer/master/lib.sh)
 # When released
-# shellcheck source=../lib.sh
-source ../lib.sh
+# shellcheck source=lib.sh
+source lib/lib.sh
+
+# ------------------ Variables ----------------- #
+INSTALL_MARIADB="${INSTALL_MARIADB:-false}"
+
+# firewall
+CONFIGURE_FIREWALL="${CONFIGURE_FIREWALL:-false}"
+CONFIGURE_UFW="${CONFIGURE_UFW:-false}"
+CONFIGURE_FIREWALL_CMD="${CONFIGURE_FIREWALL_CMD:-false}"
+
+# SSL (Let's Encrypt)
+CONFIGURE_LETSENCRYPT="${CONFIGURE_LETSENCRYPT:-false}"
+FQDN="${FQDN:-}"
+EMAIL="${EMAIL:-}"
+
+# Database host
+CONFIGURE_DBHOST="${CONFIGURE_DBHOST:-false}"
+CONFIGURE_DBEXTERNAL="${CONFIGURE_DBEXTERNAL:-false}"
+CONFIGURE_DBEXTERNAL_HOST="${CONFIGURE_DBEXTERNAL_HOST:-%}"
+CONFIGURE_DB_FIREWALL="${CONFIGURE_DB_FIREWALL:-false}"
+MYSQL_DBHOST_USER="${MYSQL_DBHOST_USER:-pterodactyluser}"
+MYSQL_DBHOST_PASSWORD="${MYSQL_DBHOST_PASSWORD:-}"
+
+# -------------- OS check funtions ------------- #
+
+check_os_comp() {
+  # check virtualization
+  echo -e "* Installing virt-what..."
+  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
+    # silence dpkg output
+    export DEBIAN_FRONTEND=noninteractive
+
+    # install virt-what
+    apt-get -y update -qq
+    apt-get install -y virt-what -qq
+
+    # unsilence
+    unset DEBIAN_FRONTEND
+  elif [ "$OS" == "centos" ]; then
+    if [ "$OS_VER_MAJOR" == "7" ]; then
+      yum -q -y update
+
+      # install virt-what
+      yum -q -y install virt-what
+    elif [ "$OS_VER_MAJOR" == "8" ]; then
+      dnf -y -q update
+
+      # install virt-what
+      dnf install -y -q virt-what
+    fi
+  else
+    print_error "Invalid OS."
+    exit 1
+  fi
+
+  export PATH="$PATH:/sbin:/usr/sbin"
+
+  virt_serv=$(virt-what)
+
+  case "$virt_serv" in
+  *openvz* | *lxc*)
+    print_warning "Unsupported type of virtualization detected. Please consult with your hosting provider whether your server can run Docker or not. Proceed at your own risk."
+    echo -e -n "* Are you sure you want to proceed? (y/N): "
+    read -r CONFIRM_PROCEED
+    if [[ ! "$CONFIRM_PROCEED" =~ [Yy] ]]; then
+      print_error "Installation aborted!"
+      exit 1
+    fi
+    ;;
+  *)
+    [ "$virt_serv" != "" ] && print_warning "Virtualization: $virt_serv detected."
+    ;;
+  esac
+
+  if uname -r | grep -q "xxxx"; then
+    print_error "Unsupported kernel detected."
+    exit 1
+  fi
+}

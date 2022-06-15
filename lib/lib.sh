@@ -38,6 +38,7 @@ export SCRIPT_RELEASE=${SCRIPT_RELEASE:-canary}
 export OS=""
 export OS_VER_MAJOR=""
 export CPU_ARCHITECTURE=""
+export ARCH=""
 
 # download URLs
 export PANEL_DL_URL="https://github.com/pterodactyl/panel/releases/latest/download/panel.tar.gz"
@@ -53,7 +54,7 @@ COLOR_YELLOW='\033[1;33m'
 email_regex="^(([A-Za-z0-9]+((\.|\-|\_|\+)?[A-Za-z0-9]?)*[A-Za-z0-9]+)|[A-Za-z0-9]+)@(([A-Za-z0-9]+)+((\.|\-|\_)?([A-Za-z0-9]+)+)*)+\.([A-Za-z]{2,})+$"
 
 # Charset used to generate random passwords
-password_charset='A-Za-z0-9!"#$%&()*+,-./:;<=>?@[\]^_`{|}~'
+password_charset='A-Za-z0-9!"#%&()*+,-./:;<=>?@[\]^_`{|}~'
 
 # -------------- Visual functions -------------- #
 
@@ -138,10 +139,6 @@ array_contains_element() {
   return 1
 }
 
-sanitize() {
-  LC_ALL=C sed -e 's/[^a-zA-Z0-9,._+@%/-]/\\&/g; 1{$s/^$/""/}; 1!s/^/"/; $!s/$/"/' <<< "$1"
-}
-
 valid_email() {
   [[ $1 =~ ${email_regex} ]]
 }
@@ -158,7 +155,7 @@ gen_passwd() {
   do
       password=$(echo "$password""$(head -c 100 /dev/urandom | LC_ALL=C tr -dc "$password_charset")" | fold -w "$length" | head -n 1)
   done
-  sanitize "$password"
+  echo "$password"
 }
 
 # -------------------- MYSQL ------------------- #
@@ -249,8 +246,6 @@ required_input() {
     fi
   done
 
-  result=$(sanitize "$result")
-
   eval "$__resultvar="'$result'""
 }
 
@@ -264,8 +259,6 @@ email_input() {
 
     valid_email "$result" || error "${3}"
   done
-
-  result=$(sanitize "$result")
 
   eval "$__resultvar="'$result'""
 }
@@ -303,12 +296,26 @@ password_input() {
     [ -z "$result" ] && error "${3}"
   done
 
-  result=$(sanitize "$result")
-
   eval "$__resultvar="'$result'""
 }
 
 # ---------------- System checks --------------- #
+
+# panel x86_64 check
+check_os_x86_64() {
+  if [ "${ARCH}" != "amd64" ]; then 
+    warning "Detected CPU architecture $CPU_ARCHITECTURE"
+    warning "Using any other architecture than 64 bit (x86_64) will cause problems."
+
+    echo -e -n "* Are you sure you want to proceed? (y/N):"
+    read -r choice
+
+    if [[ ! "$choice" =~ [Yy] ]]; then
+      error "Installation aborted!"
+      exit 1
+    fi
+  fi
+}
 
 # Exit with error status code if user is not root
 if [[ $EUID -ne 0 ]]; then
@@ -353,17 +360,32 @@ OS=$(echo "$OS" | awk '{print tolower($0)}')
 OS_VER_MAJOR=$(echo "$OS_VER" | cut -d. -f1)
 CPU_ARCHITECTURE=$(uname -m)
 
-# Check for supported OS. Doesn't check OS architecture as it is different between panel and wings scripts.
+case "$CPU_ARCHITECTURE" in
+x86_64)
+  ARCH=amd64
+  ;;
+arm64) ;&
+aarch64)
+  ARCH=arm64
+  ;;
+*)
+  print_error "Only x86_64 and arm64 are supported!"
+  exit 1
+  ;;
+esac
+
 case "$OS" in
 ubuntu)
   [ "$OS_VER_MAJOR" == "18" ] && SUPPORTED=true
   [ "$OS_VER_MAJOR" == "20" ] && SUPPORTED=true
   [ "$OS_VER_MAJOR" == "22" ] && SUPPORTED=true
+  export DEBIAN_FRONTEND=noninteractive
   ;;
 debian)
   [ "$OS_VER_MAJOR" == "9" ] && SUPPORTED=true
   [ "$OS_VER_MAJOR" == "10" ] && SUPPORTED=true
   [ "$OS_VER_MAJOR" == "11" ] && SUPPORTED=true
+  export DEBIAN_FRONTEND=noninteractive 
   ;;
 centos)
   [ "$OS_VER_MAJOR" == "7" ] && SUPPORTED=true
@@ -375,22 +397,6 @@ rocky | almalinux)
   SUPPORTED=false
   ;;
 esac
-
-# panel x86_64 check
-check_os_x86_64() {
-  if [ "${CPU_ARCHITECTURE}" != "x86_64" ]; then # check the architecture
-    warning "Detected CPU architecture $CPU_ARCHITECTURE"
-    warning "Using any other architecture than 64 bit (x86_64) will cause problems."
-
-    echo -e -n "* Are you sure you want to proceed? (y/N):"
-    read -r choice
-
-    if [[ ! "$choice" =~ [Yy] ]]; then
-      error "Installation aborted!"
-      exit 1
-    fi
-  fi
-}
 
 # exit if not supported
 if [ "$SUPPORTED" == false ]; then

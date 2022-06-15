@@ -163,8 +163,6 @@ main() {
   rand_pw=$(gen_passwd 64)
   password_input MYSQL_PASSWORD "Password (press enter to use randomly generated password): " "MySQL password cannot be empty" "$rand_pw"
 
-  echo "$MYSQL_PASSWORD"
-
   readarray -t valid_timezones <<< "$(curl -s "$GITHUB_BASE_URL"/configs/valid_timezones.txt)"
   output "List of valid timezones here $(hyperlink "https://www.php.net/manual/en/timezones.php")"
 

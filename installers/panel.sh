@@ -111,11 +111,14 @@ ptdl_dl() {
   chmod -R 755 storage/* bootstrap/cache/
 
   cp .env.example .env
+
+  output "Downloaded pterodactyl panel files!"
+}
+
+install_composer_deps() {
   [ "$OS" == "centos" ] && export PATH=/usr/local/bin:$PATH
   COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader
-
-  php artisan key:generate --force
-  output "Downloaded pterodactyl panel files & installed composer dependencies!"
+  output "Installed composer dependencies!"
 }
 
 # Configure environment
@@ -123,6 +126,9 @@ configure() {
   local app_url="http://$FQDN"
   [ "$ASSUME_SSL" == true ] && app_url="https://$FQDN"
   [ "$CONFIGURE_LETSENCRYPT" == true ] && app_url="https://$FQDN"
+
+  # Generate encryption key
+  php artisan key:generate --force
 
   # Fill in environment:setup automatically
   php artisan p:environment:setup \
@@ -185,7 +191,7 @@ insert_cronjob() {
 install_pteroq() {
   output "Installing pteroq service.."
 
-  curl -o /etc/systemd/system/pteroq.service "$GITHUB_BASE_URL"configs/pteroq.service
+  curl -o /etc/systemd/system/pteroq.service "$GITHUB_BASE_URL"/configs/pteroq.service
 
   case "$OS" in
   debian | ubuntu)
@@ -236,7 +242,7 @@ php_fpm_conf() {
 
 ubuntu_dep() {
   # Install deps for adding repos
-  install_packages "software-properties-common curl apt-transport-https ca-certificates gnupg"
+  install_packages "software-properties-common apt-transport-https ca-certificates gnupg"
 
   # Add Ubuntu universe repo
   add-apt-repository universe -y
@@ -326,7 +332,7 @@ dep_install() {
     # Allow nginx
     selinux_allow
 
-    # Create needed config for php fpm
+    # Create config for php fpm
     php_fpm_conf
     ;;
   esac
@@ -458,6 +464,7 @@ perform_install() {
   dep_install
   install_composer
   ptdl_dl
+  install_composer_deps
   create_db_user "$MYSQL_USER" "$MYSQL_PASSWORD"
   create_db "$MYSQL_DB" "$MYSQL_USER"
   configure
@@ -466,7 +473,7 @@ perform_install() {
   install_pteroq
   configure_nginx
   [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
-  true
+  return 0
 }
 
 perform_install
