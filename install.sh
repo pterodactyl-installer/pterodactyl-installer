@@ -28,8 +28,8 @@ set -e
 #                                                                           #
 #############################################################################
 
-export GITHUB_SOURCE="v0.10.0"
-export SCRIPT_RELEASE="v0.10.0"
+export GITHUB_SOURCE="v0.11.0"
+export SCRIPT_RELEASE="v0.11.0"
 
 # TODO: Change to something like
 # source /tmp/lib.sh || source <(curl -sL https://raw.githubuserc.com/vilhelmprytz/pterodactyl-installer/master/lib.sh)
@@ -59,7 +59,7 @@ while [ "$done" == false ]; do
 
     "Install panel with canary version of the script (the versions that lives in master, may be broken!)"
     "Install Wings with canary version of the script (the versions that lives in master, may be broken!)"
-    "Install both [6] and [7] on the same machine (wings script runs after panel)"
+    "Install both [3] and [4] on the same machine (wings script runs after panel)"
   )
 
   actions=(
