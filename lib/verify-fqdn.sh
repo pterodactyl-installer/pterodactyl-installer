@@ -98,8 +98,7 @@ main() {
   fqdn="$1"
   os="$2"
   dep_install
-  confirm
-  dns_verify
+  confirm && dns_verify
 }
 
 main "$1" "$2"
