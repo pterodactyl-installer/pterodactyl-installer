@@ -51,110 +51,11 @@ dnf_update() {
   dnf -y upgrade
 }
 
-enable_docker() {
-  systemctl start docker
-  systemctl enable docker
-}
 
-install_docker() {
-  echo "* Installing docker .."
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
-    # Install dependencies
-    apt-get -y install \
-      apt-transport-https \
-      ca-certificates \
-      gnupg2 \
-      software-properties-common
 
-    # Add docker gpg key
-    curl -fsSL https://download.docker.com/linux/"$OS"/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
 
-    # Add docker repo
-    echo \
-      "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/$OS \
-      $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
 
-    # Install docker
-    apt_update
-    apt-get -y install docker-ce docker-ce-cli containerd.io
 
-    # Make sure docker is enabled
-    enable_docker
-
-  elif [ "$OS" == "centos" ]; then
-    if [ "$OS_VER_MAJOR" == "7" ]; then
-      # Install dependencies for Docker
-      yum install -y yum-utils device-mapper-persistent-data lvm2
-
-      # Add repo to yum
-      yum-config-manager \
-        --add-repo \
-        https://download.docker.com/linux/centos/docker-ce.repo
-
-      # Install Docker
-      yum install -y docker-ce docker-ce-cli containerd.io
-    elif [ "$OS_VER_MAJOR" == "8" ]; then
-      # Install dependencies for Docker
-      dnf install -y dnf-utils device-mapper-persistent-data lvm2
-
-      # Add repo to dnf
-      dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
-
-      # Install Docker
-      dnf install -y docker-ce docker-ce-cli containerd.io --nobest
-    fi
-
-    enable_docker
-  fi
-
-  echo "* Docker has now been installed."
-}
-
-ptdl_dl() {
-  echo "* Installing Pterodactyl Wings .. "
-
-  mkdir -p /etc/pterodactyl
-  curl -L -o /usr/local/bin/wings "$WINGS_DL_BASE_URL$ARCH"
-
-  chmod u+x /usr/local/bin/wings
-
-  echo "* Done."
-}
-
-systemd_file() {
-  echo "* Installing systemd service.."
-  curl -o /etc/systemd/system/wings.service $GITHUB_BASE_URL/configs/wings.service
-  systemctl daemon-reload
-  systemctl enable wings
-  echo "* Installed systemd service!"
-}
-
-install_mariadb() {
-  MARIADB_URL="https://downloads.mariadb.com/MariaDB/mariadb_repo_setup"
-
-  case "$OS" in
-  debian)
-    if [ "$ARCH" == "aarch64" ]; then
-      print_warning "MariaDB doesn't support Debian on arm64"
-      return
-    fi
-    [ "$OS_VER_MAJOR" == "9" ] && curl -sS $MARIADB_URL | sudo bash
-    apt install -y mariadb-server
-    ;;
-  ubuntu)
-    [ "$OS_VER_MAJOR" == "18" ] && curl -sS $MARIADB_URL | sudo bash
-    apt install -y mariadb-server
-    ;;
-  centos)
-    [ "$OS_VER_MAJOR" == "7" ] && curl -sS $MARIADB_URL | bash
-    [ "$OS_VER_MAJOR" == "7" ] && yum -y install mariadb-server
-    [ "$OS_VER_MAJOR" == "8" ] && dnf install -y mariadb mariadb-server
-    ;;
-  esac
-
-  systemctl enable mariadb
-  systemctl start mariadb
-}
 
 ask_database_user() {
   echo -n "* Do you want to automatically configure a user for database hosts? (y/N): "

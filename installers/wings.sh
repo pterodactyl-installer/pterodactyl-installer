@@ -57,36 +57,14 @@ MYSQL_DBHOST_PASSWORD="${MYSQL_DBHOST_PASSWORD:-}"
 
 # -------------- OS check funtions ------------- #
 
-check_os_comp() {
-  # check virtualization
+# check virtualization
+check_virt() {
   echo -e "* Installing virt-what..."
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
-    # silence dpkg output
-    export DEBIAN_FRONTEND=noninteractive
 
-    # install virt-what
-    apt-get -y update -qq
-    apt-get install -y virt-what -qq
+  update_repos true
+  install_packages "virt-what" true
 
-    # unsilence
-    unset DEBIAN_FRONTEND
-  elif [ "$OS" == "centos" ]; then
-    if [ "$OS_VER_MAJOR" == "7" ]; then
-      yum -q -y update
-
-      # install virt-what
-      yum -q -y install virt-what
-    elif [ "$OS_VER_MAJOR" == "8" ]; then
-      dnf -y -q update
-
-      # install virt-what
-      dnf install -y -q virt-what
-    fi
-  else
-    print_error "Invalid OS."
-    exit 1
-  fi
-
+  # Export sbin for virt-what
   export PATH="$PATH:/sbin:/usr/sbin"
 
   virt_serv=$(virt-what)
@@ -110,4 +88,91 @@ check_os_comp() {
     print_error "Unsupported kernel detected."
     exit 1
   fi
+}
+
+enable_services() {
+  systemctl start docker
+  systemctl enable docker
+}
+
+dep_install() {
+  output "Installing docker for $OS $OS_VER..."
+
+  case "$OS" in
+  ubuntu | debian)
+    [ "$CONFIGURE_UFW" == true ] && firewall_ufw
+
+    install_packages "ca-certificates gnupg lsb-release"
+
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$OS \
+      $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
+    ;;
+
+  rocky | almalinux | centos)
+    [ "$CONFIGURE_FIREWALL_CMD" == true ] && firewall_firewalld
+    case "$OS" in
+    centos)
+      install_packages "yum-utils"
+      yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+      ;;
+    almalinux | rocky) 
+      install_packages "dnf-utils" 
+      dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo 
+      ;;
+    esac
+
+    install_packages "device-mapper-persistent-data lvm2"
+  esac
+
+  # Update the new repos
+  update_repos
+
+  # Install dependencies
+  install_packages "docker-ce docker-ce-cli containerd.io"
+
+  enable_services
+}
+
+ptdl_dl() {
+  echo "* Installing Pterodactyl Wings .. "
+
+  mkdir -p /etc/pterodactyl
+  curl -L -o /usr/local/bin/wings "$WINGS_DL_BASE_URL$ARCH"
+
+  chmod u+x /usr/local/bin/wings
+
+  echo "* Done."
+}
+
+systemd_file() {
+  echo "* Installing systemd service.."
+  curl -o /etc/systemd/system/wings.service "$GITHUB_BASE_URL"/configs/wings.service
+  systemctl daemon-reload
+  systemctl enable wings
+  echo "* Installed systemd service!"
+}
+
+install_mariadb() {
+  case "$OS" in
+  debian)
+    if [ "$ARCH" == "aarch64" ]; then
+      print_warning "MariaDB doesn't support Debian on arm64"
+      return
+    fi
+    apt install -y mariadb-server
+    ;;
+  ubuntu)
+    [ "$OS_VER_MAJOR" == "18" ] && curl -sS $MARIADB_URL | sudo bash
+    apt install -y mariadb-server
+    ;;
+  centos)
+    [ "$OS_VER_MAJOR" == "7" ] && curl -sS $MARIADB_URL | bash
+    [ "$OS_VER_MAJOR" == "7" ] && yum -y install mariadb-server
+    [ "$OS_VER_MAJOR" == "8" ] && dnf install -y mariadb mariadb-server
+    ;;
+  esac
+
+  systemctl enable mariadb
+  systemctl start mariadb
 }

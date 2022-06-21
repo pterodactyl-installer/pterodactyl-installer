@@ -247,7 +247,7 @@ ubuntu_dep() {
   # Add Ubuntu universe repo
   add-apt-repository universe -y
 
-  # Add PPA for PHP (we need 8.0)
+  # Add PPA for PHP (we need 8.1)
   LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php
 
   # Add the MariaDB repo (bionic has mariadb version 10.1 and we need newer than that)
@@ -260,26 +260,20 @@ debian_dep() {
   # Install deps for adding repos
   install_packages "dirmngr ca-certificates apt-transport-https lsb-release"
 
-  # install PHP 8.0 using sury's repo
+  # Install PHP 8.1 using sury's repo
   wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
   echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/php.list
-
-  # Add the MariaDB repo (oldstable has mariadb version 10.1 and we need newer than that)
-  [ "$OS_VER_MAJOR" == "8" ] && curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
-
-  true
 }
 
 centos_dep() {
   # SELinux tools
   install_packages "policycoreutils policycoreutils-python selinux-policy selinux-policy-targeted \
-    libselinux-utils setroubleshoot-server setools setools-console mcstrans"
+    yum-utils libselinux-utils setroubleshoot-server setools setools-console mcstrans"
   
   # Add remi repo (php8.0)
   install_packages "epel-release http://rpms.remirepo.net/enterprise/remi-release-7.rpm"
-  install_packages "yum-utils"
   yum-config-manager -y --disable remi-php54
-  yum-config-manager -y --enable remi-php80
+  yum-config-manager -y --enable remi-php81
 
   # Install MariaDB
   curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
@@ -292,7 +286,7 @@ alma_rocky_dep() {
 
   # add remi repo (php8.0)
   install_packages "epel-release http://rpms.remirepo.net/enterprise/remi-release-8.rpm"
-  dnf module enable -y php:remi-8.0
+  dnf module enable -y php:remi-8.1
 }
 
 dep_install() {
@@ -307,8 +301,10 @@ dep_install() {
     [ "$OS" == "ubuntu" ] && ubuntu_dep
     [ "$OS" == "debian" ] && debian_dep
 
+    update_repos
+
     # Install dependencies
-    install_packages "php8.0 php8.0-{cli,common,gd,mysql,mbstring,bcmath,xml,fpm,curl,zip} \
+    install_packages "php8.1 php8.1-{cli,common,gd,mysql,mbstring,bcmath,xml,fpm,curl,zip} \
       mariadb-common mariadb-server mariadb-client \
       nginx \
       redis-server \
@@ -424,7 +420,7 @@ configure_nginx() {
 
   case "$OS" in
   ubuntu | debian)
-    PHP_SOCKET="/run/php/php8.0-fpm.sock"
+    PHP_SOCKET="/run/php/php8.1-fpm.sock"
     CONFIG_PATH_AVAIL="/etc/nginx/sites-available"
     CONFIG_PATH_ENABL="/etc/nginx/sites-enabled"
     ;;
@@ -442,8 +438,6 @@ configure_nginx() {
   sed -i -e "s@<domain>@${FQDN}@g" $CONFIG_PATH_AVAIL/pterodactyl.conf
 
   sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" $CONFIG_PATH_AVAIL/pterodactyl.conf
-
-  [ "$OS" == "debian" ] && [ "$OS_VER_MAJOR" == "9" ] && sed -i 's/ TLSv1.3//' $CONFIG_PATH_AVAIL/pterodactyl.conf
 
   case "$OS" in
   ubuntu | debian)

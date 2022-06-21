@@ -27,19 +27,6 @@ Vagrant.configure("2") do |config|
     debian_buster.vm.box = "debian/buster64"
   end
 
-  config.vm.define "debian_stretch" do |debian_stretch|
-    debian_stretch.vm.box = "debian/stretch64"
-  end
-
-  # (centos)
-  config.vm.define "centos_7" do |centos_7|
-    centos_7.vm.box = "centos/7"
-  end
-
-  config.vm.define "centos_8" do |centos_8|
-    centos_8.vm.box = "centos/8"
-  end
-
   config.vm.define "almalinux_8" do |almalinux_8|
     almalinux_8.vm.box = "almalinux/8"
   end
