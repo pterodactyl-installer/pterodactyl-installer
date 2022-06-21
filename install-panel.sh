@@ -640,7 +640,7 @@ debian_stretch_dep() {
 
   # install PHP 8.0 using sury's repo instead of PPA
   apt install ca-certificates apt-transport-https lsb-release -y
-  wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
+  curl -o /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
   echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/php.list
 
   # Add the MariaDB repo (oldstable has mariadb version 10.1 and we need newer than that)
@@ -667,7 +667,7 @@ debian_buster_dep() {
   # install PHP 8.0 using sury's repo instead of default 7.2 package (in buster repo)
   # this guide shows how: https://vilhelmprytz.se/2018/08/22/install-php72-on-Debian-8-and-9.html
   apt install ca-certificates apt-transport-https lsb-release -y
-  wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
+  curl -o /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
   echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/php.list
 
   # Update repositories list
@@ -691,7 +691,7 @@ debian_dep() {
   # install PHP 8.0 using sury's repo instead of default 7.2 package (in buster repo)
   # this guide shows how: https://vilhelmprytz.se/2018/08/22/install-php72-on-Debian-8-and-9.html
   apt install ca-certificates apt-transport-https lsb-release -y
-  wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
+  curl -o /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
   echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/php.list
 
   # Update repositories list
