@@ -30,6 +30,18 @@ set -e
 
 export GITHUB_SOURCE="v0.11.0"
 export SCRIPT_RELEASE="v0.11.0"
+export GITHUB_BASE_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/$GITHUB_SOURCE"
+
+# check for curl
+if ! [ -x "$(command -v curl)" ]; then
+  echo "* curl is required in order for this script to work."
+  echo "* install using apt (Debian and derivatives) or yum/dnf (CentOS)"
+  exit 1
+fi
+
+if [ ! -f "/tmp/lib.sh" ]; then
+  curl -o /tmp/lib.sh $GITHUB_SOURCE/lib/lib.sh
+fi
 
 # TODO: Change to something like
 # source /tmp/lib.sh || source <(curl -sL https://raw.githubuserc.com/vilhelmprytz/pterodactyl-installer/master/lib.sh)
@@ -44,7 +56,7 @@ execute() {
 
   [[ "$1" == *"canary"* ]] && export GITHUB_SOURCE="master" && export SCRIPT_RELEASE="canary"
 
-  run_ui "${1//_canary/}" | tee -a $LOG_PATH
+  run_ui "${1//_canary/}" |& tee -a $LOG_PATH
   [[ -n $2 ]] && execute "$2"
 }
 

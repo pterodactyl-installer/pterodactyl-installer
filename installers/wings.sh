@@ -39,8 +39,6 @@ INSTALL_MARIADB="${INSTALL_MARIADB:-false}"
 
 # firewall
 CONFIGURE_FIREWALL="${CONFIGURE_FIREWALL:-false}"
-CONFIGURE_UFW="${CONFIGURE_UFW:-false}"
-CONFIGURE_FIREWALL_CMD="${CONFIGURE_FIREWALL_CMD:-false}"
 
 # SSL (Let's Encrypt)
 CONFIGURE_LETSENCRYPT="${CONFIGURE_LETSENCRYPT:-false}"
@@ -93,19 +91,23 @@ check_virt() {
 enable_services() {
   systemctl start docker
   systemctl enable docker
+  [ "$INSTALL_MARIADB" == true ] && systemctl enable mariadb
+  [ "$INSTALL_MARIADB" == true ] && systemctl start mariadb
 }
 
 dep_install() {
-  output "Installing docker for $OS $OS_VER..."
+  output "Installing dependencies for $OS $OS_VER..."
+
+  [ "$CONFIGURE_FIREWALL" == true ] && install_firewall && firewall_allow_ports
 
   case "$OS" in
   ubuntu | debian)
-    [ "$CONFIGURE_UFW" == true ] && firewall_ufw
-    
     install_packages "ca-certificates gnupg lsb-release"
 
     mkdir -p /etc/apt/keyrings
     curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+    [ "$INSTALL_MARIADB" == true ] && [ "$OS_VER_MAJOR" == "18" ] && curl -sS "$MARIADB_URL" | bash
 
     echo \
       "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$OS \
@@ -113,7 +115,6 @@ dep_install() {
     ;;
 
   rocky | almalinux | centos)
-    [ "$CONFIGURE_FIREWALL_CMD" == true ] && firewall_firewalld
     case "$OS" in
     centos)
       install_packages "yum-utils"
@@ -125,6 +126,8 @@ dep_install() {
       ;;
     esac
 
+    [ "$INSTALL_MARIADB" == true ] && [ "$OS_VER_MAJOR" == "7" ] && curl -sS "$MARIADB_URL" | bash
+
     install_packages "device-mapper-persistent-data lvm2"
   esac
 
@@ -133,6 +136,9 @@ dep_install() {
 
   # Install dependencies
   install_packages "docker-ce docker-ce-cli containerd.io"
+  
+  # Install mariadb if needed
+  [ "$INSTALL_MARIADB" == true ] && install_packages "mariadb-server"
 
   enable_services
 }
@@ -159,23 +165,25 @@ systemd_file() {
 install_mariadb() {
   case "$OS" in
   debian)
-    if [ "$ARCH" == "aarch64" ]; then
-      print_warning "MariaDB doesn't support Debian on arm64"
-      return
-    fi
     apt install -y mariadb-server
     ;;
   ubuntu)
-    [ "$OS_VER_MAJOR" == "18" ] && curl -sS $MARIADB_URL | sudo bash
+    
     apt install -y mariadb-server
     ;;
   centos)
-    [ "$OS_VER_MAJOR" == "7" ] && curl -sS $MARIADB_URL | bash
+    [ "$OS_VER_MAJOR" == "7" ] && curl -sS "$MARIADB_URL" | bash
     [ "$OS_VER_MAJOR" == "7" ] && yum -y install mariadb-server
     [ "$OS_VER_MAJOR" == "8" ] && dnf install -y mariadb mariadb-server
     ;;
   esac
+}
 
-  systemctl enable mariadb
-  systemctl start mariadb
+firewall_ports() {
+  echo "* Opening port 22 (SSH), 8080 (Wings Port), 2022 (Wings SFTP Port)"
+
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && firewall_allow_ports "80 443"
+  [ "$CONFIGURE_DB_FIREWALL" == true ] && firewall_allow_ports "3306"
+
+  firewall_allow_ports "22 8080 2022"
 }

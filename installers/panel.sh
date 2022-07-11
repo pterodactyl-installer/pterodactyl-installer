@@ -52,8 +52,7 @@ ASSUME_SSL="${ASSUME_SSL:-false}"
 CONFIGURE_LETSENCRYPT="${CONFIGURE_LETSENCRYPT:-false}"
 
 # Firewall
-CONFIGURE_UFW="${CONFIGURE_UFW:-false}"
-CONFIGURE_FIREWALL_CMD="${CONFIGURE_FIREWALL_CMD:-false}"
+CONFIGURE_FIREWALL="${CONFIGURE_FIREWALL:-false}"
 
 # Must be assigned to work
 email="${email:-}"
@@ -295,9 +294,10 @@ dep_install() {
   # Update repos before installing
   update_repos
 
+  [ "$CONFIGURE_FIREWALL" == true ] && install_firewall && firewall_ports
+
   case "$OS" in
   ubuntu | debian)
-    [ "$CONFIGURE_UFW" == true ] && firewall_ufw
     [ "$OS" == "ubuntu" ] && ubuntu_dep
     [ "$OS" == "debian" ] && debian_dep
 
@@ -313,7 +313,6 @@ dep_install() {
 
     ;;
   rocky | almalinux | centos)
-    [ "$CONFIGURE_FIREWALL_CMD" == true ] && firewall_firewalld
     [ "$OS" == "centos" ] && centos_dep
     [ "$OS" == "almalinux" ] || [ "$OS" == "rocky" ] && alma_rocky_dep
 
@@ -338,40 +337,10 @@ dep_install() {
 
 ##### OTHER OS SPECIFIC FUNCTIONS #####
 
-firewall_ufw() {
-  install_packages "ufw"
+firewall_ports() {
+  output "Opening ports: 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
 
-  echo -e "\n* Enabling Uncomplicated Firewall (UFW)"
-  output "Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
-
-  # pointing to /dev/null silences the command output
-  ufw allow ssh > /dev/null   # Port 22
-  ufw allow http > /dev/null  # Port 80
-  ufw allow https > /dev/null # Port 443
-
-  ufw --force enable          # Enable firewall
-  ufw --force reload
-  ufw status numbered | sed '/v6/d'
-}
-
-firewall_firewalld() {
-  echo -e "\n* Enabling firewall_cmd (firewalld)"
-  output "Opening port 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
-
-  # Install
-  install_packages "firewalld"
-
-  # Enable
-  systemctl --now enable firewalld > /dev/null # Enable and start
-
-  # Configure
-  firewall-cmd --add-service=http --permanent -q  # Port 80
-  firewall-cmd --add-service=https --permanent -q # Port 443
-  firewall-cmd --add-service=ssh --permanent -q   # Port 22
-  firewall-cmd --reload -q                        # Enable firewall
-
-  output "Firewall-cmd installed"
-  print_brake 70
+  firewall_allow_ports "22 80 443"
 }
 
 letsencrypt() {

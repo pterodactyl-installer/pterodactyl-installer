@@ -43,13 +43,14 @@ export ARCH=""
 # download URLs
 export PANEL_DL_URL="https://github.com/pterodactyl/panel/releases/latest/download/panel.tar.gz"
 export WINGS_DL_BASE_URL="https://github.com/pterodactyl/wings/releases/latest/download/wings_linux_"
-export GITHUB_BASE_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/$GITHUB_SOURCE"
 export MARIADB_URL="https://downloads.mariadb.com/MariaDB/mariadb_repo_setup"
+export GITHUB_BASE_URL=$GITHUB_BASE_URL # Just to be defined here
 
 # Colors
+COLOR_YELLOW='\033[1;33m'
+COLOR_GREEN='\033[0;32m'
 COLOR_RED='\033[0;31m'
 COLOR_NC='\033[0m'
-COLOR_YELLOW='\033[1;33m'
 
 # email input validation regex
 email_regex="^(([A-Za-z0-9]+((\.|\-|\_|\+)?[A-Za-z0-9]?)*[A-Za-z0-9]+)|[A-Za-z0-9]+)@(([A-Za-z0-9]+)+((\.|\-|\_)?([A-Za-z0-9]+)+)*)+\.([A-Za-z]{2,})+$"
@@ -60,7 +61,13 @@ password_charset='A-Za-z0-9!"#%&()*+,-./:;<=>?@[\]^_`{|}~'
 # -------------- Visual functions -------------- #
 
 output() {
-  echo -e "* ${1}"
+  echo -e "* $1"
+}
+
+success() {
+  echo ""
+  output "${COLOR_GREEN}SUCCESS${COLOR_NC}: $1"
+  echo ""
 }
 
 error() {
@@ -71,7 +78,7 @@ error() {
 
 warning() {
   echo ""
-  echo -e "* ${COLOR_YELLOW}WARNING${COLOR_NC}: $1"
+  output "${COLOR_YELLOW}WARNING${COLOR_NC}: $1"
   echo ""
 }
 
@@ -300,6 +307,59 @@ password_input() {
   eval "$__resultvar="'$result'""
 }
 
+# ------------------ Firewall ------------------ #
+
+install_firewall() {
+  case "$OS" in
+  ubuntu | debian)
+    output ""
+    output "Installing Uncomplicated Firewall (UFW)"
+
+    if ! [ -x "$(command -v ufw)" ]; then
+      update_repos true
+      install_packages "ufw" true
+    fi
+
+    ufw --force enable
+
+    success "Enabled Uncomplicated Firewall (UFW)"
+    
+  ;;
+  rocky | almalinux | centos)
+
+    output ""
+    output "Installing FirewallD"+
+    
+    if ! [ -x "$(command -v firewall-cmd)" ]; then
+      install_packages "firewalld" true
+    fi
+
+    systemctl --now enable firewalld > /dev/null
+    
+    success "Enabled FirewallD"
+
+    ;;    
+  esac
+}
+
+firewall_allow_ports(){
+  case "$OS" in
+  ubuntu | debian)
+    for port in $1; do
+      ufw allow "$port"
+    done
+    ufw --force reload
+    ufw status numbered | sed '/v6/d'
+    ;;
+  rocky | almalinux | centos)
+    for port in $1; do
+      firewall-cmd --zone=public --add-port="$port"/tcp --permanent
+    done
+    firewall-cmd --reload -q    
+    ;;
+  esac
+}
+
 # ---------------- System checks --------------- #
 
 # panel x86_64 check
@@ -403,12 +463,4 @@ if [ "$SUPPORTED" == false ]; then
   output "$OS $OS_VER is not supported"
   error "Unsupported OS"
   exit 1
-fi
-
-# Check for curl and install it if not found
-if ! [ -x "$(command -v curl)" ]; then
-  output "Installing curl..."
-  update_repos true
-  install_packages "curl" true
-  output "Installed curl"
 fi

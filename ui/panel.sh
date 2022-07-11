@@ -60,8 +60,6 @@ export ASSUME_SSL=false
 export CONFIGURE_LETSENCRYPT=false
 
 # Firewall
-export CONFIGURE_UFW=false
-export CONFIGURE_FIREWALL_CMD=false
 export CONFIGURE_FIREWALL=false
 
 # ---------------- Lib functions --------------- # 
@@ -107,7 +105,6 @@ ask_firewall() {
     read -r CONFIRM_UFW
 
     if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
-      CONFIGURE_UFW=true
       CONFIGURE_FIREWALL=true
     fi
     ;;
@@ -116,7 +113,6 @@ ask_firewall() {
     read -r CONFIRM_FIREWALL_CMD
 
     if [[ "$CONFIRM_FIREWALL_CMD" =~ [Yy] ]]; then
-      CONFIGURE_FIREWALL_CMD=true
       CONFIGURE_FIREWALL=true
     fi
     ;;
