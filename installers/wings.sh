@@ -47,9 +47,8 @@ EMAIL="${EMAIL:-}"
 
 # Database host
 CONFIGURE_DBHOST="${CONFIGURE_DBHOST:-false}"
-CONFIGURE_DBEXTERNAL="${CONFIGURE_DBEXTERNAL:-false}"
-CONFIGURE_DBEXTERNAL_HOST="${CONFIGURE_DBEXTERNAL_HOST:-%}"
 CONFIGURE_DB_FIREWALL="${CONFIGURE_DB_FIREWALL:-false}"
+MYSQL_DBHOST_HOST="${MYSQL_DBHOST_HOST:-127.0.0.1}"
 MYSQL_DBHOST_USER="${MYSQL_DBHOST_USER:-pterodactyluser}"
 MYSQL_DBHOST_PASSWORD="${MYSQL_DBHOST_PASSWORD:-}"
 
@@ -57,7 +56,7 @@ MYSQL_DBHOST_PASSWORD="${MYSQL_DBHOST_PASSWORD:-}"
 
 # check virtualization
 check_virt() {
-  echo -e "* Installing virt-what..."
+  output "Installing virt-what..."
 
   update_repos true
   install_packages "virt-what" true
@@ -86,6 +85,8 @@ check_virt() {
     print_error "Unsupported kernel detected."
     exit 1
   fi
+
+  success "System is compatible with docker"
 }
 
 enable_services() {
@@ -126,6 +127,8 @@ dep_install() {
       ;;
     esac
 
+    [ "$CONFIGURE_LETSENCRYPT" == true ] && install_packages "epel-release"
+
     [ "$INSTALL_MARIADB" == true ] && [ "$OS_VER_MAJOR" == "7" ] && curl -sS "$MARIADB_URL" | bash
 
     install_packages "device-mapper-persistent-data lvm2"
@@ -139,51 +142,100 @@ dep_install() {
   
   # Install mariadb if needed
   [ "$INSTALL_MARIADB" == true ] && install_packages "mariadb-server"
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && install_packages "certbot"
 
   enable_services
+
+  success "Dependencies installed!"
 }
 
 ptdl_dl() {
-  echo "* Installing Pterodactyl Wings .. "
+  echo "* Downloading Pterodactyl Wings.. "
 
   mkdir -p /etc/pterodactyl
   curl -L -o /usr/local/bin/wings "$WINGS_DL_BASE_URL$ARCH"
 
   chmod u+x /usr/local/bin/wings
 
-  echo "* Done."
+  success "Pterodactyl Wings downloaded successfully"
 }
 
 systemd_file() {
-  echo "* Installing systemd service.."
+  output "Installing systemd service.."
+  
   curl -o /etc/systemd/system/wings.service "$GITHUB_BASE_URL"/configs/wings.service
   systemctl daemon-reload
   systemctl enable wings
-  echo "* Installed systemd service!"
-}
 
-install_mariadb() {
-  case "$OS" in
-  debian)
-    apt install -y mariadb-server
-    ;;
-  ubuntu)
-    
-    apt install -y mariadb-server
-    ;;
-  centos)
-    [ "$OS_VER_MAJOR" == "7" ] && curl -sS "$MARIADB_URL" | bash
-    [ "$OS_VER_MAJOR" == "7" ] && yum -y install mariadb-server
-    [ "$OS_VER_MAJOR" == "8" ] && dnf install -y mariadb mariadb-server
-    ;;
-  esac
+  success "Installed systemd service!"
 }
 
 firewall_ports() {
-  echo "* Opening port 22 (SSH), 8080 (Wings Port), 2022 (Wings SFTP Port)"
+  output "Opening port 22 (SSH), 8080 (Wings Port), 2022 (Wings SFTP Port)"
 
   [ "$CONFIGURE_LETSENCRYPT" == true ] && firewall_allow_ports "80 443"
   [ "$CONFIGURE_DB_FIREWALL" == true ] && firewall_allow_ports "3306"
 
   firewall_allow_ports "22 8080 2022"
+
+  success "Firewall ports opened!"
 }
+
+letsencrypt() {
+  FAILED=false
+
+  output "Configuring LetsEncrypt.."
+
+  # If user has nginx
+  systemctl stop nginx || true
+
+  # Obtain certificate
+  certbot certonly --no-eff-email --email "$EMAIL" --standalone -d "$FQDN" || FAILED=true
+
+  systemctl start nginx || true
+
+  # Check if it succeded
+  if [ ! -d "/etc/letsencrypt/live/$FQDN/" ] || [ "$FAILED" == true ]; then
+    print_warning "The process of obtaining a Let's Encrypt certificate failed!"
+  else 
+    success "The process of obtaining a Let's Encrypt certificate succeeded!"
+  fi
+}
+
+configure_mysql() {
+  output "Configuring MySQL.."
+
+  create_db_user "$MYSQL_DBHOST_USER" "$MYSQL_DBHOST_PASSWORD" "$MYSQL_DBHOST_HOST"
+  grant_all_privileges "*" "$MYSQL_DBHOST_USER" "$MYSQL_DBHOST_HOST"
+
+  if [ "$MYSQL_DBHOST_HOST" != "127.0.0.1" ]; then
+    echo "* Changing MySQL bind address.."
+
+    case "$OS" in
+    debian | ubuntu)
+      sed -i 's/127.0.0.1/0.0.0.0/g' /etc/mysql/mariadb.conf.d/50-server.cnf
+      ;;
+    rocky | almalinux | centos)
+      sed -ne 's/^#bind-address=0.0.0.0$/bind-address=0.0.0.0/' /etc/my.cnf.d/mariadb-server.cnf
+      ;;
+    esac
+  
+    systemctl restart mysqld
+  fi
+
+  success "MySQL configured!"
+}
+
+perform_install() {
+  output "Installing pterodactyl wings.."
+  dep_install
+  ptdl_dl
+  systemd_file
+  [ "$CONFIGURE_DBHOST" == true ] && configure_mysql
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
+
+  # return true if script has made it this far
+  return 0
+}
+
+perform_install

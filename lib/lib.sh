@@ -168,7 +168,6 @@ gen_passwd() {
 
 # -------------------- MYSQL ------------------- #
 
-# Create a database user
 create_db_user() {
   local db_user_name="$1"
   local db_user_password="$2"
@@ -182,7 +181,20 @@ create_db_user() {
   output "Database user $db_user_name created"
 }
 
-# Create the database
+grant_all_privileges() {
+  local db_name="$1"
+  local db_user_name="$2"
+  local db_host="${3:-127.0.0.1}"
+
+  output "Granting all privileges on $db_name to $db_user_name..."
+
+  mysql -u root -e "GRANT ALL PRIVILEGES ON $db_name.* TO '$db_user_name'@'$db_host' WITH GRANT OPTION;"
+  mysql -u root -e "FLUSH PRIVILEGES;"
+
+  output "Privileges granted"
+
+}
+
 create_db() {
   local db_name="$1"
   local db_user_name="$2"
@@ -191,8 +203,7 @@ create_db() {
   output "Creating database $db_name..."
 
   mysql -u root -e "CREATE DATABASE $db_name;"
-  mysql -u root -e "GRANT ALL PRIVILEGES ON $db_name.* TO '$db_user_name'@'$db_host' WITH GRANT OPTION;"
-  mysql -u root -e "FLUSH PRIVILEGES;"
+  grant_all_privileges "$db_name" "$db_user_name" "$db_host"
 
   output "Database $db_name created"
 }
@@ -349,7 +360,6 @@ firewall_allow_ports(){
       ufw allow "$port"
     done
     ufw --force reload
-    ufw status numbered | sed '/v6/d'
     ;;
   rocky | almalinux | centos)
     for port in $1; do

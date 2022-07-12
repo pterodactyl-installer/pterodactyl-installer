@@ -97,7 +97,7 @@ fi
 install_composer() {
   output "Installing composer.."
   curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-  output "Composer installed!"
+  success "Composer installed!"
 }
 
 ptdl_dl() {
@@ -111,17 +111,20 @@ ptdl_dl() {
 
   cp .env.example .env
 
-  output "Downloaded pterodactyl panel files!"
+  success "Downloaded pterodactyl panel files!"
 }
 
 install_composer_deps() {
+  output "Installing composer dependencies.."
   [ "$OS" == "centos" ] && export PATH=/usr/local/bin:$PATH
   COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader
-  output "Installed composer dependencies!"
+  success "Installed composer dependencies!"
 }
 
 # Configure environment
 configure() {
+  output "Configuring environment.."
+
   local app_url="http://$FQDN"
   [ "$ASSUME_SSL" == true ] && app_url="https://$FQDN"
   [ "$CONFIGURE_LETSENCRYPT" == true ] && app_url="https://$FQDN"
@@ -161,6 +164,8 @@ configure() {
     --name-last="$user_lastname" \
     --password="$user_password" \
     --admin=1
+
+  success "Configured environment!"
 }
 
 # set the correct folder permissions depending on OS and webserver
@@ -184,7 +189,7 @@ insert_cronjob() {
     output "* * * * php /var/www/pterodactyl/artisan schedule:run >> /dev/null 2>&1"
   } | crontab -
 
-  output "Cronjob installed!"
+  success "Cronjob installed!"
 }
 
 install_pteroq() {
@@ -204,7 +209,7 @@ install_pteroq() {
   systemctl enable pteroq.service
   systemctl start pteroq
 
-  output "Installed pteroq!"
+  success "Installed pteroq!"
 }
 
 ##### OS specific install functions #####
@@ -274,6 +279,8 @@ centos_dep() {
   yum-config-manager -y --disable remi-php54
   yum-config-manager -y --enable remi-php81
 
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && install_packages "python-certbot-nginx"
+
   # Install MariaDB
   curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
 }
@@ -282,6 +289,8 @@ alma_rocky_dep() {
   # SELinux tools
   install_packages "policycoreutils selinux-policy selinux-policy-targeted \
     setroubleshoot-server setools setools-console mcstrans"
+
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && install_packages "python3-certbot-nginx"
 
   # add remi repo (php8.0)
   install_packages "epel-release http://rpms.remirepo.net/enterprise/remi-release-8.rpm"
@@ -311,6 +320,8 @@ dep_install() {
       zip unzip tar \
       git cron"
 
+    [ "$CONFIGURE_LETSENCRYPT" == true ] && install_packages "certbot python3-certbot-nginx"
+
     ;;
   rocky | almalinux | centos)
     [ "$OS" == "centos" ] && centos_dep
@@ -324,6 +335,8 @@ dep_install() {
       zip unzip tar \
       git cron"
 
+    [ "$CONFIGURE_LETSENCRYPT" == true ] && install_packages "certbot "
+
     # Allow nginx
     selinux_allow
 
@@ -333,6 +346,8 @@ dep_install() {
   esac
 
   enable_services
+
+  success "Dependencies installed!"
 }
 
 ##### OTHER OS SPECIFIC FUNCTIONS #####
@@ -341,20 +356,14 @@ firewall_ports() {
   output "Opening ports: 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
 
   firewall_allow_ports "22 80 443"
+
+  success "Firewall ports opened!"
 }
 
 letsencrypt() {
   FAILED=false
 
-  # Install certbot
-  case "$OS" in
-  centos)
-    install_packages "certbot python-certbot-nginx"
-    ;;
-  *)
-    install_packages "certbot python3-certbot-nginx"
-    ;;
-  esac
+  output "Configuring Let's Encrypt..."
 
   # Obtain certificate
   certbot --nginx --redirect --no-eff-email --email "$email" -d "$FQDN" || FAILED=true
@@ -373,6 +382,8 @@ letsencrypt() {
       ASSUME_SSL=false
       CONFIGURE_LETSENCRYPT=false
     fi
+  else 
+    success "The process of obtaining a Let's Encrypt certificate succeeded!"
   fi
 }
 
@@ -417,7 +428,7 @@ configure_nginx() {
     systemctl restart nginx
   fi
 
-  output "nginx configured!"
+  success "Nginx configured!"
 }
 
 ##### MAIN FUNCTIONS #####
