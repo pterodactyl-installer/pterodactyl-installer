@@ -426,21 +426,21 @@ check_virt() {
 
   case "$virt_serv" in
   *openvz* | *lxc*)
-    print_warning "Unsupported type of virtualization detected. Please consult with your hosting provider whether your server can run Docker or not. Proceed at your own risk."
+    warning "Unsupported type of virtualization detected. Please consult with your hosting provider whether your server can run Docker or not. Proceed at your own risk."
     echo -e -n "* Are you sure you want to proceed? (y/N): "
     read -r CONFIRM_PROCEED
     if [[ ! "$CONFIRM_PROCEED" =~ [Yy] ]]; then
-      print_error "Installation aborted!"
+      error "Installation aborted!"
       exit 1
     fi
     ;;
   *)
-    [ "$virt_serv" != "" ] && print_warning "Virtualization: $virt_serv detected."
+    [ "$virt_serv" != "" ] && warning "Virtualization: $virt_serv detected."
     ;;
   esac
 
   if uname -r | grep -q "xxxx"; then
-    print_error "Unsupported kernel detected."
+    error "Unsupported kernel detected."
     exit 1
   fi
 
@@ -499,7 +499,7 @@ aarch64)
   ARCH=arm64
   ;;
 *)
-  print_error "Only x86_64 and arm64 are supported!"
+  error "Only x86_64 and arm64 are supported!"
   exit 1
   ;;
 esac

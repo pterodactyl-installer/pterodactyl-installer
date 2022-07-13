@@ -78,7 +78,7 @@ ask_database_external() {
 }
 
 ask_database_firewall() {
-  print_warning "Allow incoming traffic to port 3306 (MySQL) can potentially be a security risk, unless you know what you are doing!"
+  warning "Allow incoming traffic to port 3306 (MySQL) can potentially be a security risk, unless you know what you are doing!"
   echo -n "* Would you like to allow incoming traffic to port 3306? (y/N): "
   read -r CONFIRM_DB_FIREWALL
   if [[ "$CONFIRM_DB_FIREWALL" =~ [Yy] ]]; then
@@ -93,11 +93,11 @@ ask_database_firewall() {
 main() {
   # check if we can detect an already existing installation
   if [ -d "/etc/pterodactyl" ]; then
-    print_warning "The script has detected that you already have Pterodactyl wings on your system! You cannot run the script multiple times, it will fail!"
+    warning "The script has detected that you already have Pterodactyl wings on your system! You cannot run the script multiple times, it will fail!"
     echo -e -n "* Are you sure you want to proceed? (y/N): "
     read -r CONFIRM_PROCEED
     if [[ ! "$CONFIRM_PROCEED" =~ [Yy] ]]; then
-      print_error "Installation aborted!"
+      error "Installation aborted!"
       exit 1
     fi
   fi
@@ -131,7 +131,7 @@ main() {
     MYSQL_DBHOST_USER="-"
     while [[ "$MYSQL_DBHOST_USER" == *"-"* ]]; do
       required_input MYSQL_DBHOST_USER "Database host username (pterodactyluser): " "" "pterodactyluser"
-      [[ "$MYSQL_DBHOST_USER" == *"-"* ]] && print_error "Database user cannot contain hyphens"
+      [[ "$MYSQL_DBHOST_USER" == *"-"* ]] && error "Database user cannot contain hyphens"
     done
 
     password_input MYSQL_DBHOST_PASSWORD "Database host password: " "Password cannot be empty"
@@ -146,9 +146,9 @@ main() {
 
       ASK=false
 
-      [ -z "$FQDN" ] && print_error "FQDN cannot be empty"                                                            # check if FQDN is empty
+      [ -z "$FQDN" ] && error "FQDN cannot be empty"                                                            # check if FQDN is empty
       bash <(curl -s "$GITHUB_BASE_URL"/lib/verify-fqdn.sh) "$FQDN" || ASK=true                                       # check if FQDN is valid
-      [ -d "/etc/letsencrypt/live/$FQDN/" ] && print_error "A certificate with this FQDN already exists!" && ASK=true # check if cert exists
+      [ -d "/etc/letsencrypt/live/$FQDN/" ] && error "A certificate with this FQDN already exists!" && ASK=true # check if cert exists
 
       [ "$ASK" == true ] && FQDN=""
       [ "$ASK" == true ] && echo -e -n "* Do you still want to automatically configure HTTPS using Let's Encrypt? (y/N): "
@@ -167,7 +167,7 @@ main() {
       echo -n "* Enter email address for Let's Encrypt: "
       read -r EMAIL
 
-      valid_email "$EMAIL" || print_error "Email cannot be empty or invalid"
+      valid_email "$EMAIL" || error "Email cannot be empty or invalid"
     done
   fi
 

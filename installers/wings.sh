@@ -163,7 +163,7 @@ letsencrypt() {
 
   # Check if it succeded
   if [ ! -d "/etc/letsencrypt/live/$FQDN/" ] || [ "$FAILED" == true ]; then
-    print_warning "The process of obtaining a Let's Encrypt certificate failed!"
+    warning "The process of obtaining a Let's Encrypt certificate failed!"
   else 
     success "The process of obtaining a Let's Encrypt certificate succeeded!"
   fi
