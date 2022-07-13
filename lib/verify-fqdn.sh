@@ -56,11 +56,13 @@ dep_install() {
 
   case "$OS" in
   ubuntu | debian)
-    install_packages "dnsutils" true ;;
+    install_packages "dnsutils" true
+    ;;
   rocky | almalinux | centos)
-    install_packages "bind-utils" true ;;
+    install_packages "bind-utils" true
+    ;;
   esac
-  
+
   return 0
 }
 

@@ -118,8 +118,8 @@ welcome() {
 
 get_latest_release() {
   curl --silent "https://api.github.com/repos/$1/releases/latest" | # Get latest release from GitHub api
-  grep '"tag_name":' |                                              # Get tag line
-  sed -E 's/.*"([^"]+)".*/\1/'                                      # Pluck JSON value
+    grep '"tag_name":' |                                            # Get tag line
+    sed -E 's/.*"([^"]+)".*/\1/'                                    # Pluck JSON value
 }
 
 get_latest_versions() {
@@ -130,7 +130,7 @@ get_latest_versions() {
 
 run_installer() {
   # In prod
-  # bash <(curl -s -S -L "$GITHUB_BASE_URL/$SCRIPT_VERSION/installers/$1.sh") 
+  # bash <(curl -s -S -L "$GITHUB_BASE_URL/$SCRIPT_VERSION/installers/$1.sh")
   bash installers/"$1".sh
 }
 
@@ -152,16 +152,15 @@ valid_email() {
 }
 
 invalid_ip() {
-  ip route get "$1" > /dev/null 2>&1
+  ip route get "$1" >/dev/null 2>&1
   echo $?
 }
 
 gen_passwd() {
   local length=$1
   local password=""
-  while [ ${#password} -lt "$length" ]
-  do
-      password=$(echo "$password""$(head -c 100 /dev/urandom | LC_ALL=C tr -dc "$password_charset")" | fold -w "$length" | head -n 1)
+  while [ ${#password} -lt "$length" ]; do
+    password=$(echo "$password""$(head -c 100 /dev/urandom | LC_ALL=C tr -dc "$password_charset")" | fold -w "$length" | head -n 1)
   done
   echo "$password"
 }
@@ -218,22 +217,22 @@ update_repos() {
   ubuntu | debian)
     apt-get -y $args update
     ;;
-  *) 
+  *)
     # Do nothing as CentOS, AlmaLinux and RockyLinux update metadata before installing packages.
-  ;;
+    ;;
   esac
 }
 
 # First argument list of packages to install, second argument for quite mode
 install_packages() {
   local args=""
-  if [[ $2 == true ]]; then 
+  if [[ $2 == true ]]; then
     case "$OS" in
-    ubuntu | debian) args="-qq";;
-    *) args="-q";;
+    ubuntu | debian) args="-qq" ;;
+    *) args="-q" ;;
     esac
   fi
-  
+
   # Eval needed for proper expansion of arguments
   case "$OS" in
   ubuntu | debian)
@@ -343,7 +342,6 @@ ask_firewall() {
   esac
 }
 
-
 install_firewall() {
   case "$OS" in
   ubuntu | debian)
@@ -358,26 +356,26 @@ install_firewall() {
     ufw --force enable
 
     success "Enabled Uncomplicated Firewall (UFW)"
-    
-  ;;
+
+    ;;
   rocky | almalinux | centos)
 
     output ""
     output "Installing FirewallD"+
-    
+
     if ! [ -x "$(command -v firewall-cmd)" ]; then
       install_packages "firewalld" true
     fi
 
-    systemctl --now enable firewalld > /dev/null
-    
+    systemctl --now enable firewalld >/dev/null
+
     success "Enabled FirewallD"
 
-    ;;    
+    ;;
   esac
 }
 
-firewall_allow_ports(){
+firewall_allow_ports() {
   case "$OS" in
   ubuntu | debian)
     for port in $1; do
@@ -389,7 +387,7 @@ firewall_allow_ports(){
     for port in $1; do
       firewall-cmd --zone=public --add-port="$port"/tcp --permanent
     done
-    firewall-cmd --reload -q    
+    firewall-cmd --reload -q
     ;;
   esac
 }
@@ -398,7 +396,7 @@ firewall_allow_ports(){
 
 # panel x86_64 check
 check_os_x86_64() {
-  if [ "${ARCH}" != "amd64" ]; then 
+  if [ "${ARCH}" != "amd64" ]; then
     warning "Detected CPU architecture $CPU_ARCHITECTURE"
     warning "Using any other architecture than 64 bit (x86_64) will cause problems."
 
@@ -514,7 +512,7 @@ ubuntu)
 debian)
   [ "$OS_VER_MAJOR" == "10" ] && SUPPORTED=true
   [ "$OS_VER_MAJOR" == "11" ] && SUPPORTED=true
-  export DEBIAN_FRONTEND=noninteractive 
+  export DEBIAN_FRONTEND=noninteractive
   ;;
 centos)
   [ "$OS_VER_MAJOR" == "7" ] && SUPPORTED=true

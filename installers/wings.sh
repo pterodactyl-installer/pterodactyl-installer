@@ -50,8 +50,8 @@ MYSQL_DBHOST_USER="${MYSQL_DBHOST_USER:-pterodactyluser}"
 MYSQL_DBHOST_PASSWORD="${MYSQL_DBHOST_PASSWORD:-}"
 
 if [[ $CONFIGURE_DBHOST == true && -z "${MYSQL_DBHOST_PASSWORD}" ]]; then
-    error "Mysql database host user password is required"
-    exit 1
+  error "Mysql database host user password is required"
+  exit 1
 fi
 
 # -------------- OS check funtions ------------- #
@@ -88,9 +88,9 @@ dep_install() {
       install_packages "yum-utils"
       yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
       ;;
-    almalinux | rocky) 
-      install_packages "dnf-utils" 
-      dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo 
+    almalinux | rocky)
+      install_packages "dnf-utils"
+      dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
       ;;
     esac
 
@@ -99,6 +99,7 @@ dep_install() {
     [ "$INSTALL_MARIADB" == true ] && [ "$OS_VER_MAJOR" == "7" ] && curl -sS "$MARIADB_URL" | bash
 
     install_packages "device-mapper-persistent-data lvm2"
+    ;;
   esac
 
   # Update the new repos
@@ -106,7 +107,7 @@ dep_install() {
 
   # Install dependencies
   install_packages "docker-ce docker-ce-cli containerd.io"
-  
+
   # Install mariadb if needed
   [ "$INSTALL_MARIADB" == true ] && install_packages "mariadb-server"
   [ "$CONFIGURE_LETSENCRYPT" == true ] && install_packages "certbot"
@@ -129,7 +130,7 @@ ptdl_dl() {
 
 systemd_file() {
   output "Installing systemd service.."
-  
+
   curl -o /etc/systemd/system/wings.service "$GITHUB_BASE_URL"/configs/wings.service
   systemctl daemon-reload
   systemctl enable wings
@@ -164,7 +165,7 @@ letsencrypt() {
   # Check if it succeded
   if [ ! -d "/etc/letsencrypt/live/$FQDN/" ] || [ "$FAILED" == true ]; then
     warning "The process of obtaining a Let's Encrypt certificate failed!"
-  else 
+  else
     success "The process of obtaining a Let's Encrypt certificate succeeded!"
   fi
 }
@@ -186,7 +187,7 @@ configure_mysql() {
       sed -ne 's/^#bind-address=0.0.0.0$/bind-address=0.0.0.0/' /etc/my.cnf.d/mariadb-server.cnf
       ;;
     esac
-  
+
     systemctl restart mysqld
   fi
 

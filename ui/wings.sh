@@ -164,7 +164,7 @@ main() {
       ASK=false
 
       [ -z "$FQDN" ] && error "FQDN cannot be empty"                                                            # check if FQDN is empty
-      bash <(curl -s "$GITHUB_BASE_URL"/lib/verify-fqdn.sh) "$FQDN" || ASK=true                                       # check if FQDN is valid
+      bash <(curl -s "$GITHUB_BASE_URL"/lib/verify-fqdn.sh) "$FQDN" || ASK=true                                 # check if FQDN is valid
       [ -d "/etc/letsencrypt/live/$FQDN/" ] && error "A certificate with this FQDN already exists!" && ASK=true # check if cert exists
 
       [ "$ASK" == true ] && FQDN=""

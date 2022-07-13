@@ -32,4 +32,3 @@ set -e
 source /tmp/lib.sh || source <(curl -sL "$GITHUB_SOURCE"/lib/lib.sh)
 
 # When #280 is merged
-

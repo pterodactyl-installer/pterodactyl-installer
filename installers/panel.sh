@@ -60,33 +60,33 @@ user_lastname="${user_lastname:-}"
 user_password="${user_password:-}"
 
 if [[ -z "${email}" ]]; then
-    error "Email is required"
-    exit 1
+  error "Email is required"
+  exit 1
 fi
 
 if [[ -z "${user_email}" ]]; then
-    error "User email is required"
-    exit 1
+  error "User email is required"
+  exit 1
 fi
 
 if [[ -z "${user_username}" ]]; then
-    error "User username is required"
-    exit 1
+  error "User username is required"
+  exit 1
 fi
 
 if [[ -z "${user_firstname}" ]]; then
-    error "User firstname is required"
-    exit 1
+  error "User firstname is required"
+  exit 1
 fi
 
 if [[ -z "${user_lastname}" ]]; then
-    error "User lastname is required"
-    exit 1
+  error "User lastname is required"
+  exit 1
 fi
 
 if [[ -z "${user_password}" ]]; then
-    error "User password is required"
-    exit 1
+  error "User password is required"
+  exit 1
 fi
 
 ##### Main installation functions #####
@@ -225,7 +225,6 @@ enable_services() {
   systemctl enable nginx
   systemctl enable mariadb
   systemctl start mariadb
-  
 }
 
 selinux_allow() {
@@ -270,7 +269,7 @@ centos_dep() {
   # SELinux tools
   install_packages "policycoreutils policycoreutils-python selinux-policy selinux-policy-targeted \
     yum-utils libselinux-utils setroubleshoot-server setools setools-console mcstrans"
-  
+
   # Add remi repo (php8.0)
   install_packages "epel-release http://rpms.remirepo.net/enterprise/remi-release-7.rpm"
   yum-config-manager -y --disable remi-php54
@@ -379,7 +378,7 @@ letsencrypt() {
       ASSUME_SSL=false
       CONFIGURE_LETSENCRYPT=false
     fi
-  else 
+  else
     success "The process of obtaining a Let's Encrypt certificate succeeded!"
   fi
 }
@@ -419,6 +418,7 @@ configure_nginx() {
   case "$OS" in
   ubuntu | debian)
     ln -sf $CONFIG_PATH_AVAIL/pterodactyl.conf $CONFIG_PATH_ENABL/pterodactyl.conf
+    ;;
   esac
 
   if [ "$ASSUME_SSL" == false ] && [ "$CONFIGURE_LETSENCRYPT" == false ]; then
@@ -444,7 +444,7 @@ perform_install() {
   install_pteroq
   configure_nginx
   [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
-  
+
   return 0
 }
 

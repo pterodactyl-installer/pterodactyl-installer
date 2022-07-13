@@ -40,18 +40,18 @@ export FQDN=""
 export MYSQL_DB=""
 export MYSQL_USER=""
 export MYSQL_PASSWORD=""
- 
+
 # Environment
 export timezone=""
 export email=""
- 
+
 # Initial admin account
 export user_email=""
 export user_username=""
 export user_firstname=""
 export user_lastname=""
 export user_password=""
- 
+
 # Assume SSL, will fetch different config if true
 export ASSUME_SSL=false
 export CONFIGURE_LETSENCRYPT=false
@@ -61,7 +61,7 @@ export CONFIGURE_FIREWALL=false
 
 # ------------ User input functions ------------ #
 
-ask_letsencrypt() {   
+ask_letsencrypt() {
   if [ "$CONFIGURE_UFW" == false ] && [ "$CONFIGURE_FIREWALL_CMD" == false ]; then
     warning "Let's Encrypt requires port 80/443 to be opened! You have opted out of the automatic firewall configuration; use this at your own risk (if port 80/443 is closed, the script will fail)!"
   fi
@@ -135,7 +135,7 @@ main() {
   rand_pw=$(gen_passwd 64)
   password_input MYSQL_PASSWORD "Password (press enter to use randomly generated password): " "MySQL password cannot be empty" "$rand_pw"
 
-  readarray -t valid_timezones <<< "$(curl -s "$GITHUB_BASE_URL"/configs/valid_timezones.txt)"
+  readarray -t valid_timezones <<<"$(curl -s "$GITHUB_BASE_URL"/configs/valid_timezones.txt)"
   output "List of valid timezones here $(hyperlink "https://www.php.net/manual/en/timezones.php")"
 
   while [ -z "$timezone" ]; do
