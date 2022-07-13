@@ -42,7 +42,7 @@ if ! [ -x "$(command -v curl)" ]; then
 fi
 
 if [ ! -f "/tmp/lib.sh" ]; then
-  curl -o /tmp/lib.sh $GITHUB_SOURCE/lib/lib.sh
+  curl -o /tmp/lib.sh $GITHUB_BASE_URL/lib/lib.sh
 fi
 
 source /tmp/lib.sh

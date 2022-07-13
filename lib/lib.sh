@@ -492,8 +492,7 @@ case "$CPU_ARCHITECTURE" in
 x86_64)
   ARCH=amd64
   ;;
-arm64) ;&
-aarch64)
+arm64 | aarch64)
   ARCH=arm64
   ;;
 *)
