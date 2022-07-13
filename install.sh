@@ -32,6 +32,8 @@ export GITHUB_SOURCE="v0.11.0"
 export SCRIPT_RELEASE="v0.11.0"
 export GITHUB_BASE_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/$GITHUB_SOURCE"
 
+LOG_PATH="/var/log/pterodactyl-installer.log"
+
 # check for curl
 if ! [ -x "$(command -v curl)" ]; then
   echo "* curl is required in order for this script to work."
@@ -43,13 +45,7 @@ if [ ! -f "/tmp/lib.sh" ]; then
   curl -o /tmp/lib.sh $GITHUB_SOURCE/lib/lib.sh
 fi
 
-# TODO: Change to something like
-# source /tmp/lib.sh || source <(curl -sL https://raw.githubuserc.com/vilhelmprytz/pterodactyl-installer/master/lib.sh)
-# When released
-# shellcheck source=lib/lib.sh
-source lib/lib.sh
-
-LOG_PATH="/var/log/pterodactyl-installer.log"
+source /tmp/lib.sh
 
 execute() {
   echo -e "\n\n* pterodactyl-installer $(date) \n\n" >>$LOG_PATH
@@ -99,3 +95,6 @@ while [ "$done" == false ]; do
   [[ ! " ${valid_input[*]} " =~ ${action} ]] && error "Invalid option"
   [[ " ${valid_input[*]} " =~ ${action} ]] && done=true && IFS=";" read -r i1 i2 <<<"${actions[$action]}" && execute "$i1" "$i2"
 done
+
+# Remove lib.sh, so next time the script is run the newest version is downloaded.
+rm -rf /tmp/lib.sh

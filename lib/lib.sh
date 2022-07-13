@@ -320,6 +320,30 @@ password_input() {
 
 # ------------------ Firewall ------------------ #
 
+ask_firewall() {
+  local __resultvar=$1
+
+  case "$OS" in
+  ubuntu | debian)
+    echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
+    read -r CONFIRM_UFW
+
+    if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
+      eval "$__resultvar="'true'""
+    fi
+    ;;
+  rocky | almalinux | centos)
+    echo -e -n "* Do you want to automatically configure firewall-cmd (firewall)? (y/N): "
+    read -r CONFIRM_FIREWALL_CMD
+
+    if [[ "$CONFIRM_FIREWALL_CMD" =~ [Yy] ]]; then
+      eval "$__resultvar="'true'""
+    fi
+    ;;
+  esac
+}
+
+
 install_firewall() {
   case "$OS" in
   ubuntu | debian)
@@ -386,6 +410,41 @@ check_os_x86_64() {
       exit 1
     fi
   fi
+}
+
+# wings virtualization check
+check_virt() {
+  output "Installing virt-what..."
+
+  update_repos true
+  install_packages "virt-what" true
+
+  # Export sbin for virt-what
+  export PATH="$PATH:/sbin:/usr/sbin"
+
+  virt_serv=$(virt-what)
+
+  case "$virt_serv" in
+  *openvz* | *lxc*)
+    print_warning "Unsupported type of virtualization detected. Please consult with your hosting provider whether your server can run Docker or not. Proceed at your own risk."
+    echo -e -n "* Are you sure you want to proceed? (y/N): "
+    read -r CONFIRM_PROCEED
+    if [[ ! "$CONFIRM_PROCEED" =~ [Yy] ]]; then
+      print_error "Installation aborted!"
+      exit 1
+    fi
+    ;;
+  *)
+    [ "$virt_serv" != "" ] && print_warning "Virtualization: $virt_serv detected."
+    ;;
+  esac
+
+  if uname -r | grep -q "xxxx"; then
+    print_error "Unsupported kernel detected."
+    exit 1
+  fi
+
+  success "System is compatible with docker"
 }
 
 # Exit with error status code if user is not root

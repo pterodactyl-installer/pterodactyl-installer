@@ -28,11 +28,8 @@ set -e
 #                                                                           #
 #############################################################################
 
-# TODO: Change to something like
-# source /tmp/lib.sh || source <(curl -sL https://raw.githubuserc.com/vilhelmprytz/pterodactyl-installer/master/lib.sh)
-# When released
-# shellcheck source=../lib.sh
-source lib/lib.sh
+# shellcheck source=lib/lib.sh
+source /tmp/lib.sh || source <(curl -sL "$GITHUB_SOURCE"/lib/lib.sh)
 
 # ------------------ Variables ----------------- #
 
@@ -175,7 +172,7 @@ set_folder_permissions() {
   debian | ubuntu)
     chown -R www-data:www-data ./*
     ;;
-  centos)
+  rocky | almalinux | centos)
     chown -R nginx:nginx ./*
     ;;
   esac
@@ -201,7 +198,7 @@ install_pteroq() {
   debian | ubuntu)
     sed -i -e "s@<user>@www-data@g" /etc/systemd/system/pteroq.service
     ;;
-  centos)
+  rocky | almalinux | centos)
     sed -i -e "s@<user>@nginx@g" /etc/systemd/system/pteroq.service
     ;;
   esac
@@ -447,6 +444,7 @@ perform_install() {
   install_pteroq
   configure_nginx
   [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
+  
   return 0
 }
 

@@ -5,6 +5,9 @@ Vagrant.configure("2") do |config|
   # "public" network so that we can access the panel interface
   config.vm.network "public_network"
 
+  config.vm.provision "shell",
+    inline: "ln -sf /vagrant/lib/lib.sh /tmp/lib.sh"
+
   # ubuntu
   config.vm.define "ubuntu_jammy" do |ubuntu_jammy|
     ubuntu_jammy.vm.box = "ubuntu/jammy64"

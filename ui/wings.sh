@@ -28,239 +28,28 @@ set -e
 #                                                                           #
 #############################################################################
 
-# TODO: Change to something like
-# source /tmp/lib.sh || source <(curl -sL https://raw.githubuserc.com/vilhelmprytz/pterodactyl-installer/master/lib.sh)
-# When released
-# shellcheck source=lib.sh
-source lib.sh
+# shellcheck source=lib/lib.sh
+source /tmp/lib.sh || source <(curl -sL "$GITHUB_SOURCE"/lib/lib.sh)
 
 # ------------------ Variables ----------------- #
 
-INSTALL_MARIADB=false
+# Install mariadb
+export INSTALL_MARIADB=false
 
-# firewall
-CONFIGURE_FIREWALL=false
-CONFIGURE_UFW=false
-CONFIGURE_FIREWALL_CMD=false
+# Firewall
+export CONFIGURE_FIREWALL=false
 
 # SSL (Let's Encrypt)
-CONFIGURE_LETSENCRYPT=false
-FQDN=""
-EMAIL=""
+export CONFIGURE_LETSENCRYPT=false
+export FQDN=""
+export EMAIL=""
 
 # Database host
-CONFIGURE_DBHOST=false
-CONFIGURE_DBEXTERNAL=false
-CONFIGURE_DBEXTERNAL_HOST="%"
-CONFIGURE_DB_FIREWALL=false
-MYSQL_DBHOST_USER="pterodactyluser"
-MYSQL_DBHOST_PASSWORD="password"
-
-
-# -------------- OS check funtions ------------- #
-
-check_os_comp() {
-  SUPPORTED=false
-
-  MACHINE_TYPE=$(uname -m)
-  case "$MACHINE_TYPE" in
-  x86_64)
-    ARCH=amd64
-    ;;
-  arm64) ;&
-    # fallthrough
-  aarch64)
-    print_warning "Detected architecture arm64"
-    print_warning "You will need to use Docker images made specifically for arm64"
-    echo -e -n "* Are you sure you want to proceed? (y/N):"
-    read -r choice
-
-    if [[ ! "$choice" =~ [Yy] ]]; then
-      print_error "Installation aborted!"
-      exit 1
-    fi
-    ARCH=arm64
-    ;;
-  *)
-    print_error "Only x86_64 and arm64 are supported for Wings"
-    exit 1
-    ;;
-  esac
-
-  # check virtualization
-  echo -e "* Installing virt-what..."
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
-    # silence dpkg output
-    export DEBIAN_FRONTEND=noninteractive
-
-    # install virt-what
-    apt-get -y update -qq
-    apt-get install -y virt-what -qq
-
-    # unsilence
-    unset DEBIAN_FRONTEND
-  elif [ "$OS" == "centos" ]; then
-    if [ "$OS_VER_MAJOR" == "7" ]; then
-      yum -q -y update
-
-      # install virt-what
-      yum -q -y install virt-what
-    elif [ "$OS_VER_MAJOR" == "8" ]; then
-      dnf -y -q update
-
-      # install virt-what
-      dnf install -y -q virt-what
-    fi
-  else
-    print_error "Invalid OS."
-    exit 1
-  fi
-
-  export PATH="$PATH:/sbin:/usr/sbin"
-
-  virt_serv=$(virt-what)
-
-  case "$virt_serv" in
-  *openvz* | *lxc*)
-    print_warning "Unsupported type of virtualization detected. Please consult with your hosting provider whether your server can run Docker or not. Proceed at your own risk."
-    echo -e -n "* Are you sure you want to proceed? (y/N): "
-    read -r CONFIRM_PROCEED
-    if [[ ! "$CONFIRM_PROCEED" =~ [Yy] ]]; then
-      print_error "Installation aborted!"
-      exit 1
-    fi
-    ;;
-  *)
-    [ "$virt_serv" != "" ] && print_warning "Virtualization: $virt_serv detected."
-    ;;
-  esac
-
-  if uname -r | grep -q "xxxx"; then
-    print_error "Unsupported kernel detected."
-    exit 1
-  fi
-}
-
-############################
-## INSTALLATION FUNCTIONS ##
-############################
-
-apt_update() {
-  apt update -q -y && apt upgrade -y
-}
-
-yum_update() {
-  yum -y update
-}
-
-dnf_update() {
-  dnf -y upgrade
-}
-
-enable_docker() {
-  systemctl start docker
-  systemctl enable docker
-}
-
-install_docker() {
-  echo "* Installing docker .."
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
-    # Install dependencies
-    apt-get -y install \
-      apt-transport-https \
-      ca-certificates \
-      gnupg2 \
-      software-properties-common
-
-    # Add docker gpg key
-    curl -fsSL https://download.docker.com/linux/"$OS"/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-
-    # Add docker repo
-    echo \
-      "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/$OS \
-      $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
-
-    # Install docker
-    apt_update
-    apt-get -y install docker-ce docker-ce-cli containerd.io
-
-    # Make sure docker is enabled
-    enable_docker
-
-  elif [ "$OS" == "centos" ]; then
-    if [ "$OS_VER_MAJOR" == "7" ]; then
-      # Install dependencies for Docker
-      yum install -y yum-utils device-mapper-persistent-data lvm2
-
-      # Add repo to yum
-      yum-config-manager \
-        --add-repo \
-        https://download.docker.com/linux/centos/docker-ce.repo
-
-      # Install Docker
-      yum install -y docker-ce docker-ce-cli containerd.io
-    elif [ "$OS_VER_MAJOR" == "8" ]; then
-      # Install dependencies for Docker
-      dnf install -y dnf-utils device-mapper-persistent-data lvm2
-
-      # Add repo to dnf
-      dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
-
-      # Install Docker
-      dnf install -y docker-ce docker-ce-cli containerd.io --nobest
-    fi
-
-    enable_docker
-  fi
-
-  echo "* Docker has now been installed."
-}
-
-ptdl_dl() {
-  echo "* Installing Pterodactyl Wings .. "
-
-  mkdir -p /etc/pterodactyl
-  curl -L -o /usr/local/bin/wings "$WINGS_DL_BASE_URL$ARCH"
-
-  chmod u+x /usr/local/bin/wings
-
-  echo "* Done."
-}
-
-systemd_file() {
-  echo "* Installing systemd service.."
-  curl -o /etc/systemd/system/wings.service $GITHUB_BASE_URL/configs/wings.service
-  systemctl daemon-reload
-  systemctl enable wings
-  echo "* Installed systemd service!"
-}
-
-install_mariadb() {
-  MARIADB_URL="https://downloads.mariadb.com/MariaDB/mariadb_repo_setup"
-
-  case "$OS" in
-  debian)
-    if [ "$ARCH" == "aarch64" ]; then
-      print_warning "MariaDB doesn't support Debian on arm64"
-      return
-    fi
-    [ "$OS_VER_MAJOR" == "9" ] && curl -sS $MARIADB_URL | sudo bash
-    apt install -y mariadb-server
-    ;;
-  ubuntu)
-    [ "$OS_VER_MAJOR" == "18" ] && curl -sS $MARIADB_URL | sudo bash
-    apt install -y mariadb-server
-    ;;
-  centos)
-    [ "$OS_VER_MAJOR" == "7" ] && curl -sS $MARIADB_URL | bash
-    [ "$OS_VER_MAJOR" == "7" ] && yum -y install mariadb-server
-    [ "$OS_VER_MAJOR" == "8" ] && dnf install -y mariadb mariadb-server
-    ;;
-  esac
-
-  systemctl enable mariadb
-  systemctl start mariadb
-}
+export CONFIGURE_DBHOST=false
+export CONFIGURE_DB_FIREWALL=false
+export MYSQL_DBHOST_HOST="127.0.0.1"
+export MYSQL_DBHOST_USER="pterodactyluser"
+export MYSQL_DBHOST_PASSWORD=""
 
 ask_database_user() {
   echo -n "* Do you want to automatically configure a user for database hosts? (y/N): "
@@ -279,11 +68,12 @@ ask_database_external() {
   if [[ "$CONFIRM_DBEXTERNAL" =~ [Yy] ]]; then
     echo -n "* Enter the panel address (blank for any address): "
     read -r CONFIRM_DBEXTERNAL_HOST
-    if [ "$CONFIRM_DBEXTERNAL_HOST" != "" ]; then
-      CONFIGURE_DBEXTERNAL_HOST="$CONFIRM_DBEXTERNAL_HOST"
+    if [ "$CONFIRM_DBEXTERNAL_HOST" == "" ]; then
+      MYSQL_DBHOST_HOST="%"
+    else
+      MYSQL_DBHOST_HOST="$CONFIRM_DBEXTERNAL_HOST"
     fi
     [ "$CONFIGURE_FIREWALL" == true ] && ask_database_firewall
-    CONFIGURE_DBEXTERNAL=true
   fi
 }
 
@@ -296,162 +86,9 @@ ask_database_firewall() {
   fi
 }
 
-configure_mysql() {
-  echo "* Performing MySQL queries.."
-
-  if [ "$CONFIGURE_DBEXTERNAL" == true ]; then
-    echo "* Creating MySQL user..."
-    mysql -u root -e "CREATE USER '${MYSQL_DBHOST_USER}'@'${CONFIGURE_DBEXTERNAL_HOST}' IDENTIFIED BY '${MYSQL_DBHOST_PASSWORD}';"
-
-    echo "* Granting privileges.."
-    mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO '${MYSQL_DBHOST_USER}'@'${CONFIGURE_DBEXTERNAL_HOST}' WITH GRANT OPTION;"
-  else
-    echo "* Creating MySQL user..."
-    mysql -u root -e "CREATE USER '${MYSQL_DBHOST_USER}'@'127.0.0.1' IDENTIFIED BY '${MYSQL_DBHOST_PASSWORD}';"
-
-    echo "* Granting privileges.."
-    mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO '${MYSQL_DBHOST_USER}'@'127.0.0.1' WITH GRANT OPTION;"
-  fi
-
-  echo "* Flushing privileges.."
-  mysql -u root -e "FLUSH PRIVILEGES;"
-
-  echo "* Changing MySQL bind address.."
-
-  if [ "$CONFIGURE_DBEXTERNAL" == true ]; then
-    case "$OS" in
-    debian | ubuntu)
-      sed -i 's/127.0.0.1/0.0.0.0/g' /etc/mysql/mariadb.conf.d/50-server.cnf
-      ;;
-    centos)
-      sed -ne 's/^#bind-address=0.0.0.0$/bind-address=0.0.0.0/' /etc/my.cnf.d/mariadb-server.cnf
-      ;;
-    esac
-  
-    systemctl restart mysqld
-  fi
-
-  echo "* MySQL configured!"
-}
-
-#################################
-##### OS SPECIFIC FUNCTIONS #####
-#################################
-
-ask_letsencrypt() {
-  if [ "$CONFIGURE_UFW" == false ] && [ "$CONFIGURE_FIREWALL_CMD" == false ]; then
-    print_warning "Let's Encrypt requires port 80/443 to be opened! You have opted out of the automatic firewall configuration; use this at your own risk (if port 80/443 is closed, the script will fail)!"
-  fi
-
-  print_warning "You cannot use Let's Encrypt with your hostname as an IP address! It must be a FQDN (e.g. node.example.org)."
-
-  echo -e -n "* Do you want to automatically configure HTTPS using Let's Encrypt? (y/N): "
-  read -r CONFIRM_SSL
-
-  if [[ "$CONFIRM_SSL" =~ [Yy] ]]; then
-    CONFIGURE_LETSENCRYPT=true
-  fi
-}
-
-firewall_ufw() {
-  apt install ufw -y
-
-  echo -e "\n* Enabling Uncomplicated Firewall (UFW)"
-  echo "* Opening port 22 (SSH), 8080 (Wings Port), 2022 (Wings SFTP Port)"
-
-  # pointing to /dev/null silences the command output
-  ufw allow ssh >/dev/null
-  ufw allow 8080 >/dev/null
-  ufw allow 2022 >/dev/null
-
-  [ "$CONFIGURE_LETSENCRYPT" == true ] && ufw allow http >/dev/null
-  [ "$CONFIGURE_LETSENCRYPT" == true ] && ufw allow https >/dev/null
-  [ "$CONFIGURE_DB_FIREWALL" == true ] && ufw allow 3306 >/dev/null
-
-  ufw --force enable
-  ufw --force reload
-  ufw status numbered | sed '/v6/d'
-}
-
-firewall_firewalld() {
-  echo -e "\n* Enabling firewall_cmd (firewalld)"
-  echo "* Opening port 22 (SSH), 8080 (Wings Port), 2022 (Wings SFTP Port)"
-
-  # Install
-  [ "$OS_VER_MAJOR" == "7" ] && yum -y -q install firewalld >/dev/null
-  [ "$OS_VER_MAJOR" == "8" ] && dnf -y -q install firewalld >/dev/null
-
-  # Enable
-  systemctl --now enable firewalld >/dev/null # Enable and start
-
-  # Configure
-  firewall-cmd --add-service=ssh --permanent -q                                           # Port 22
-  firewall-cmd --add-port 8080/tcp --permanent -q                                         # Port 8080
-  firewall-cmd --add-port 2022/tcp --permanent -q                                         # Port 2022
-  [ "$CONFIGURE_LETSENCRYPT" == true ] && firewall-cmd --add-service=http --permanent -q  # Port 80
-  [ "$CONFIGURE_LETSENCRYPT" == true ] && firewall-cmd --add-service=https --permanent -q # Port 443
-  [ "$CONFIGURE_DB_FIREWALL" == true ] && firewall-cmd --add-service=mysql --permanent -q # Port 3306
-
-  firewall-cmd --permanent --zone=trusted --change-interface=pterodactyl0 -q
-  firewall-cmd --zone=trusted --add-masquerade --permanent
-  firewall-cmd --reload -q # Enable firewall
-
-  echo "* Firewall-cmd installed"
-  print_brake 70
-}
-
-letsencrypt() {
-  FAILED=false
-
-  # Install certbot
-  case "$OS" in
-  debian | ubuntu)
-    apt-get -y install certbot python3-certbot-nginx
-    ;;
-  centos)
-    [ "$OS_VER_MAJOR" == "7" ] && yum -y -q install epel-release
-    [ "$OS_VER_MAJOR" == "7" ] && yum -y -q install certbot python-certbot-nginx
-
-    [ "$OS_VER_MAJOR" == "8" ] && dnf -y -q install epel-release
-    [ "$OS_VER_MAJOR" == "8" ] && dnf -y -q install certbot python3-certbot-nginx
-    ;;
-  esac
-
-  # If user has nginx
-  systemctl stop nginx || true
-
-  # Obtain certificate
-  certbot certonly --no-eff-email --email "$EMAIL" --standalone -d "$FQDN" || FAILED=true
-
-  systemctl start nginx || true
-
-  # Check if it succeded
-  if [ ! -d "/etc/letsencrypt/live/$FQDN/" ] || [ "$FAILED" == true ]; then
-    print_warning "The process of obtaining a Let's Encrypt certificate failed!"
-  fi
-}
-
 ####################
 ## MAIN FUNCTIONS ##
 ####################
-
-perform_install() {
-  echo "* Installing pterodactyl wings.."
-  [ "$OS" == "ubuntu" ] || [ "$OS" == "debian" ] && apt_update
-  [ "$OS" == "centos" ] && [ "$OS_VER_MAJOR" == "7" ] && yum_update
-  [ "$OS" == "centos" ] && [ "$OS_VER_MAJOR" == "8" ] && dnf_update
-  [ "$CONFIGURE_UFW" == true ] && firewall_ufw
-  [ "$CONFIGURE_FIREWALL_CMD" == true ] && firewall_firewalld
-  install_docker
-  ptdl_dl
-  systemd_file
-  [ "$INSTALL_MARIADB" == true ] && install_mariadb
-  [ "$CONFIGURE_DBHOST" == true ] && configure_mysql
-  [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
-
-  # return true if script has made it this far
-  return 0
-}
 
 main() {
   # check if we can detect an already existing installation
@@ -465,13 +102,9 @@ main() {
     fi
   fi
 
-  # detect distro
-  detect_distro
-
   welcome "wings"
 
-  # checks if the system is compatible with this installation script
-  check_os_comp
+  check_virt
 
   echo "* "
   echo "* The installer will install Docker, required dependencies for Wings"
@@ -484,25 +117,7 @@ main() {
   echo -e "* ${COLOR_RED}Note${COLOR_NC}: this script will not enable swap (for docker)."
   print_brake 42
 
-  if [ "$OS" == "debian" ] || [ "$OS" == "ubuntu" ]; then
-    echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
-    read -r CONFIRM_UFW
-
-    if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
-      CONFIGURE_UFW=true
-      CONFIGURE_FIREWALL=true
-    fi
-  fi
-
-  if [ "$OS" == "centos" ]; then
-    echo -e -n "* Do you want to automatically configure firewall-cmd (firewall)? (y/N): "
-    read -r CONFIRM_FIREWALL_CMD
-
-    if [[ "$CONFIRM_FIREWALL_CMD" =~ [Yy] ]]; then
-      CONFIGURE_FIREWALL_CMD=true
-      CONFIGURE_FIREWALL=true
-    fi
-  fi
+  ask_firewall CONFIGURE_FIREWALL
 
   ask_database_user
 
@@ -532,7 +147,7 @@ main() {
       ASK=false
 
       [ -z "$FQDN" ] && print_error "FQDN cannot be empty"                                                            # check if FQDN is empty
-      bash <(curl -s $GITHUB_BASE_URL/lib/verify-fqdn.sh) "$FQDN" "$OS" || ASK=true                                   # check if FQDN is valid
+      bash <(curl -s "$GITHUB_BASE_URL"/lib/verify-fqdn.sh) "$FQDN" || ASK=true                                       # check if FQDN is valid
       [ -d "/etc/letsencrypt/live/$FQDN/" ] && print_error "A certificate with this FQDN already exists!" && ASK=true # check if cert exists
 
       [ "$ASK" == true ] && FQDN=""
@@ -541,7 +156,7 @@ main() {
 
       if [[ ! "$CONFIRM_SSL" =~ [Yy] ]] && [ "$ASK" == true ]; then
         CONFIGURE_LETSENCRYPT=false
-        FQDN="none"
+        FQDN=""
       fi
     done
   fi
@@ -559,10 +174,12 @@ main() {
   echo -n "* Proceed with installation? (y/N): "
 
   read -r CONFIRM
-  [[ "$CONFIRM" =~ [Yy] ]] && perform_install && return
-
-  print_error "Installation aborted"
-  exit 0
+  if [[ "$CONFIRM" =~ [Yy] ]]; then
+    run_installer "wings"
+  else
+    error "Installation aborted."
+    exit 1
+  fi
 }
 
 function goodbye {

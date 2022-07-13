@@ -28,11 +28,8 @@ set -e
 #                                                                           #
 #############################################################################
 
-# TODO: Change to something like
-# source /tmp/lib.sh || source <(curl -sL https://raw.githubuserc.com/vilhelmprytz/pterodactyl-installer/master/lib.sh)
-# When released
-# shellcheck source=lib.sh
-source lib/lib.sh
+# shellcheck source=lib/lib.sh
+source /tmp/lib.sh || source <(curl -sL "$GITHUB_SOURCE"/lib/lib.sh)
 
 # ------------------ Variables ----------------- #
 
@@ -98,30 +95,7 @@ check_FQDN_SSL() {
   fi
 }
 
-ask_firewall() {
-  case "$OS" in
-  ubuntu | debian)
-    echo -e -n "* Do you want to automatically configure UFW (firewall)? (y/N): "
-    read -r CONFIRM_UFW
-
-    if [[ "$CONFIRM_UFW" =~ [Yy] ]]; then
-      CONFIGURE_FIREWALL=true
-    fi
-    ;;
-  centos)
-    echo -e -n "* Do you want to automatically configure firewall-cmd (firewall)? (y/N): "
-    read -r CONFIRM_FIREWALL_CMD
-
-    if [[ "$CONFIRM_FIREWALL_CMD" =~ [Yy] ]]; then
-      CONFIGURE_FIREWALL=true
-    fi
-    ;;
-  esac
-}
-
 main() {
-  check_os_x86_64
-
   # check if we can detect an already existing installation
   if [ -d "/var/www/pterodactyl" ]; then
     warning "The script has detected that you already have Pterodactyl panel on your system! You cannot run the script multiple times, it will fail!"
@@ -134,6 +108,8 @@ main() {
   fi
 
   welcome "panel"
+
+  check_os_x86_64
 
   # set database credentials
   output "Database configuration."
@@ -192,7 +168,7 @@ main() {
   check_FQDN_SSL
 
   # Ask if firewall is needed
-  ask_firewall
+  ask_firewall CONFIGURE_FIREWALL
 
   # Only ask about SSL if it is available
   if [ "$SSL_AVAILABLE" == true ]; then

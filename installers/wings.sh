@@ -28,11 +28,8 @@ set -e
 #                                                                           #
 #############################################################################
 
-# TODO: Change to something like
-# source /tmp/lib.sh || source <(curl -sL https://raw.githubuserc.com/vilhelmprytz/pterodactyl-installer/master/lib.sh)
-# When released
-# shellcheck source=lib.sh
-source lib/lib.sh
+# shellcheck source=lib/lib.sh
+source /tmp/lib.sh || source <(curl -sL "$GITHUB_SOURCE"/lib/lib.sh)
 
 # ------------------ Variables ----------------- #
 INSTALL_MARIADB="${INSTALL_MARIADB:-false}"
@@ -52,42 +49,12 @@ MYSQL_DBHOST_HOST="${MYSQL_DBHOST_HOST:-127.0.0.1}"
 MYSQL_DBHOST_USER="${MYSQL_DBHOST_USER:-pterodactyluser}"
 MYSQL_DBHOST_PASSWORD="${MYSQL_DBHOST_PASSWORD:-}"
 
-# -------------- OS check funtions ------------- #
-
-# check virtualization
-check_virt() {
-  output "Installing virt-what..."
-
-  update_repos true
-  install_packages "virt-what" true
-
-  # Export sbin for virt-what
-  export PATH="$PATH:/sbin:/usr/sbin"
-
-  virt_serv=$(virt-what)
-
-  case "$virt_serv" in
-  *openvz* | *lxc*)
-    print_warning "Unsupported type of virtualization detected. Please consult with your hosting provider whether your server can run Docker or not. Proceed at your own risk."
-    echo -e -n "* Are you sure you want to proceed? (y/N): "
-    read -r CONFIRM_PROCEED
-    if [[ ! "$CONFIRM_PROCEED" =~ [Yy] ]]; then
-      print_error "Installation aborted!"
-      exit 1
-    fi
-    ;;
-  *)
-    [ "$virt_serv" != "" ] && print_warning "Virtualization: $virt_serv detected."
-    ;;
-  esac
-
-  if uname -r | grep -q "xxxx"; then
-    print_error "Unsupported kernel detected."
+if [[ $CONFIGURE_DBHOST == true && -z "${MYSQL_DBHOST_PASSWORD}" ]]; then
+    error "Mysql database host user password is required"
     exit 1
-  fi
+fi
 
-  success "System is compatible with docker"
-}
+# -------------- OS check funtions ------------- #
 
 enable_services() {
   systemctl start docker
@@ -234,7 +201,6 @@ perform_install() {
   [ "$CONFIGURE_DBHOST" == true ] && configure_mysql
   [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
 
-  # return true if script has made it this far
   return 0
 }
 

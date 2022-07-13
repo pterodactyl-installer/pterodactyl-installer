@@ -28,11 +28,8 @@ set -e
 #                                                                           #
 #############################################################################
 
-# TODO: Change to something like
-# source /tmp/lib.sh || source <(curl -sL https://raw.githubuserc.com/vilhelmprytz/pterodactyl-installer/master/lib.sh)
-# When released
-# shellcheck source=../lib.sh
-source ../lib.sh
+# shellcheck source=lib/lib.sh
+source /tmp/lib.sh || source <(curl -sL "$GITHUB_SOURCE"/lib/lib.sh)
 
 # When #280 is merged
 
