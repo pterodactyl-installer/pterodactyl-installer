@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# TODO: Make this work
+
 output() {
     echo "- $1"
 }

@@ -39,26 +39,24 @@ List of supported installation setups for panel and Wings (installations support
 |                  | 11      | :white_check_mark: | 8.0         |
 | CentOS           | 6       | :red_circle:       |             |
 |                  | 7       | :white_check_mark: | 8.0         |
-|                  | 8       | :white_check_mark: | 8.0         |
+|                  | 8       | :red_circle: \*\*  | 8.0         |
 
 ### Supported Wings operating systems
 
 | Operating System | Version | Supported          |
 | ---------------- | ------- | ------------------ |
-| Ubuntu           | 14.04   | :red_circle:       |
-|                  | 16.04   | :red_circle: \*    |
+| Ubuntu           | 16.04   | :red_circle: \*    |
 |                  | 18.04   | :white_check_mark: |
 |                  | 20.04   | :white_check_mark: |
 |                  | 22.04   | :white_check_mark: |
-| Debian           | 8       | :red_circle: \*    |
-|                  | 9       | :white_check_mark: |
+| Debian           | 9       | :red_circle: \*    |
 |                  | 10      | :white_check_mark: |
 |                  | 11      | :white_check_mark: |
 | CentOS           | 6       | :red_circle:       |
 |                  | 7       | :white_check_mark: |
-|                  | 8       | :white_check_mark: |
+|                  | 8       | :red_circle: \*    |
 
-_\* Ubuntu 16 and Debian 8 no longer supported since Pterodactyl does not actively support it._
+_\* Ubuntu 16, CentOS 8 and Debian 9 are EOL._
 
 ## Using the installation scripts
 
