@@ -51,6 +51,23 @@ export MYSQL_DBHOST_HOST="127.0.0.1"
 export MYSQL_DBHOST_USER="pterodactyluser"
 export MYSQL_DBHOST_PASSWORD=""
 
+# ------------ User input functions ------------ #
+
+ask_letsencrypt() {
+  if [ "$CONFIGURE_UFW" == false ] && [ "$CONFIGURE_FIREWALL_CMD" == false ]; then
+    warning "Let's Encrypt requires port 80/443 to be opened! You have opted out of the automatic firewall configuration; use this at your own risk (if port 80/443 is closed, the script will fail)!"
+  fi
+
+  warning "You cannot use Let's Encrypt with your hostname as an IP address! It must be a FQDN (e.g. node.example.org)."
+
+  echo -e -n "* Do you want to automatically configure HTTPS using Let's Encrypt? (y/N): "
+  read -r CONFIRM_SSL
+
+  if [[ "$CONFIRM_SSL" =~ [Yy] ]]; then
+    CONFIGURE_LETSENCRYPT=true
+  fi
+}
+
 ask_database_user() {
   echo -n "* Do you want to automatically configure a user for database hosts? (y/N): "
   read -r CONFIRM_DBHOST
@@ -210,3 +227,5 @@ function goodbye {
 # run script
 main
 goodbye
+
+return 0

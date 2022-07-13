@@ -59,7 +59,7 @@ export CONFIGURE_LETSENCRYPT=false
 # Firewall
 export CONFIGURE_FIREWALL=false
 
-# ---------------- Lib functions --------------- # 
+# ------------ User input functions ------------ #
 
 ask_letsencrypt() {   
   if [ "$CONFIGURE_UFW" == false ] && [ "$CONFIGURE_FIREWALL_CMD" == false ]; then
@@ -234,3 +234,5 @@ goodbye() {
 # run script
 main
 goodbye
+
+return 0
