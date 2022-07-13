@@ -82,21 +82,11 @@ dep_install() {
       $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list >/dev/null
     ;;
 
-  rocky | almalinux | centos)
-    case "$OS" in
-    centos)
-      install_packages "yum-utils"
-      yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-      ;;
-    almalinux | rocky)
-      install_packages "dnf-utils"
-      dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
-      ;;
-    esac
+  rocky | almalinux)
+    install_packages "dnf-utils"
+    dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
 
     [ "$CONFIGURE_LETSENCRYPT" == true ] && install_packages "epel-release"
-
-    [ "$INSTALL_MARIADB" == true ] && [ "$OS_VER_MAJOR" == "7" ] && curl -sS "$MARIADB_URL" | bash
 
     install_packages "device-mapper-persistent-data lvm2"
     ;;
@@ -183,7 +173,7 @@ configure_mysql() {
     debian | ubuntu)
       sed -i 's/127.0.0.1/0.0.0.0/g' /etc/mysql/mariadb.conf.d/50-server.cnf
       ;;
-    rocky | almalinux | centos)
+    rocky | almalinux)
       sed -ne 's/^#bind-address=0.0.0.0$/bind-address=0.0.0.0/' /etc/my.cnf.d/mariadb-server.cnf
       ;;
     esac

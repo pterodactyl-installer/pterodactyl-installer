@@ -30,16 +30,18 @@ List of supported installation setups for panel and Wings (installations support
 | ---------------- | ------- | ------------------ | ----------- |
 | Ubuntu           | 14.04   | :red_circle:       |             |
 |                  | 16.04   | :red_circle: \*    |             |
-|                  | 18.04   | :white_check_mark: | 8.0         |
-|                  | 20.04   | :white_check_mark: | 8.0         |
-|                  | 22.04   | :white_check_mark: | 8.0         |
+|                  | 18.04   | :white_check_mark: | 8.1         |
+|                  | 20.04   | :white_check_mark: | 8.1         |
+|                  | 22.04   | :white_check_mark: | 8.1         |
 | Debian           | 8       | :red_circle: \*    |             |
-|                  | 9       | :white_check_mark: | 8.0         |
-|                  | 10      | :white_check_mark: | 8.0         |
-|                  | 11      | :white_check_mark: | 8.0         |
+|                  | 9       | :red_circle: \*    |             |
+|                  | 10      | :white_check_mark: | 8.1         |
+|                  | 11      | :white_check_mark: | 8.1         |
 | CentOS           | 6       | :red_circle:       |             |
-|                  | 7       | :white_check_mark: | 8.0         |
-|                  | 8       | :red_circle: \*\*  | 8.0         |
+|                  | 7       | :red_circle: \*    |             |
+|                  | 8       | :red_circle: \*    |             |
+| Rocky Linux      | 8       | :white_check_mark: | 8.1         |
+| AlmaLinux        | 8       | :white_check_mark: | 8.1         |
 
 ### Supported Wings operating systems
 
@@ -53,10 +55,12 @@ List of supported installation setups for panel and Wings (installations support
 |                  | 10      | :white_check_mark: |
 |                  | 11      | :white_check_mark: |
 | CentOS           | 6       | :red_circle:       |
-|                  | 7       | :white_check_mark: |
+|                  | 7       | :red_circle: \*    |
 |                  | 8       | :red_circle: \*    |
+| Rocky Linux      | 8       | :white_check_mark: |
+| AlmaLinux        | 8       | :white_check_mark: |
 
-_\* Ubuntu 16, CentOS 8 and Debian 9 are EOL._
+_\* Indicates a operating system and release that previosuly was supported by this script._
 
 ## Using the installation scripts
 

@@ -58,7 +58,7 @@ dep_install() {
   ubuntu | debian)
     install_packages "dnsutils" true
     ;;
-  rocky | almalinux | centos)
+  rocky | almalinux)
     install_packages "bind-utils" true
     ;;
   esac

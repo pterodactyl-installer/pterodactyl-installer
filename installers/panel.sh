@@ -113,7 +113,7 @@ ptdl_dl() {
 
 install_composer_deps() {
   output "Installing composer dependencies.."
-  [ "$OS" == "centos" ] && export PATH=/usr/local/bin:$PATH
+  [ "$OS" == "rocky" ] || [ "$OS" == "almalinux" ] && export PATH=/usr/local/bin:$PATH
   COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader
   success "Installed composer dependencies!"
 }
@@ -172,7 +172,7 @@ set_folder_permissions() {
   debian | ubuntu)
     chown -R www-data:www-data ./*
     ;;
-  rocky | almalinux | centos)
+  rocky | almalinux)
     chown -R nginx:nginx ./*
     ;;
   esac
@@ -198,7 +198,7 @@ install_pteroq() {
   debian | ubuntu)
     sed -i -e "s@<user>@www-data@g" /etc/systemd/system/pteroq.service
     ;;
-  rocky | almalinux | centos)
+  rocky | almalinux)
     sed -i -e "s@<user>@nginx@g" /etc/systemd/system/pteroq.service
     ;;
   esac
@@ -217,7 +217,7 @@ enable_services() {
     systemctl enable redis-server
     systemctl start redis-server
     ;;
-  rocky | almalinux | centos)
+  rocky | almalinux)
     systemctl enable redis
     systemctl start redis
     ;;
@@ -265,30 +265,12 @@ debian_dep() {
   echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/php.list
 }
 
-centos_dep() {
-  # SELinux tools
-  install_packages "policycoreutils policycoreutils-python selinux-policy selinux-policy-targeted \
-    yum-utils libselinux-utils setroubleshoot-server setools setools-console mcstrans"
-
-  # Add remi repo (php8.0)
-  install_packages "epel-release http://rpms.remirepo.net/enterprise/remi-release-7.rpm"
-  yum-config-manager -y --disable remi-php54
-  yum-config-manager -y --enable remi-php81
-
-  [ "$CONFIGURE_LETSENCRYPT" == true ] && install_packages "python-certbot-nginx"
-
-  # Install MariaDB
-  curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
-}
-
 alma_rocky_dep() {
   # SELinux tools
   install_packages "policycoreutils selinux-policy selinux-policy-targeted \
     setroubleshoot-server setools setools-console mcstrans"
 
-  [ "$CONFIGURE_LETSENCRYPT" == true ] && install_packages "python3-certbot-nginx"
-
-  # add remi repo (php8.0)
+  # add remi repo (php8.1)
   install_packages "epel-release http://rpms.remirepo.net/enterprise/remi-release-8.rpm"
   dnf module enable -y php:remi-8.1
 }
@@ -319,8 +301,7 @@ dep_install() {
     [ "$CONFIGURE_LETSENCRYPT" == true ] && install_packages "certbot python3-certbot-nginx"
 
     ;;
-  rocky | almalinux | centos)
-    [ "$OS" == "centos" ] && centos_dep
+  rocky | almalinux)
     [ "$OS" == "almalinux" ] || [ "$OS" == "rocky" ] && alma_rocky_dep
 
     # Install dependencies
@@ -331,7 +312,7 @@ dep_install() {
       zip unzip tar \
       git cron"
 
-    [ "$CONFIGURE_LETSENCRYPT" == true ] && install_packages "certbot "
+    [ "$CONFIGURE_LETSENCRYPT" == true ] && install_packages "certbot python3-certbot-nginx"
 
     # Allow nginx
     selinux_allow
@@ -400,7 +381,7 @@ configure_nginx() {
     CONFIG_PATH_AVAIL="/etc/nginx/sites-available"
     CONFIG_PATH_ENABL="/etc/nginx/sites-enabled"
     ;;
-  centos | rocky | almalinux)
+  rocky | almalinux)
     PHP_SOCKET="/var/run/php-fpm/pterodactyl.sock"
     CONFIG_PATH_AVAIL="/etc/nginx/conf.d"
     CONFIG_PATH_ENABL="$CONFIG_PATH_AVAIL"

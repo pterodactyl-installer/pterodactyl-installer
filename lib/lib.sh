@@ -214,7 +214,7 @@ update_repos() {
     apt-get -y $args update
     ;;
   *)
-    # Do nothing as CentOS, AlmaLinux and RockyLinux update metadata before installing packages.
+    # Do nothing as AlmaLinux and RockyLinux update metadata before installing packages.
     ;;
   esac
 }
@@ -236,9 +236,6 @@ install_packages() {
     ;;
   rocky | almalinux)
     eval dnf -y $args install "$1"
-    ;;
-  centos)
-    eval yum -y $args install "$1"
     ;;
   esac
 }
@@ -327,7 +324,7 @@ ask_firewall() {
       eval "$__resultvar="'true'""
     fi
     ;;
-  rocky | almalinux | centos)
+  rocky | almalinux)
     echo -e -n "* Do you want to automatically configure firewall-cmd (firewall)? (y/N): "
     read -r CONFIRM_FIREWALL_CMD
 
@@ -354,7 +351,7 @@ install_firewall() {
     success "Enabled Uncomplicated Firewall (UFW)"
 
     ;;
-  rocky | almalinux | centos)
+  rocky | almalinux)
 
     output ""
     output "Installing FirewallD"+
@@ -379,7 +376,7 @@ firewall_allow_ports() {
     done
     ufw --force reload
     ;;
-  rocky | almalinux | centos)
+  rocky | almalinux)
     for port in $1; do
       firewall-cmd --zone=public --add-port="$port"/tcp --permanent
     done
@@ -508,9 +505,6 @@ debian)
   [ "$OS_VER_MAJOR" == "10" ] && SUPPORTED=true
   [ "$OS_VER_MAJOR" == "11" ] && SUPPORTED=true
   export DEBIAN_FRONTEND=noninteractive
-  ;;
-centos)
-  [ "$OS_VER_MAJOR" == "7" ] && SUPPORTED=true
   ;;
 rocky | almalinux)
   [ "$OS_VER_MAJOR" == "8" ] && SUPPORTED=true
