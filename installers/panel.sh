@@ -302,7 +302,7 @@ dep_install() {
 
     ;;
   rocky | almalinux)
-    [ "$OS" == "almalinux" ] || [ "$OS" == "rocky" ] && alma_rocky_dep
+    alma_rocky_dep
 
     # Install dependencies
     install_packages "php php-{common,fpm,cli,json,mysqlnd,mcrypt,gd,mbstring,pdo,zip,bcmath,dom,opcache} \
