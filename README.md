@@ -60,7 +60,7 @@ List of supported installation setups for panel and Wings (installations support
 | Rocky Linux      | 8       | :white_check_mark: |
 | AlmaLinux        | 8       | :white_check_mark: |
 
-_\* Indicates a operating system and release that previosuly was supported by this script._
+_\* Indicates an operating system and release that previously was supported by this script._
 
 ## Using the installation scripts
 
