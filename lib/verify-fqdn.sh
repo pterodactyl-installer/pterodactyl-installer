@@ -29,7 +29,7 @@ set -e
 #############################################################################
 
 # shellcheck source=lib/lib.sh
-source /tmp/lib.sh || source <(curl -sL "$GITHUB_SOURCE"/lib/lib.sh)
+source /tmp/lib.sh || source <(curl -sL "$GITHUB_BASE_URL"/lib/lib.sh)
 
 CHECKIP_URL="https://checkip.pterodactyl-installer.se"
 DNS_SERVER="8.8.8.8"

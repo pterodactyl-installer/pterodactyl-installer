@@ -29,6 +29,6 @@ set -e
 #############################################################################
 
 # shellcheck source=lib/lib.sh
-source /tmp/lib.sh || source <(curl -sL "$GITHUB_SOURCE"/lib/lib.sh)
+source /tmp/lib.sh || source <(curl -sL "$GITHUB_BASE_URL"/lib/lib.sh)
 
 # When #280 is merged

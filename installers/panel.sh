@@ -29,7 +29,7 @@ set -e
 #############################################################################
 
 # shellcheck source=lib/lib.sh
-source /tmp/lib.sh || source <(curl -sL "$GITHUB_SOURCE"/lib/lib.sh)
+source /tmp/lib.sh || source <(curl -sL "$GITHUB_BASE_URL"/lib/lib.sh)
 
 # ------------------ Variables ----------------- #
 
@@ -51,7 +51,7 @@ CONFIGURE_LETSENCRYPT="${CONFIGURE_LETSENCRYPT:-false}"
 # Firewall
 CONFIGURE_FIREWALL="${CONFIGURE_FIREWALL:-false}"
 
-# Must be assigned to work
+# Must be assigned to work, no default values
 email="${email:-}"
 user_email="${user_email:-}"
 user_username="${user_username:-}"

@@ -129,15 +129,11 @@ get_latest_versions() {
 }
 
 run_installer() {
-  # In prod
-  # bash <(curl -s -S -L "$GITHUB_BASE_URL/$SCRIPT_VERSION/installers/$1.sh")
-  bash installers/"$1".sh
+  bash <(curl -s -S -L "$GITHUB_BASE_URL/installers/$1.sh")
 }
 
 run_ui() {
-  # In prod
-  # bash <(curl -s -S -L "$GITHUB_BASE_URL/$SCRIPT_VERSION/ui/$1.sh")
-  bash ui/"$1".sh
+  bash <(curl -s -S -L "$GITHUB_BASE_URL/ui/$1.sh")
 }
 
 array_contains_element() {
