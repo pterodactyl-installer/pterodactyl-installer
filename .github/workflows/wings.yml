@@ -30,7 +30,9 @@ jobs:
           - debian_buster
           - debian_bullseye
           - rockylinux_8
+          - rockylinux_9
           - almalinux_8
+          - almalinux_9
     steps:
       - uses: actions/checkout@v3
 
@@ -51,7 +53,4 @@ jobs:
       - name: Run script in vagrant env
         run: vagrant ssh ${{ matrix.os }} -c "sudo -i bash /vagrant/.github/workflow_scripts/wings-install.sh"
 
-      - name: Check if wings is installed
-        run: vagrant ssh ${{ matrix.os }} -c "sudo -i /usr/local/bin/wings --help"
-            
             

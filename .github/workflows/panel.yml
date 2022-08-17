@@ -30,7 +30,9 @@ jobs:
           - debian_buster
           - debian_bullseye
           - rockylinux_8
+          - rockylinux_9
           - almalinux_8
+          - almalinux_9
     steps:
       - uses: actions/checkout@v3
 
