@@ -34,7 +34,15 @@ Vagrant.configure("2") do |config|
     almalinux_8.vm.box = "almalinux/8"
   end
 
+  config.vm.define "almalinux_9" do |almalinux_9|
+    almalinux_9.vm.box = "almalinux/9"
+  end
+
   config.vm.define "rockylinux_8" do |rockylinux_8|
     rockylinux_8.vm.box = "bento/rockylinux-8"
+  end
+
+  config.vm.define "rockylinux_9" do |rockylinux_9|
+    rockylinux_9.vm.box = "bento/rockylinux-9"
   end
 end

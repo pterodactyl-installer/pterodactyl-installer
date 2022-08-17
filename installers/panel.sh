@@ -310,7 +310,7 @@ dep_install() {
       nginx \
       redis \
       zip unzip tar \
-      git cron"
+      git cronie"
 
     [ "$CONFIGURE_LETSENCRYPT" == true ] && install_packages "certbot python3-certbot-nginx"
 
