@@ -1,0 +1,57 @@
+name: Test Wings Installer
+
+on:
+
+  # Branch would be changed when released
+  push:
+    # paths:
+    #   - "installers/panel.sh"
+    #   - "lib/lib.sh"
+    branches: [ "major-refactor" ]
+
+  pull_request:
+    # paths:
+    #   - "installers/panel.sh"
+    #   - "lib/lib.sh"
+    branches: [ "major-refactor" ]
+
+  workflow_dispatch:
+  
+jobs:
+  install_wings:
+    runs-on: macos-12
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu_bionic
+          - ubuntu_focal
+          - ubuntu_jammy
+          - debian_buster
+          - debian_bullseye
+          - rockylinux_8
+          - almalinux_8
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Cache Vagrant boxes
+        uses: actions/cache@v3
+        with:
+          path: ~/.vagrant.d/boxes
+          key: ${{ runner.os }}-vagrant-${{ matrix.os }}-${{ hashFiles('Vagrantfile') }}
+          restore-keys: |
+            ${{ runner.os }}-vagrant-${{ matrix.os }}
+
+      - name: Show Vagrant version
+        run: vagrant --version
+
+      - name: Run vagrant up
+        run: vagrant up ${{ matrix.os }}
+
+      - name: Run script in vagrant env
+        run: vagrant ssh ${{ matrix.os }} -c "sudo -i bash /vagrant/.github/workflow_scripts/wings-install.sh"
+
+      - name: Check if wings is installed
+        run: vagrant ssh ${{ matrix.os }} -c "sudo -i /usr/local/bin/wings --help"
+            
+            

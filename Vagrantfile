@@ -35,6 +35,6 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.define "rockylinux_8" do |rockylinux_8|
-    rockylinux_8.vm.box = "rockylinux/8"
+    rockylinux_8.vm.box = "bento/rockylinux-8"
   end
 end
