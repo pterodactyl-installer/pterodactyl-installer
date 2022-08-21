@@ -271,8 +271,8 @@ alma_rocky_dep() {
     setroubleshoot-server setools setools-console mcstrans"
 
   # add remi repo (php8.1)
-  install_packages "epel-release http://rpms.remirepo.net/enterprise/remi-release-8.rpm"
-  dnf module enable -y php:remi-8.1
+  install_packages "epel-release http://rpms.remirepo.net/enterprise/remi-release-$OS_VER_MAJOR.rpm"
+  dnf module enable -y php:remi-8.1 -y
 }
 
 dep_install() {
