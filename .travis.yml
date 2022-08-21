@@ -1,4 +1,0 @@
-language: shell
-os: linux
-script:
-  - shellcheck -e SC1091 $(find . -type f -name "*.sh")
