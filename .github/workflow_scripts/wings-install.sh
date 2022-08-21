@@ -29,7 +29,7 @@ set -e
 #############################################################################
 
 export GITHUB_SOURCE="major-refactor"
-export GITHUB_BASE_URL="https://raw.githubusercontent.com/Linux123123/pterodactyl-installer/$GITHUB_SOURCE"
+export GITHUB_BASE_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/$GITHUB_SOURCE"
 export CONFIGURE_FIREWALL=true
 export CONFIGURE_DBHOST=true
 export INSTALL_MARIADB=true

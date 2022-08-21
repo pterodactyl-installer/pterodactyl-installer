@@ -4,15 +4,15 @@ on:
 
   # Branch would be changed when released
   push:
-    # paths:
-    #   - "installers/panel.sh"
-    #   - "lib/lib.sh"
+    paths:
+      - "installers/wings.sh"
+      - "lib/lib.sh"
     branches: [ "major-refactor" ]
 
   pull_request:
-    # paths:
-    #   - "installers/panel.sh"
-    #   - "lib/lib.sh"
+    paths:
+      - "installers/wings.sh"
+      - "lib/lib.sh"
     branches: [ "major-refactor" ]
 
   workflow_dispatch:
