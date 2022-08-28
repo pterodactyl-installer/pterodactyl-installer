@@ -32,6 +32,7 @@ set -e
 source /tmp/lib.sh || source <(curl -sL "$GITHUB_BASE_URL"/lib/lib.sh)
 
 # ------------------ Variables ----------------- #
+
 INSTALL_MARIADB="${INSTALL_MARIADB:-false}"
 
 # firewall
@@ -54,7 +55,7 @@ if [[ $CONFIGURE_DBHOST == true && -z "${MYSQL_DBHOST_PASSWORD}" ]]; then
   exit 1
 fi
 
-# -------------- OS check funtions ------------- #
+# ----------- Installation functions ----------- #
 
 enable_services() {
   systemctl start docker
@@ -184,6 +185,8 @@ configure_mysql() {
   success "MySQL configured!"
 }
 
+# --------------- Main functions --------------- #
+
 perform_install() {
   output "Installing pterodactyl wings.."
   dep_install
@@ -194,5 +197,7 @@ perform_install() {
 
   return 0
 }
+
+# ---------------- Installation ---------------- #
 
 perform_install
