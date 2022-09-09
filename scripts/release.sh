@@ -3,6 +3,9 @@
 RELEASE=$1
 DATE=$(date +%F)
 
+COLOR_RED='\033[0;31m'
+COLOR_NC='\033[0m'
+
 output() {
   echo -e "* $1"
 }
