@@ -28,66 +28,19 @@ set -e
 #                                                                           #
 #############################################################################
 
+export GITHUB_SOURCE="major-refactor"
+export GITHUB_BASE_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/$GITHUB_SOURCE"
+export CONFIGURE_FIREWALL=true
+export CONFIGURE_DBHOST=true
+export INSTALL_MARIADB=true
+export CONFIGURE_DB_FIREWALL=true
+export MYSQL_DBHOST_PASSWORD="test"
+
 # shellcheck source=lib/lib.sh
-source /tmp/lib.sh || source <(curl -sL "$GITHUB_BASE_URL"/lib/lib.sh)
+source /tmp/lib.sh
 
-# ------------------ Variables ----------------- #
+update_repos
 
-export RM_PANEL=false
-export RM_WINGS=false
+install_packages "curl"
 
-# --------------- Main functions --------------- #
-
-main() {
-  welcome
-
-  if [ -d "/var/www/pterodactyl" ]; then
-    output "Panel installation has been detected."
-    echo -e -n "* Do you want to remove panel? (y/N): "
-    read -r RM_PANEL_INPUT
-    [[ "$RM_PANEL_INPUT" =~ [Yy] ]] && RM_PANEL=true
-  fi
-
-  if [ -d "/etc/pterodactyl" ]; then
-    output "Wings installation has been detected."
-    warning "This will remove all the servers!"
-    echo -e -n "* Do you want to remove Wings (daemon)? (y/N): "
-    read -r RM_WINGS_INPUT
-    [[ "$RM_WINGS_INPUT" =~ [Yy] ]] && RM_WINGS=true
-  fi
-
-  if [ "$RM_PANEL" == false ] && [ "$RM_WINGS" == false ]; then
-    error "Nothing to uninstall!"
-    exit 1
-  fi
-
-  summary
-
-  # confirm uninstallation
-  echo -e -n "* Continue with uninstallation? (y/N): "
-  read -r CONFIRM
-  if [[ "$CONFIRM" =~ [Yy] ]]; then
-    run_installer "uninstall"
-  else
-    error "Uninstallation aborted."
-    exit 1
-  fi
-}
-
-summary() {
-  print_brake 30
-  output "Uninstall panel? $RM_PANEL"
-  output "Uninstall wings? $RM_WINGS"
-  print_brake 30
-}
-
-goodbye() {
-  print_brake 62
-  [ "$RM_PANEL" == true ] && output "Panel uninstallation completed"
-  [ "$RM_WINGS" == true ] && output "Wings uninstallation completed"
-  output "Thank you for using this script."
-  print_brake 62
-}
-
-main
-goodbye
+bash /vagrant/installers/wings.sh

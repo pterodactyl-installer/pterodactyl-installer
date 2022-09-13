@@ -4,7 +4,7 @@ set -e
 
 #############################################################################
 #                                                                           #
-# Project 'pterodactyl-installer' for panel                                 #
+# Project 'pterodactyl-installer'                                           #
 #                                                                           #
 # Copyright (C) 2018 - 2022, Vilhelm Prytz, <vilhelm@prytznet.se>           #
 #                                                                           #
@@ -30,3 +30,124 @@ set -e
 
 # shellcheck source=lib/lib.sh
 source /tmp/lib.sh || source <(curl -sL "$GITHUB_BASE_URL"/lib/lib.sh)
+
+# ------------------ Variables ----------------- #
+
+RM_PANEL="${RM_PANEL:-true}"
+RM_WINGS="${RM_WINGS:-true}"
+
+# ---------- Uninstallation functions ---------- #
+
+rm_panel_files() {
+  output "Removing panel files..."
+  rm -rf /var/www/pterodactyl /usr/local/bin/composer
+  [ "$OS" != "centos" ] && unlink /etc/nginx/sites-enabled/pterodactyl.conf
+  [ "$OS" != "centos" ] && rm -f /etc/nginx/sites-available/pterodactyl.conf
+  [ "$OS" != "centos" ] && ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+  [ "$OS" == "centos" ] && rm -f /etc/nginx/conf.d/pterodactyl.conf
+  systemctl restart nginx
+  output "Succesfully removed panel files."
+}
+
+rm_wings_files() {
+  output "Removing wings files..."
+
+  # stop and remove wings service
+  systemctl disable --now wings
+  rm -rf /etc/systemd/system/wings.service
+
+  rm -rf /etc/pterodactyl /usr/local/bin/wings /var/lib/pterodactyl
+  output "Succesfully removed wings files."
+}
+
+rm_services() {
+  output "Removing services..."
+  systemctl disable --now pteroq
+  rm -rf /etc/systemd/system/pteroq.service
+  case "$OS" in
+  debian | ubuntu)
+    systemctl disable --now redis-server
+    ;;
+  centos)
+    systemctl disable --now redis
+    systemctl disable --now php-fpm
+    rm -rf /etc/php-fpm.d/www-pterodactyl.conf
+    ;;
+  esac
+  output "Succesfully removed services."
+}
+
+rm_cron() {
+  output "Removing cron jobs..."
+  crontab -l | grep -vF "* * * * * php /var/www/pterodactyl/artisan schedule:run >> /dev/null 2>&1" | crontab -
+  output "Succesfully removed cron jobs."
+}
+
+rm_database() {
+  output "Removing database..."
+  valid_db=$(mysql -u root -e "SELECT schema_name FROM information_schema.schemata;" | grep -v -E -- 'schema_name|information_schema|performance_schema|mysql')
+  warning "Be careful! This database will be deleted!"
+  if [[ "$valid_db" == *"panel"* ]]; then
+    echo -n "* Database called panel has been detected. Is it the pterodactyl database? (y/N): "
+    read -r is_panel
+    if [[ "$is_panel" =~ [Yy] ]]; then
+      DATABASE=panel
+    else
+      print_list "$valid_db"
+    fi
+  else
+    print_list "$valid_db"
+  fi
+  while [ -z "$DATABASE" ] || [[ $valid_db != *"$database_input"* ]]; do
+    echo -n "* Choose the panel database (to skip don't input anything): "
+    read -r database_input
+    if [[ -n "$database_input" ]]; then
+      DATABASE="$database_input"
+    else
+      break
+    fi
+  done
+  [[ -n "$DATABASE" ]] && mysql -u root -e "DROP DATABASE $DATABASE;"
+  # Exclude usernames User and root (Hope no one uses username User)
+  output "Removing database user..."
+  valid_users=$(mysql -u root -e "SELECT user FROM mysql.user;" | grep -v -E -- 'user|root')
+  warning "Be careful! This user will be deleted!"
+  if [[ "$valid_users" == *"pterodactyl"* ]]; then
+    echo -n "* User called pterodactyl has been detected. Is it the pterodactyl user? (y/N): "
+    read -r is_user
+    if [[ "$is_user" =~ [Yy] ]]; then
+      DB_USER=pterodactyl
+    else
+      print_list "$valid_users"
+    fi
+  else
+    print_list "$valid_users"
+  fi
+  while [ -z "$DB_USER" ] || [[ $valid_users != *"$user_input"* ]]; do
+    echo -n "* Choose the panel user (to skip don't input anything): "
+    read -r user_input
+    if [[ -n "$user_input" ]]; then
+      DB_USER=$user_input
+    else
+      break
+    fi
+  done
+  [[ -n "$DB_USER" ]] && mysql -u root -e "DROP USER $DB_USER@'127.0.0.1';"
+  mysql -u root -e "FLUSH PRIVILEGES;"
+  output "Succesfully removed database and database user."
+}
+
+# --------------- Main functions --------------- #
+
+perform_uninstall() {
+  [ "$RM_PANEL" == true ] && rm_panel_files
+  [ "$RM_PANEL" == true ] && rm_cron
+  [ "$RM_PANEL" == true ] && rm_database
+  [ "$RM_PANEL" == true ] && rm_services
+  [ "$RM_WINGS" == true ] && rm_wings_files
+  true
+}
+
+# ------------------ Uninstall ----------------- #
+
+perform_uninstall

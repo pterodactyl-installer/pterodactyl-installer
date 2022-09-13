@@ -89,7 +89,7 @@ if [[ -z "${user_password}" ]]; then
   exit 1
 fi
 
-##### Main installation functions #####
+# --------- Main installation functions -------- #
 
 install_composer() {
   output "Installing composer.."
@@ -209,7 +209,7 @@ install_pteroq() {
   success "Installed pteroq!"
 }
 
-##### OS specific install functions #####
+# -------- OS specific install functions ------- #
 
 enable_services() {
   case "$OS" in
@@ -271,7 +271,7 @@ alma_rocky_dep() {
     setroubleshoot-server setools setools-console mcstrans"
 
   # add remi repo (php8.1)
-  install_packages "epel-release http://rpms.remirepo.net/enterprise/remi-release-8.rpm"
+  install_packages "epel-release http://rpms.remirepo.net/enterprise/remi-release-$OS_VER_MAJOR.rpm"
   dnf module enable -y php:remi-8.1
 }
 
@@ -310,7 +310,7 @@ dep_install() {
       nginx \
       redis \
       zip unzip tar \
-      git cron"
+      git cronie"
 
     [ "$CONFIGURE_LETSENCRYPT" == true ] && install_packages "certbot python3-certbot-nginx"
 
@@ -327,7 +327,7 @@ dep_install() {
   success "Dependencies installed!"
 }
 
-##### OTHER OS SPECIFIC FUNCTIONS #####
+# --------------- Other functions -------------- #
 
 firewall_ports() {
   output "Opening ports: 22 (SSH), 80 (HTTP) and 443 (HTTPS)"
@@ -364,7 +364,7 @@ letsencrypt() {
   fi
 }
 
-##### WEBSERVER CONFIGURATION FUNCTIONS #####
+# ------ Webserver configuration functions ----- #
 
 configure_nginx() {
   output "Configuring nginx .."
@@ -409,7 +409,7 @@ configure_nginx() {
   success "Nginx configured!"
 }
 
-##### MAIN FUNCTIONS #####
+# --------------- Main functions --------------- #
 
 perform_install() {
   output "Starting installation.. this might take a while!"
@@ -428,5 +428,7 @@ perform_install() {
 
   return 0
 }
+
+# ------------------- Install ------------------ #
 
 perform_install
