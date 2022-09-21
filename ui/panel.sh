@@ -234,5 +234,3 @@ goodbye() {
 # run script
 main
 goodbye
-
-return 0
