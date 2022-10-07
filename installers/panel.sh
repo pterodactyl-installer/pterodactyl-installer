@@ -261,7 +261,7 @@ debian_dep() {
   install_packages "dirmngr ca-certificates apt-transport-https lsb-release"
 
   # Install PHP 8.1 using sury's repo
-  wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
+  curl -o /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
   echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/php.list
 }
 
