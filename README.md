@@ -24,9 +24,9 @@ For help and support regarding the script itself and **not the official Pterodac
 
 List of supported installation setups for panel and Wings (installations supported by this installation script).
 
-### Supported panel operating systems and webservers
+### Supported panel and wings operating systems
 
-| Operating System | Version | nginx support      | PHP Version |
+| Operating System | Version | Supported          | PHP Version |
 | ---------------- | ------- | ------------------ | ----------- |
 | Ubuntu           | 14.04   | :red_circle:       |             |
 |                  | 16.04   | :red_circle: \*    |             |
@@ -44,25 +44,6 @@ List of supported installation setups for panel and Wings (installations support
 |                  | 9       | :white_check_mark: | 8.1         |
 | AlmaLinux        | 8       | :white_check_mark: | 8.1         |
 |                  | 9       | :white_check_mark: | 8.1         |
-
-### Supported Wings operating systems
-
-| Operating System | Version | Supported          |
-| ---------------- | ------- | ------------------ |
-| Ubuntu           | 16.04   | :red_circle: \*    |
-|                  | 18.04   | :white_check_mark: |
-|                  | 20.04   | :white_check_mark: |
-|                  | 22.04   | :white_check_mark: |
-| Debian           | 9       | :red_circle: \*    |
-|                  | 10      | :white_check_mark: |
-|                  | 11      | :white_check_mark: |
-| CentOS           | 6       | :red_circle:       |
-|                  | 7       | :red_circle: \*    |
-|                  | 8       | :red_circle: \*    |
-| Rocky Linux      | 8       | :white_check_mark: |
-|                  | 9       | :white_check_mark: |
-| AlmaLinux        | 8       | :white_check_mark: |
-|                  | 9       | :white_check_mark: |
 
 _\* Indicates an operating system and release that previously was supported by this script._
 
