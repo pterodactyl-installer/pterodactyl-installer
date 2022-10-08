@@ -34,6 +34,10 @@ set -e
 export GITHUB_SOURCE=${GITHUB_SOURCE:-master}
 export SCRIPT_RELEASE=${SCRIPT_RELEASE:-canary}
 
+# Pterodactyl versions
+export PTERODACTYL_PANEL_VERSION=""
+export PTERODACTYL_WINGS_VERSION=""
+
 # OS
 export OS=""
 export OS_VER_MAJOR=""
