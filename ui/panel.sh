@@ -197,7 +197,7 @@ main() {
 
 summary() {
   print_brake 62
-  output "Pterodactyl panel $PTERODACTYL_VERSION with nginx on $OS"
+  output "Pterodactyl panel $PTERODACTYL_PANEL_VERSION with nginx on $OS"
   output "Database name: $MYSQL_DB"
   output "Database user: $MYSQL_USER"
   output "Database password: (censored)"
