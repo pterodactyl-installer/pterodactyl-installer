@@ -58,10 +58,10 @@ fi
 # ----------- Installation functions ----------- #
 
 enable_services() {
-  systemctl start docker
-  systemctl enable docker
   [ "$INSTALL_MARIADB" == true ] && systemctl enable mariadb
   [ "$INSTALL_MARIADB" == true ] && systemctl start mariadb
+  systemctl start docker
+  systemctl enable docker
 }
 
 dep_install() {

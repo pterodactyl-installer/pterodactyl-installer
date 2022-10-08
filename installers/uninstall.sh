@@ -46,7 +46,7 @@ rm_panel_files() {
   [ "$OS" != "centos" ] && ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
   [ "$OS" == "centos" ] && rm -f /etc/nginx/conf.d/pterodactyl.conf
   systemctl restart nginx
-  output "Succesfully removed panel files."
+  success "Removed panel files."
 }
 
 rm_wings_files() {
@@ -57,7 +57,7 @@ rm_wings_files() {
   rm -rf /etc/systemd/system/wings.service
 
   rm -rf /etc/pterodactyl /usr/local/bin/wings /var/lib/pterodactyl
-  output "Succesfully removed wings files."
+  success "Removed wings files."
 }
 
 rm_services() {
@@ -74,13 +74,13 @@ rm_services() {
     rm -rf /etc/php-fpm.d/www-pterodactyl.conf
     ;;
   esac
-  output "Succesfully removed services."
+  success "Removed services."
 }
 
 rm_cron() {
   output "Removing cron jobs..."
   crontab -l | grep -vF "* * * * * php /var/www/pterodactyl/artisan schedule:run >> /dev/null 2>&1" | crontab -
-  output "Succesfully removed cron jobs."
+  success "Removed cron jobs."
 }
 
 rm_database() {
@@ -134,7 +134,7 @@ rm_database() {
   done
   [[ -n "$DB_USER" ]] && mysql -u root -e "DROP USER $DB_USER@'127.0.0.1';"
   mysql -u root -e "FLUSH PRIVILEGES;"
-  output "Succesfully removed database and database user."
+  success "Removed database and database user."
 }
 
 # --------------- Main functions --------------- #
@@ -145,7 +145,8 @@ perform_uninstall() {
   [ "$RM_PANEL" == true ] && rm_database
   [ "$RM_PANEL" == true ] && rm_services
   [ "$RM_WINGS" == true ] && rm_wings_files
-  true
+  
+  return 0
 }
 
 # ------------------ Uninstall ----------------- #
