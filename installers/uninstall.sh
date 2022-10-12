@@ -49,6 +49,14 @@ rm_panel_files() {
   success "Removed panel files."
 }
 
+rm_docker_containers() {
+  output "Removing docker containers and images..."
+
+  docker system prune -a -f
+
+  success "Removed docker containers and images."
+}
+
 rm_wings_files() {
   output "Removing wings files..."
 
@@ -144,6 +152,7 @@ perform_uninstall() {
   [ "$RM_PANEL" == true ] && rm_cron
   [ "$RM_PANEL" == true ] && rm_database
   [ "$RM_PANEL" == true ] && rm_services
+  [ "$RM_WINGS" == true ] && rm_docker_containers
   [ "$RM_WINGS" == true ] && rm_wings_files
   
   return 0
