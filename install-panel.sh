@@ -331,13 +331,13 @@ check_os_comp() {
 
   case "$OS" in
   ubuntu)
-    PHP_SOCKET="/run/php/php8.0-fpm.sock"
+    PHP_SOCKET="/run/php/php8.1-fpm.sock"
     [ "$OS_VER_MAJOR" == "18" ] && SUPPORTED=true
     [ "$OS_VER_MAJOR" == "20" ] && SUPPORTED=true
     [ "$OS_VER_MAJOR" == "22" ] && SUPPORTED=true
     ;;
   debian)
-    PHP_SOCKET="/run/php/php8.0-fpm.sock"
+    PHP_SOCKET="/run/php/php8.1-fpm.sock"
     [ "$OS_VER_MAJOR" == "9" ] && SUPPORTED=true
     [ "$OS_VER_MAJOR" == "10" ] && SUPPORTED=true
     [ "$OS_VER_MAJOR" == "11" ] && SUPPORTED=true
@@ -573,7 +573,7 @@ ubuntu22_dep() {
   apt_update
 
   # Install Dependencies
-  apt -y install php8.0 php8.0-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis cron
+  apt -y install php8.1 php8.1-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis cron
 
   # Enable services
   enable_services_debian_based
@@ -597,7 +597,7 @@ ubuntu20_dep() {
   apt_update
 
   # Install Dependencies
-  apt -y install php8.0 php8.0-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis cron
+  apt -y install php8.1 php8.1-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis cron
 
   # Enable services
   enable_services_debian_based
@@ -624,7 +624,7 @@ ubuntu18_dep() {
   apt_update
 
   # Install Dependencies
-  apt -y install php8.0 php8.0-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis cron
+  apt -y install php8.1 php8.1-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx tar unzip git redis-server redis cron
 
   # Enable services
   enable_services_debian_based
@@ -650,7 +650,7 @@ debian_stretch_dep() {
   apt_update
 
   # Install Dependencies
-  apt -y install php8.0 php8.0-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server cron
+  apt -y install php8.1 php8.1-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server cron
 
   # Enable services
   enable_services_debian_based
@@ -674,7 +674,7 @@ debian_buster_dep() {
   apt_update
 
   # install dependencies
-  apt -y install php8.0 php8.0-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server cron
+  apt -y install php8.1 php8.1-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server cron
 
   # Enable services
   enable_services_debian_based
@@ -698,7 +698,7 @@ debian_dep() {
   apt_update
 
   # install dependencies
-  apt -y install php8.0 php8.0-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server cron
+  apt -y install php8.1 php8.1-{cli,gd,mysql,pdo,mbstring,tokenizer,bcmath,xml,fpm,curl,zip} mariadb-server nginx curl tar unzip git redis-server cron
 
   # Enable services
   enable_services_debian_based
@@ -712,11 +712,11 @@ centos7_dep() {
   # SELinux tools
   yum install -y policycoreutils policycoreutils-python selinux-policy selinux-policy-targeted libselinux-utils setroubleshoot-server setools setools-console mcstrans
 
-  # Add remi repo (php8.0)
+  # Add remi repo (php8.1)
   yum install -y epel-release http://rpms.remirepo.net/enterprise/remi-release-7.rpm
   yum install -y yum-utils
   yum-config-manager -y --disable remi-php54
-  yum-config-manager -y --enable remi-php80
+  yum-config-manager -y --enable remi-php81
   yum_update
 
   # Install MariaDB
@@ -740,9 +740,9 @@ centos8_dep() {
   # SELinux tools
   dnf install -y policycoreutils selinux-policy selinux-policy-targeted setroubleshoot-server setools setools-console mcstrans
 
-  # add remi repo (php8.0)
+  # add remi repo (php8.1)
   dnf install -y epel-release http://rpms.remirepo.net/enterprise/remi-release-8.rpm
-  dnf module enable -y php:remi-8.0
+  dnf module enable -y php:remi-8.1
   dnf_update
 
   dnf install -y php php-common php-fpm php-cli php-json php-mysqlnd php-gd php-mbstring php-pdo php-zip php-bcmath php-dom php-opcache
