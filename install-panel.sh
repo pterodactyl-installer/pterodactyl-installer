@@ -331,13 +331,13 @@ check_os_comp() {
 
   case "$OS" in
   ubuntu)
-    PHP_SOCKET="/run/php/php8.0-fpm.sock"
+    PHP_SOCKET="/run/php/php8.1-fpm.sock"
     [ "$OS_VER_MAJOR" == "18" ] && SUPPORTED=true
     [ "$OS_VER_MAJOR" == "20" ] && SUPPORTED=true
     [ "$OS_VER_MAJOR" == "22" ] && SUPPORTED=true
     ;;
   debian)
-    PHP_SOCKET="/run/php/php8.0-fpm.sock"
+    PHP_SOCKET="/run/php/php8.1-fpm.sock"
     [ "$OS_VER_MAJOR" == "9" ] && SUPPORTED=true
     [ "$OS_VER_MAJOR" == "10" ] && SUPPORTED=true
     [ "$OS_VER_MAJOR" == "11" ] && SUPPORTED=true
