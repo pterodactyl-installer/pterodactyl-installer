@@ -42,7 +42,8 @@ if ! [ -x "$(command -v curl)" ]; then
 fi
 
 if [ ! -f "/tmp/lib.sh" ]; then
-  curl -o /tmp/lib.sh $GITHUB_BASE_URL/lib/lib.sh
+  # Until first official major-refactor release this needs to always be pulled from master
+  curl -o /tmp/lib.sh https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/lib/lib.sh
 fi
 
 source /tmp/lib.sh
@@ -50,9 +51,14 @@ source /tmp/lib.sh
 execute() {
   echo -e "\n\n* pterodactyl-installer $(date) \n\n" >>$LOG_PATH
 
-  [[ "$1" == *"canary"* ]] && export GITHUB_SOURCE="master" && export SCRIPT_RELEASE="canary"
+  # Only use the new method for canary version. Change after first major-refactor release
+  if [[ "$1" == *"canary"* ]]; then
+    GITHUB_SOURCE="master" && SCRIPT_RELEASE="canary" && GITHUB_BASE_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/$GITHUB_SOURCE"
+    run_ui "${1//_canary/}" |& tee -a $LOG_PATH
+  else
+    bash <(curl -s "$GITHUB_BASE_URL/install-$1.sh") |& tee -a $LOG_PATH
+  fi
 
-  run_ui "${1//_canary/}" |& tee -a $LOG_PATH
   [[ -n $2 ]] && execute "$2"
 }
 
@@ -64,7 +70,7 @@ while [ "$done" == false ]; do
     "Install the panel"
     "Install Wings"
     "Install both [0] and [1] on the same machine (wings script runs after panel)"
-    "Uninstall panel or wings\n"
+    # "Uninstall panel or wings\n"
 
     "Install panel with canary version of the script (the versions that lives in master, may be broken!)"
     "Install Wings with canary version of the script (the versions that lives in master, may be broken!)"
@@ -76,7 +82,7 @@ while [ "$done" == false ]; do
     "panel"
     "wings"
     "panel;wings"
-    "uninstall"
+    # "uninstall"
 
     "panel_canary"
     "wings_canary"
@@ -100,5 +106,5 @@ while [ "$done" == false ]; do
   [[ " ${valid_input[*]} " =~ ${action} ]] && done=true && IFS=";" read -r i1 i2 <<<"${actions[$action]}" && execute "$i1" "$i2"
 done
 
-# Remove lib.sh, so next time the script is run the newest version is downloaded.
+# Remove lib.sh, so next time the script is run the, newest version is downloaded.
 rm -rf /tmp/lib.sh
