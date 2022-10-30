@@ -61,12 +61,12 @@ execute() {
   fi
 
   if [[ -n $2 ]];then 
-    echo -e -n "/n* $1 installation completed. Do you want to proceed to $2 installation? "
+    echo -e -n "* Installation of $1 completed. Do you want to proceed to $2 installation? (y/N): "
     read -r CONFIRM
     if [[ "$CONFIRM" =~ [Yy] ]]; then
       execute "$2"
     else
-      error "$2 installation aborted."
+      error "Installation of $2 aborted."
       exit 1
     fi
   fi

@@ -1,22 +1,18 @@
 name: Test Panel Installer
 
 on:
-
-  # Branch would be changed when released
   push:
     paths:
       - "installers/panel.sh"
       - "lib/lib.sh"
-    branches: [ "major-refactor" ]
+    branches: [ "master" ]
 
   pull_request:
     paths:
       - "installers/panel.sh"
       - "lib/lib.sh"
-    branches: [ "major-refactor" ]
+    branches: [ "master" ]
 
-  workflow_dispatch:
-  
 jobs:
   install_panel:
     runs-on: macos-12

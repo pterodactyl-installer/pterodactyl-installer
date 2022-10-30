@@ -2,9 +2,9 @@ name: Shellcheck
 
 on:
   push:
-    branches: [ "major-refactor" ]
-
-  workflow_dispatch:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
 
 jobs:
   shellcheck:

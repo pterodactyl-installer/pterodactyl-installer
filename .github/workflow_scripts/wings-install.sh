@@ -28,7 +28,7 @@ set -e
 #                                                                           #
 #############################################################################
 
-export GITHUB_SOURCE="major-refactor"
+export GITHUB_SOURCE="master"
 export GITHUB_BASE_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer"
 export CONFIGURE_FIREWALL=true
 export CONFIGURE_DBHOST=true
