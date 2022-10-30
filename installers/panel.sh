@@ -28,8 +28,13 @@ set -e
 #                                                                           #
 #############################################################################
 
-# shellcheck source=lib/lib.sh
-source /tmp/lib.sh || source <(curl -sL "$GITHUB_BASE_URL"/lib/lib.sh)
+# Check if script is loaded, load if not or fail otherwise.
+fn_exists() { declare -F "$1" > /dev/null; }
+if ! fn_exists lib_loaded; then
+  # shellcheck source=lib/lib.sh
+  source /tmp/lib.sh || source <(curl -sL "$GITHUB_BASE_URL/$GITHUB_SOURCE"/lib/lib.sh)
+  ! fn_exists lib_loaded && echo "* ERROR: Could not load lib script" && exit 1
+fi
 
 # ------------------ Variables ----------------- #
 
@@ -192,7 +197,7 @@ insert_cronjob() {
 install_pteroq() {
   output "Installing pteroq service.."
 
-  curl -o /etc/systemd/system/pteroq.service "$GITHUB_BASE_URL"/configs/pteroq.service
+  curl -o /etc/systemd/system/pteroq.service "$GITHUB_URL"/configs/pteroq.service
 
   case "$OS" in
   debian | ubuntu)
@@ -234,7 +239,7 @@ selinux_allow() {
 }
 
 php_fpm_conf() {
-  curl -o /etc/php-fpm.d/www-pterodactyl.conf "$GITHUB_BASE_URL"/configs/www-pterodactyl.conf
+  curl -o /etc/php-fpm.d/www-pterodactyl.conf "$GITHUB_URL"/configs/www-pterodactyl.conf
 
   systemctl enable php-fpm
   systemctl start php-fpm
@@ -388,7 +393,7 @@ configure_nginx() {
 
   rm -rf $CONFIG_PATH_ENABL/default
 
-  curl -o $CONFIG_PATH_AVAIL/pterodactyl.conf "$GITHUB_BASE_URL"/configs/$DL_FILE
+  curl -o $CONFIG_PATH_AVAIL/pterodactyl.conf "$GITHUB_URL"/configs/$DL_FILE
 
   sed -i -e "s@<domain>@${FQDN}@g" $CONFIG_PATH_AVAIL/pterodactyl.conf
 

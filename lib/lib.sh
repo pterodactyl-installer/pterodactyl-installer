@@ -48,7 +48,8 @@ export ARCH=""
 export PANEL_DL_URL="https://github.com/pterodactyl/panel/releases/latest/download/panel.tar.gz"
 export WINGS_DL_BASE_URL="https://github.com/pterodactyl/wings/releases/latest/download/wings_linux_"
 export MARIADB_URL="https://downloads.mariadb.com/MariaDB/mariadb_repo_setup"
-export GITHUB_BASE_URL=${GITHUB_BASE_URL:-"https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/$GITHUB_SOURCE"}
+export GITHUB_BASE_URL=${GITHUB_BASE_URL:-"https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer"}
+export GITHUB_URL="$GITHUB_BASE_URL/$GITHUB_SOURCE"
 
 # Colors
 COLOR_YELLOW='\033[1;33m'
@@ -61,6 +62,12 @@ email_regex="^(([A-Za-z0-9]+((\.|\-|\_|\+)?[A-Za-z0-9]?)*[A-Za-z0-9]+)|[A-Za-z0-
 
 # Charset used to generate random passwords
 password_charset='A-Za-z0-9!"#%&()*+,-./:;<=>?@[\]^_`{|}~'
+
+# --------------------- Lib -------------------- #
+
+lib_loaded() {
+  return 0
+}
 
 # -------------- Visual functions -------------- #
 
@@ -132,12 +139,18 @@ get_latest_versions() {
   PTERODACTYL_WINGS_VERSION=$(get_latest_release "pterodactyl/wings")
 }
 
+update_lib_source() {
+  GITHUB_URL="$GITHUB_BASE_URL/$GITHUB_SOURCE"
+  curl -o /tmp/lib.sh "$GITHUB_URL"/lib/lib.sh
+  source /tmp/lib.sh
+}
+
 run_installer() {
-  bash <(curl -s -S -L "$GITHUB_BASE_URL/installers/$1.sh")
+  bash <(curl -s -S -L "$GITHUB_URL/installers/$1.sh")
 }
 
 run_ui() {
-  bash <(curl -s -S -L "$GITHUB_BASE_URL/ui/$1.sh")
+  bash <(curl -s -S -L "$GITHUB_URL/ui/$1.sh")
 }
 
 array_contains_element() {

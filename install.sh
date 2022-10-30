@@ -30,7 +30,7 @@ set -e
 
 export GITHUB_SOURCE="v0.11.0"
 export SCRIPT_RELEASE="v0.11.0"
-export GITHUB_BASE_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/$GITHUB_SOURCE"
+export GITHUB_BASE_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer"
 
 LOG_PATH="/var/log/pterodactyl-installer.log"
 
@@ -43,7 +43,7 @@ fi
 
 if [ ! -f "/tmp/lib.sh" ]; then
   # Until first official major-refactor release this needs to always be pulled from master
-  curl -o /tmp/lib.sh https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/master/lib/lib.sh
+  curl -o /tmp/lib.sh "$GITHUB_BASE_URL"/master/lib/lib.sh
 fi
 
 source /tmp/lib.sh
@@ -53,13 +53,23 @@ execute() {
 
   # Only use the new method for canary version. Change after first major-refactor release
   if [[ "$1" == *"canary"* ]]; then
-    GITHUB_SOURCE="master" && SCRIPT_RELEASE="canary" && GITHUB_BASE_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer/$GITHUB_SOURCE"
+    GITHUB_SOURCE="master" && SCRIPT_RELEASE="canary"
+    update_lib_source
     run_ui "${1//_canary/}" |& tee -a $LOG_PATH
   else
-    bash <(curl -s "$GITHUB_BASE_URL/install-$1.sh") |& tee -a $LOG_PATH
+    bash <(curl -s "$GITHUB_URL/install-$1.sh") |& tee -a $LOG_PATH
   fi
 
-  [[ -n $2 ]] && execute "$2"
+  if [[ -n $2 ]];then 
+    echo -e -n "/n* $1 installation completed. Do you want to proceed to $2 installation? "
+    read -r CONFIRM
+    if [[ "$CONFIRM" =~ [Yy] ]]; then
+      execute "$2"
+    else
+      error "$2 installation aborted."
+      exit 1
+    fi
+  fi
 }
 
 welcome
