@@ -128,7 +128,7 @@ welcome() {
 # ---------------- Lib functions --------------- #
 
 get_latest_release() {
-  curl --silent "https://api.github.com/repos/$1/releases/latest" | # Get latest release from GitHub api
+  curl -sL "https://api.github.com/repos/$1/releases/latest" | # Get latest release from GitHub api
     grep '"tag_name":' |                                            # Get tag line
     sed -E 's/.*"([^"]+)".*/\1/'                                    # Pluck JSON value
 }
@@ -141,16 +141,16 @@ get_latest_versions() {
 
 update_lib_source() {
   GITHUB_URL="$GITHUB_BASE_URL/$GITHUB_SOURCE"
-  curl -o /tmp/lib.sh "$GITHUB_URL"/lib/lib.sh
+  curl -sSL -o /tmp/lib.sh "$GITHUB_URL"/lib/lib.sh
   source /tmp/lib.sh
 }
 
 run_installer() {
-  bash <(curl -s -S -L "$GITHUB_URL/installers/$1.sh")
+  bash <(curl -sSL "$GITHUB_URL/installers/$1.sh")
 }
 
 run_ui() {
-  bash <(curl -s -S -L "$GITHUB_URL/ui/$1.sh")
+  bash <(curl -sSL "$GITHUB_URL/ui/$1.sh")
 }
 
 array_contains_element() {

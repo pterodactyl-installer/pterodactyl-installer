@@ -43,7 +43,7 @@ fi
 
 if [ ! -f "/tmp/lib.sh" ]; then
   # Until first official major-refactor release this needs to always be pulled from master
-  curl -o /tmp/lib.sh "$GITHUB_BASE_URL"/master/lib/lib.sh
+  curl -sSL -o /tmp/lib.sh "$GITHUB_BASE_URL"/master/lib/lib.sh
 fi
 
 source /tmp/lib.sh
@@ -57,7 +57,7 @@ execute() {
     update_lib_source
     run_ui "${1//_canary/}" |& tee -a $LOG_PATH
   else
-    bash <(curl -s "$GITHUB_URL/install-$1.sh") |& tee -a $LOG_PATH
+    bash <(curl -sSL "$GITHUB_URL/install-$1.sh") |& tee -a $LOG_PATH
   fi
 
   if [[ -n $2 ]];then 
