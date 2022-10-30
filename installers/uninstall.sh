@@ -28,140 +28,20 @@ set -e
 #                                                                           #
 #############################################################################
 
-######## General checks #########
-
-# exit with error status code if user is not root
-if [[ $EUID -ne 0 ]]; then
-  echo "* This script must be executed with root privileges (sudo)." 1>&2
-  exit 1
+# Check if script is loaded, load if not or fail otherwise.
+fn_exists() { declare -F "$1" > /dev/null; }
+if ! fn_exists lib_loaded; then
+  # shellcheck source=lib/lib.sh
+  source /tmp/lib.sh || source <(curl -sSL "$GITHUB_BASE_URL/$GITHUB_SOURCE"/lib/lib.sh)
+  ! fn_exists lib_loaded && echo "* ERROR: Could not load lib script" && exit 1
 fi
 
-# check for curl
-if ! [ -x "$(command -v curl)" ]; then
-  echo "* curl is required in order for this script to work."
-  echo "* install using apt (Debian and derivatives) or yum/dnf (CentOS)"
-  exit 1
-fi
+# ------------------ Variables ----------------- #
 
-########## Variables ############
+RM_PANEL="${RM_PANEL:-true}"
+RM_WINGS="${RM_WINGS:-true}"
 
-RM_PANEL=false
-RM_WINGS=false
-
-####### Visual functions ########
-
-print_brake() {
-  for ((n = 0; n < $1; n++)); do
-    echo -n "#"
-  done
-  echo ""
-}
-
-output() {
-  echo "* ${1}"
-}
-
-print_list() {
-  print_brake 30
-  for word in $1; do
-    output "$word"
-  done
-  print_brake 30
-  echo ""
-}
-
-error() {
-  COLOR_RED='\033[0;31m'
-  COLOR_NC='\033[0m'
-
-  echo ""
-  echo -e "* ${COLOR_RED}ERROR${COLOR_NC}: $1"
-  echo ""
-}
-
-warning() {
-  COLOR_YELLOW='\033[1;33m'
-  COLOR_NC='\033[0m'
-  echo ""
-  echo -e "* ${COLOR_YELLOW}WARNING${COLOR_NC}: $1"
-  echo ""
-}
-
-summary() {
-  print_brake 30
-  output "Uninstall panel? $RM_PANEL"
-  output "Uninstall wings? $RM_WINGS"
-  print_brake 30
-}
-
-####### OS check funtions #######
-
-detect_distro() {
-  if [ -f /etc/os-release ]; then
-    # freedesktop.org and systemd
-    . /etc/os-release
-    OS=$(echo "$ID" | awk '{print tolower($0)}')
-    OS_VER=$VERSION_ID
-  elif type lsb_release >/dev/null 2>&1; then
-    # linuxbase.org
-    OS=$(lsb_release -si | awk '{print tolower($0)}')
-    OS_VER=$(lsb_release -sr)
-  elif [ -f /etc/lsb-release ]; then
-    # For some versions of Debian/Ubuntu without lsb_release command
-    . /etc/lsb-release
-    OS=$(echo "$DISTRIB_ID" | awk '{print tolower($0)}')
-    OS_VER=$DISTRIB_RELEASE
-  elif [ -f /etc/debian_version ]; then
-    # Older Debian/Ubuntu/etc.
-    OS="debian"
-    OS_VER=$(cat /etc/debian_version)
-  elif [ -f /etc/SuSe-release ]; then
-    # Older SuSE/etc.
-    OS="SuSE"
-    OS_VER="?"
-  elif [ -f /etc/redhat-release ]; then
-    # Older Red Hat, CentOS, etc.
-    OS="Red Hat/CentOS"
-    OS_VER="?"
-  else
-    # Fall back to uname, e.g. "Linux <version>", also works for BSD, etc.
-    OS=$(uname -s)
-    OS_VER=$(uname -r)
-  fi
-
-  OS=$(echo "$OS" | awk '{print tolower($0)}')
-  OS_VER_MAJOR=$(echo "$OS_VER" | cut -d. -f1)
-}
-
-check_os_comp() {
-  SUPPORTED=false
-  case "$OS" in
-  ubuntu)
-    [ "$OS_VER_MAJOR" == "18" ] && SUPPORTED=true
-    [ "$OS_VER_MAJOR" == "20" ] && SUPPORTED=true
-    [ "$OS_VER_MAJOR" == "22" ] && SUPPORTED=true
-    ;;
-  debian)
-    [ "$OS_VER_MAJOR" == "9" ] && SUPPORTED=true
-    [ "$OS_VER_MAJOR" == "10" ] && SUPPORTED=true
-    ;;
-  centos)
-    [ "$OS_VER_MAJOR" == "7" ] && SUPPORTED=true
-    [ "$OS_VER_MAJOR" == "8" ] && SUPPORTED=true
-    ;;
-  esac
-
-  # exit if not supported
-  if [ "$SUPPORTED" == true ]; then
-    echo "* $OS $OS_VER is supported."
-  else
-    echo "* $OS $OS_VER is not supported"
-    error "Unsupported OS"
-    exit 1
-  fi
-}
-
-### Main uninstallation functions ###
+# ---------- Uninstallation functions ---------- #
 
 rm_panel_files() {
   output "Removing panel files..."
@@ -171,7 +51,15 @@ rm_panel_files() {
   [ "$OS" != "centos" ] && ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
   [ "$OS" == "centos" ] && rm -f /etc/nginx/conf.d/pterodactyl.conf
   systemctl restart nginx
-  output "Succesfully removed panel files."
+  success "Removed panel files."
+}
+
+rm_docker_containers() {
+  output "Removing docker containers and images..."
+
+  docker system prune -a -f
+
+  success "Removed docker containers and images."
 }
 
 rm_wings_files() {
@@ -182,7 +70,7 @@ rm_wings_files() {
   rm -rf /etc/systemd/system/wings.service
 
   rm -rf /etc/pterodactyl /usr/local/bin/wings /var/lib/pterodactyl
-  output "Succesfully removed wings files."
+  success "Removed wings files."
 }
 
 rm_services() {
@@ -199,13 +87,13 @@ rm_services() {
     rm -rf /etc/php-fpm.d/www-pterodactyl.conf
     ;;
   esac
-  output "Succesfully removed services."
+  success "Removed services."
 }
 
 rm_cron() {
   output "Removing cron jobs..."
   crontab -l | grep -vF "* * * * * php /var/www/pterodactyl/artisan schedule:run >> /dev/null 2>&1" | crontab -
-  output "Succesfully removed cron jobs."
+  success "Removed cron jobs."
 }
 
 rm_database() {
@@ -259,75 +147,22 @@ rm_database() {
   done
   [[ -n "$DB_USER" ]] && mysql -u root -e "DROP USER $DB_USER@'127.0.0.1';"
   mysql -u root -e "FLUSH PRIVILEGES;"
-  output "Succesfully removed database and database user."
+  success "Removed database and database user."
 }
 
-## MAIN FUNCTIONS ##
+# --------------- Main functions --------------- #
 
 perform_uninstall() {
   [ "$RM_PANEL" == true ] && rm_panel_files
   [ "$RM_PANEL" == true ] && rm_cron
   [ "$RM_PANEL" == true ] && rm_database
   [ "$RM_PANEL" == true ] && rm_services
+  [ "$RM_WINGS" == true ] && rm_docker_containers
   [ "$RM_WINGS" == true ] && rm_wings_files
-  true
+  
+  return 0
 }
 
-main() {
-  detect_distro
-  print_brake 70
-  output "Pterodactyl uninstallation script"
-  output
-  output "Copyright (C) 2018 - 2022, Vilhelm Prytz, <vilhelm@prytznet.se>"
-  output "https://github.com/vilhelmprytz/pterodactyl-installer"
-  output
-  output "Sponsoring/Donations: https://github.com/vilhelmprytz/pterodactyl-installer?sponsor=1"
-  output "This script is not associated with the official Pterodactyl Project."
-  output
-  output "Running $OS version $OS_VER."
-  print_brake 70
-  check_os_comp
+# ------------------ Uninstall ----------------- #
 
-  if [ -d "/var/www/pterodactyl" ]; then
-    output "Panel installation has been detected."
-    echo -e -n "* Do you want to remove panel? (y/N): "
-    read -r RM_PANEL_INPUT
-    [[ "$RM_PANEL_INPUT" =~ [Yy] ]] && RM_PANEL=true
-  fi
-
-  if [ -d "/etc/pterodactyl" ]; then
-    output "Wings installation has been detected."
-    warning "This will remove all the servers!"
-    echo -e -n "* Do you want to remove Wings (daemon)? (y/N): "
-    read -r RM_WINGS_INPUT
-    [[ "$RM_WINGS_INPUT" =~ [Yy] ]] && RM_WINGS=true
-  fi
-
-  if [ "$RM_PANEL" == false ] && [ "$RM_WINGS" == false ]; then
-    error "Nothing to uninstall!"
-    exit 1
-  fi
-
-  summary
-
-  # confirm uninstallation
-  echo -e -n "* Continue with uninstallation? (y/N): "
-  read -r CONFIRM
-  if [[ "$CONFIRM" =~ [Yy] ]]; then
-    perform_uninstall
-  else
-    error "Uninstallation aborted."
-    exit 1
-  fi
-}
-
-goodbye() {
-  print_brake 62
-  [ "$RM_PANEL" == true ] && output "Panel uninstallation completed"
-  [ "$RM_WINGS" == true ] && output "Wings uninstallation completed"
-  output "Thank you for using this script."
-  print_brake 62
-}
-
-main
-goodbye
+perform_uninstall

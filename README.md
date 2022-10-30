@@ -15,6 +15,7 @@ Read more about [Pterodactyl](https://pterodactyl.io/) here. This script is not 
 - Automatic installation of the Pterodactyl Wings (Docker, systemd).
 - Panel: (optional) automatic configuration of Let's Encrypt.
 - Panel: (optional) automatic configuration of firewall.
+- Uninstallation support for both panel and wings.
 
 ## Help and support
 
@@ -24,41 +25,28 @@ For help and support regarding the script itself and **not the official Pterodac
 
 List of supported installation setups for panel and Wings (installations supported by this installation script).
 
-### Supported panel operating systems and webservers
+### Supported panel and wings operating systems
 
-| Operating System | Version | nginx support      | PHP Version |
+| Operating System | Version | Supported          | PHP Version |
 | ---------------- | ------- | ------------------ | ----------- |
 | Ubuntu           | 14.04   | :red_circle:       |             |
 |                  | 16.04   | :red_circle: \*    |             |
-|                  | 18.04   | :white_check_mark: | 8.0         |
-|                  | 20.04   | :white_check_mark: | 8.0         |
-|                  | 22.04   | :white_check_mark: | 8.0         |
+|                  | 18.04   | :white_check_mark: | 8.1         |
+|                  | 20.04   | :white_check_mark: | 8.1         |
+|                  | 22.04   | :white_check_mark: | 8.1         |
 | Debian           | 8       | :red_circle: \*    |             |
-|                  | 9       | :white_check_mark: | 8.0         |
-|                  | 10      | :white_check_mark: | 8.0         |
-|                  | 11      | :white_check_mark: | 8.0         |
+|                  | 9       | :red_circle: \*    |             |
+|                  | 10      | :white_check_mark: | 8.1         |
+|                  | 11      | :white_check_mark: | 8.1         |
 | CentOS           | 6       | :red_circle:       |             |
-|                  | 7       | :white_check_mark: | 8.0         |
-|                  | 8       | :white_check_mark: | 8.0         |
+|                  | 7       | :red_circle: \*    |             |
+|                  | 8       | :red_circle: \*    |             |
+| Rocky Linux      | 8       | :white_check_mark: | 8.1         |
+|                  | 9       | :white_check_mark: | 8.1         |
+| AlmaLinux        | 8       | :white_check_mark: | 8.1         |
+|                  | 9       | :white_check_mark: | 8.1         |
 
-### Supported Wings operating systems
-
-| Operating System | Version | Supported          |
-| ---------------- | ------- | ------------------ |
-| Ubuntu           | 14.04   | :red_circle:       |
-|                  | 16.04   | :red_circle: \*    |
-|                  | 18.04   | :white_check_mark: |
-|                  | 20.04   | :white_check_mark: |
-|                  | 22.04   | :white_check_mark: |
-| Debian           | 8       | :red_circle: \*    |
-|                  | 9       | :white_check_mark: |
-|                  | 10      | :white_check_mark: |
-|                  | 11      | :white_check_mark: |
-| CentOS           | 6       | :red_circle:       |
-|                  | 7       | :white_check_mark: |
-|                  | 8       | :white_check_mark: |
-
-_\* Ubuntu 16 and Debian 8 no longer supported since Pterodactyl does not actively support it._
+_\* Indicates an operating system and release that previously was supported by this script._
 
 ## Using the installation scripts
 
@@ -101,17 +89,16 @@ Replace name with one of the following (supported installations).
 - `ubuntu_bionic`
 - `debian_bullseye`
 - `debian_buster`
-- `debian_stretch`
-- `centos_8`
-- `centos_7`
+- `almalinux_8`
+- `almalinux_9`
+- `rockylinux_8`
+- `rockylinux_9`
 
-Then you can use `vagrant ssh <name of machine>` to SSH into the box. The project directory will be mounted in `/vagrant` so you can quickly modify the script locally and then test the changes by running the script from `/vagrant/install_panel.sh` and `/vagrant/install_wings.sh` respectively.
+Then you can use `vagrant ssh <name of machine>` to SSH into the box. The project directory will be mounted in `/vagrant` so you can quickly modify the script locally and then test the changes by running the script from `/vagrant/installers/panel.sh` and `/vagrant/installers/wings.sh` respectively.
 
 ### Creating a release
 
-There are a couple of files that each release commit should always change. Firstly, update the `CHANGELOG.md` so that the release date and release tag are both displayed. No changes should be made to the changelog points themselves. Secondly, update `GITHUB_SOURCE` and `SCRIPT_RELEASE` in both `install-panel.sh` and `install-wings.sh`. Thirdly, update `SCRIPT_RELEASE` in `install.sh`. Finally, you can now push a commit with the message `Release vX.Y.Z`. Create a release on GitHub. See [this commit](https://github.com/vilhelmprytz/pterodactyl-installer/commit/90aaae10785f1032fdf90b216a4a8d8ca64e6d44) for reference.
-
-When the release is published, push another commit which revers the changes you made to `install-wings.sh` and `install-panel.sh`. See [this commit](https://github.com/vilhelmprytz/pterodactyl-installer/commit/be5f361523d1d546d49eef8b3ce1a9145eded234) for reference.
+In `install.sh` github source and script release variables should change every release. Firstly, update the `CHANGELOG.md` so that the release date and release tag are both displayed. No changes should be made to the changelog points themselves. Secondly, update `GITHUB_SOURCE` and `SCRIPT_RELEASE` in `install.sh`. Finally, you can now push a commit with the message `Release vX.Y.Z`. Create a release on GitHub. See [this commit](https://github.com/vilhelmprytz/pterodactyl-installer/commit/90aaae10785f1032fdf90b216a4a8d8ca64e6d44) for reference.
 
 ## Contributors ✨
 

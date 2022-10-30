@@ -3,16 +3,16 @@
 RELEASE=$1
 DATE=$(date +%F)
 
+COLOR_RED='\033[0;31m'
+COLOR_NC='\033[0m'
+
 output() {
-  echo "- $1"
+  echo -e "* $1"
 }
 
 error() {
-  COLOR_RED='\033[0;31m'
-  COLOR_NC='\033[0m'
-
   echo ""
-  echo -e "* ${COLOR_RED}ERROR${COLOR_NC}: $1"
+  echo -e "* ${COLOR_RED}ERROR${COLOR_NC}: $1" 1>&2
   echo ""
 }
 
@@ -22,16 +22,9 @@ output "Releasing $RELEASE on $DATE"
 
 sed -i "/next-release/c\## $RELEASE (released on $DATE)" CHANGELOG.md
 
-# install-panel.sh
-sed -i "s/.*GITHUB_SOURCE=.*/GITHUB_SOURCE=\"$RELEASE\"/" install-panel.sh
-sed -i "s/.*SCRIPT_RELEASE=.*/SCRIPT_RELEASE=\"$RELEASE\"/" install-panel.sh
-
-# install-wings.sh
-sed -i "s/.*GITHUB_SOURCE=.*/GITHUB_SOURCE=\"$RELEASE\"/" install-wings.sh
-sed -i "s/.*SCRIPT_RELEASE=.*/SCRIPT_RELEASE=\"$RELEASE\"/" install-wings.sh
-
 # install.sh
-sed -i "s/.*SCRIPT_VERSION=.*/SCRIPT_VERSION=\"$RELEASE\"/" install.sh
+sed -i "s/.*SCRIPT_RELEASE=.*/SCRIPT_RELEASE=\"$RELEASE\"/" install.sh
+sed -i "s/.*GITHUB_SOURCE=.*/GITHUB_SOURCE=\"$RELEASE\"/" install.sh
 
 output "Commit release"
 

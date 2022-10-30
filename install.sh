@@ -28,16 +28,11 @@ set -e
 #                                                                           #
 #############################################################################
 
-SCRIPT_VERSION="v0.11.0"
-GITHUB_BASE_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer"
+export GITHUB_SOURCE="v0.11.0"
+export SCRIPT_RELEASE="v0.11.0"
+export GITHUB_BASE_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer"
 
 LOG_PATH="/var/log/pterodactyl-installer.log"
-
-# exit with error status code if user is not root
-if [[ $EUID -ne 0 ]]; then
-  echo "* This script must be executed with root privileges (sudo)." 1>&2
-  exit 1
-fi
 
 # check for curl
 if ! [ -x "$(command -v curl)" ]; then
@@ -46,65 +41,63 @@ if ! [ -x "$(command -v curl)" ]; then
   exit 1
 fi
 
-output() {
-  echo -e "* ${1}"
-}
+if [ ! -f "/tmp/lib.sh" ]; then
+  # Until first official major-refactor release this needs to always be pulled from master
+  curl -sSL -o /tmp/lib.sh "$GITHUB_BASE_URL"/master/lib/lib.sh
+fi
 
-error() {
-  COLOR_RED='\033[0;31m'
-  COLOR_NC='\033[0m'
-
-  echo ""
-  echo -e "* ${COLOR_RED}ERROR${COLOR_NC}: $1"
-  echo ""
-}
+source /tmp/lib.sh
 
 execute() {
   echo -e "\n\n* pterodactyl-installer $(date) \n\n" >>$LOG_PATH
 
-  bash <(curl -s "$1") | tee -a $LOG_PATH
-  [[ -n $2 ]] && execute "$2"
+  # Only use the new method for canary version. Change after first major-refactor release
+  if [[ "$1" == *"canary"* ]]; then
+    GITHUB_SOURCE="master" && SCRIPT_RELEASE="canary"
+    update_lib_source
+    run_ui "${1//_canary/}" |& tee -a $LOG_PATH
+  else
+    bash <(curl -sSL "$GITHUB_URL/install-$1.sh") |& tee -a $LOG_PATH
+  fi
+
+  if [[ -n $2 ]];then 
+    echo -e -n "* Installation of $1 completed. Do you want to proceed to $2 installation? (y/N): "
+    read -r CONFIRM
+    if [[ "$CONFIRM" =~ [Yy] ]]; then
+      execute "$2"
+    else
+      error "Installation of $2 aborted."
+      exit 1
+    fi
+  fi
 }
 
+welcome
+
 done=false
-
-output "Pterodactyl installation script @ $SCRIPT_VERSION"
-output
-output "Copyright (C) 2018 - 2022, Vilhelm Prytz, <vilhelm@prytznet.se>"
-output "https://github.com/vilhelmprytz/pterodactyl-installer"
-output
-output "Sponsoring/Donations: https://github.com/vilhelmprytz/pterodactyl-installer?sponsor=1"
-output "This script is not associated with the official Pterodactyl Project."
-
-output
-
-PANEL_LATEST="$GITHUB_BASE_URL/$SCRIPT_VERSION/install-panel.sh"
-
-WINGS_LATEST="$GITHUB_BASE_URL/$SCRIPT_VERSION/install-wings.sh"
-
-PANEL_CANARY="$GITHUB_BASE_URL/master/install-panel.sh"
-
-WINGS_CANARY="$GITHUB_BASE_URL/master/install-wings.sh"
-
 while [ "$done" == false ]; do
   options=(
     "Install the panel"
     "Install Wings"
-    "Install both [0] and [1] on the same machine (wings script runs after panel)\n"
+    "Install both [0] and [1] on the same machine (wings script runs after panel)"
+    # "Uninstall panel or wings\n"
 
     "Install panel with canary version of the script (the versions that lives in master, may be broken!)"
     "Install Wings with canary version of the script (the versions that lives in master, may be broken!)"
     "Install both [3] and [4] on the same machine (wings script runs after panel)"
+    "Uninstall panel or wings with canary version of the script (the versions that lives in master, may be broken!)"
   )
 
   actions=(
-    "$PANEL_LATEST"
-    "$WINGS_LATEST"
-    "$PANEL_LATEST;$WINGS_LATEST"
+    "panel"
+    "wings"
+    "panel;wings"
+    # "uninstall"
 
-    "$PANEL_CANARY"
-    "$WINGS_CANARY"
-    "$PANEL_CANARY;$WINGS_CANARY"
+    "panel_canary"
+    "wings_canary"
+    "panel_canary;wings_canary"
+    "uninstall_canary"
   )
 
   output "What would you like to do?"
@@ -122,3 +115,6 @@ while [ "$done" == false ]; do
   [[ ! " ${valid_input[*]} " =~ ${action} ]] && error "Invalid option"
   [[ " ${valid_input[*]} " =~ ${action} ]] && done=true && IFS=";" read -r i1 i2 <<<"${actions[$action]}" && execute "$i1" "$i2"
 done
+
+# Remove lib.sh, so next time the script is run the, newest version is downloaded.
+rm -rf /tmp/lib.sh
