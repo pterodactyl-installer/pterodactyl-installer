@@ -6,7 +6,7 @@ This project follows the [semantic versioning](https://semver.org) convention. C
 
 - [#353](https://github.com/vilhelmprytz/pterodactyl-installer/pull/353) panel: Update php version to 8.1 (thanks to [@drylian](https://github.com/drylian) for contributing!).
 - [#315](https://github.com/vilhelmprytz/pterodactyl-installer/pull/315) panel/wings: Split the scripts into separate components, UI functions and installation functions. This is a major overhaul, expect bugs! (thanks [@Linux123123](https://github.com/Linux123123) for contributing!).
-- [#283](https://github.com/vilhelmprytz/pterodactyl-installer/issues/283) panel/wings: Introduce support for Rocky Linux and AlmaLinux, also remove support for CentOS (thanks [@Linux123123](https://github.com/Linux123123) for contributing!).
+- [#283](https://github.com/vilhelmprytz/pterodactyl-installer/issues/283) panel/wings: Introduce support for Rocky Linux and AlmaLinux, also remove support for CentOS and Debian 9 (thanks [@Linux123123](https://github.com/Linux123123) for contributing!).
 
 ## v0.11.0 (released on 2022-05-17)
 
