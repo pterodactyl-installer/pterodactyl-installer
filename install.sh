@@ -60,7 +60,7 @@ execute() {
     bash <(curl -sSL "$GITHUB_URL/install-$1.sh") |& tee -a $LOG_PATH
   fi
 
-  if [[ -n $2 ]];then 
+  if [[ -n $2 ]]; then
     echo -e -n "* Installation of $1 completed. Do you want to proceed to $2 installation? (y/N): "
     read -r CONFIRM
     if [[ "$CONFIRM" =~ [Yy] ]]; then

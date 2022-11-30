@@ -29,7 +29,7 @@ set -e
 #############################################################################
 
 # Check if script is loaded, load if not or fail otherwise.
-fn_exists() { declare -F "$1" > /dev/null; }
+fn_exists() { declare -F "$1" >/dev/null; }
 if ! fn_exists lib_loaded; then
   # shellcheck source=lib/lib.sh
   source /tmp/lib.sh || source <(curl -sSL "$GITHUB_BASE_URL/$GITHUB_SOURCE"/lib/lib.sh)
@@ -159,7 +159,7 @@ perform_uninstall() {
   [ "$RM_PANEL" == true ] && rm_services
   [ "$RM_WINGS" == true ] && rm_docker_containers
   [ "$RM_WINGS" == true ] && rm_wings_files
-  
+
   return 0
 }
 

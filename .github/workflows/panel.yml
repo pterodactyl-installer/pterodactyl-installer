@@ -5,13 +5,13 @@ on:
     paths:
       - "installers/panel.sh"
       - "lib/lib.sh"
-    branches: [ "master" ]
+    branches: ["master"]
 
   pull_request:
     paths:
       - "installers/panel.sh"
       - "lib/lib.sh"
-    branches: [ "master" ]
+    branches: ["master"]
 
 jobs:
   install_panel:
@@ -51,5 +51,3 @@ jobs:
 
       - name: Check if installed correctly
         run: vagrant ssh ${{ matrix.os }} -c "curl http://localhost/auth/login"
-            
-            

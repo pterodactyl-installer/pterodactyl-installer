@@ -5,13 +5,13 @@ on:
     paths:
       - "installers/wings.sh"
       - "lib/lib.sh"
-    branches: [ "master" ]
+    branches: ["master"]
 
   pull_request:
     paths:
       - "installers/wings.sh"
       - "lib/lib.sh"
-    branches: [ "master" ]
+    branches: ["master"]
 
 jobs:
   install_wings:
@@ -48,5 +48,3 @@ jobs:
 
       - name: Run script in vagrant env
         run: vagrant ssh ${{ matrix.os }} -c "sudo -i bash /vagrant/.github/workflow_scripts/wings-install.sh"
-
-            
