@@ -28,8 +28,8 @@ set -e
 #                                                                           #
 #############################################################################
 
-export GITHUB_SOURCE="v0.11.0"
-export SCRIPT_RELEASE="v0.11.0"
+export GITHUB_SOURCE="v0.12.0"
+export SCRIPT_RELEASE="v0.12.0"
 export GITHUB_BASE_URL="https://raw.githubusercontent.com/vilhelmprytz/pterodactyl-installer"
 
 LOG_PATH="/var/log/pterodactyl-installer.log"
@@ -43,7 +43,7 @@ fi
 
 if [ ! -f "/tmp/lib.sh" ]; then
   # Until first official major-refactor release this needs to always be pulled from master
-  curl -sSL -o /tmp/lib.sh "$GITHUB_BASE_URL"/master/lib/lib.sh
+  curl -sSL -o /tmp/lib.sh "$GITHUB_BASE_URL"/"$GITHUB_SOURCE"/lib/lib.sh
 fi
 
 source /tmp/lib.sh
@@ -51,14 +51,9 @@ source /tmp/lib.sh
 execute() {
   echo -e "\n\n* pterodactyl-installer $(date) \n\n" >>$LOG_PATH
 
-  # Only use the new method for canary version. Change after first major-refactor release
-  if [[ "$1" == *"canary"* ]]; then
-    GITHUB_SOURCE="master" && SCRIPT_RELEASE="canary"
-    update_lib_source
-    run_ui "${1//_canary/}" |& tee -a $LOG_PATH
-  else
-    bash <(curl -sSL "$GITHUB_URL/install-$1.sh") |& tee -a $LOG_PATH
-  fi
+  [[ "$1" == *"canary"* ]] && export GITHUB_SOURCE="master" && export SCRIPT_RELEASE="canary"
+  update_lib_source
+  run_ui "${1//_canary/}" |& tee -a $LOG_PATH
 
   if [[ -n $2 ]]; then
     echo -e -n "* Installation of $1 completed. Do you want to proceed to $2 installation? (y/N): "

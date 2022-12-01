@@ -2,7 +2,7 @@
 
 This project follows the [semantic versioning](https://semver.org) convention. Changelog points should be divided into fixed, changed, or added.
 
-## next-release
+## v0.12.0 (released on 2022-12-01)
 
 - [#353](https://github.com/vilhelmprytz/pterodactyl-installer/pull/353) panel: Update php version to 8.1 (thanks to [@drylian](https://github.com/drylian) for contributing!).
 - [#315](https://github.com/vilhelmprytz/pterodactyl-installer/pull/315) panel/wings: Split the scripts into separate components, UI functions and installation functions. This is a major overhaul, expect bugs! (thanks [@Linux123123](https://github.com/Linux123123) for contributing!).
