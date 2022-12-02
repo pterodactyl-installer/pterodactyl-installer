@@ -2,6 +2,12 @@
 
 This project follows the [semantic versioning](https://semver.org) convention. Changelog points should be divided into fixed, changed, or added.
 
+## next-release
+
+### Fixed
+
+- [#359](https://github.com/pterodactyl-installer/pterodactyl-installer/issues/359) lib: Fix a bug that would cause the script to fail on some systems because `curl` was not able to overwrite existing `/tmp/lib.sh`.
+
 ## v0.12.0 (released on 2022-12-01)
 
 - [#353](https://github.com/pterodactyl-installer/pterodactyl-installer/pull/353) panel: Update php version to 8.1 (thanks to [@drylian](https://github.com/drylian) for contributing!).
