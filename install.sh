@@ -41,11 +41,10 @@ if ! [ -x "$(command -v curl)" ]; then
   exit 1
 fi
 
-if [ ! -f "/tmp/lib.sh" ]; then
-  # Until first official major-refactor release this needs to always be pulled from master
-  curl -sSL -o /tmp/lib.sh "$GITHUB_BASE_URL"/"$GITHUB_SOURCE"/lib/lib.sh
-fi
-
+# Always remove lib.sh, before downloading it
+rm -rf /tmp/lib.sh
+curl -sSL -o /tmp/lib.sh "$GITHUB_BASE_URL"/"$GITHUB_SOURCE"/lib/lib.sh
+# shellcheck source=lib/lib.sh
 source /tmp/lib.sh
 
 execute() {
@@ -67,7 +66,7 @@ execute() {
   fi
 }
 
-welcome
+welcome ""
 
 done=false
 while [ "$done" == false ]; do
