@@ -72,15 +72,15 @@ welcome
 done=false
 while [ "$done" == false ]; do
   options=(
-    "Install the panel"
-    "Install Wings"
-    "Install both [0] and [1] on the same machine (wings script runs after panel)"
+    "Instale el panel"
+    "instalar alas"
+    "Instale tanto [0] como [1] en la misma máquina (la secuencia de comandos Wings se ejecuta después del panel)"
     # "Uninstall panel or wings\n"
 
-    "Install panel with canary version of the script (the versions that lives in master, may be broken!)"
-    "Install Wings with canary version of the script (the versions that lives in master, may be broken!)"
-    "Install both [3] and [4] on the same machine (wings script runs after panel)"
-    "Uninstall panel or wings with canary version of the script (the versions that lives in master, may be broken!)"
+    "Instale el panel con la versión canaria del script (¡las versiones que viven en el maestro pueden estar rotas!)"
+    "Instale Wings con la versión Canary del script (¡las versiones que viven en el maestro pueden estar rotas!)"
+    "Instale [3] y [4] en la misma máquina (el script de alas se ejecuta después del panel)"
+    "Desinstale el panel o las alas con la versión canaria del script (¡las versiones que viven en el maestro pueden estar rotas!)"
   )
 
   actions=(
