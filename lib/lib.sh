@@ -141,6 +141,7 @@ get_latest_versions() {
 
 update_lib_source() {
   GITHUB_URL="$GITHUB_BASE_URL/$GITHUB_SOURCE"
+  rm -rf /tmp/lib.sh
   curl -sSL -o /tmp/lib.sh "$GITHUB_URL"/lib/lib.sh
   source /tmp/lib.sh
 }
