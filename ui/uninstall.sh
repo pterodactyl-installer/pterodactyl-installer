@@ -44,7 +44,7 @@ export RM_WINGS=false
 # --------------- Main functions --------------- #
 
 main() {
-  welcome
+  welcome ""
 
   if [ -d "/var/www/pterodactyl" ]; then
     output "Panel installation has been detected."

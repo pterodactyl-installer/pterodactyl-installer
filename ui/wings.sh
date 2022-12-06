@@ -96,6 +96,7 @@ ask_database_external() {
       MYSQL_DBHOST_HOST="$CONFIRM_DBEXTERNAL_HOST"
     fi
     [ "$CONFIGURE_FIREWALL" == true ] && ask_database_firewall
+    return 0;
   fi
 }
 
