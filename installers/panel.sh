@@ -308,7 +308,7 @@ dep_install() {
     alma_rocky_dep
 
     # Install dependencies
-    install_packages "php php-{common,fpm,cli,json,mysqlnd,mcrypt,gd,mbstring,pdo,zip,bcmath,dom,opcache} \
+    install_packages "php php-{common,fpm,cli,json,mysqlnd,mcrypt,gd,mbstring,pdo,zip,bcmath,dom,opcache,posix} \
       mariadb mariadb-server \
       nginx \
       redis \
