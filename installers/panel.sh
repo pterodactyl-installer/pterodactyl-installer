@@ -372,7 +372,7 @@ letsencrypt() {
 configure_nginx() {
   output "Configuring nginx .."
 
-  if [ $ASSUME_SSL == true ] && [ $CONFIGURE_LETSENCRYPT == false ]; then
+  if [ "$ASSUME_SSL" == true ] && [ "$CONFIGURE_LETSENCRYPT" == false ]; then
     DL_FILE="nginx_ssl.conf"
   else
     DL_FILE="nginx.conf"
@@ -391,17 +391,17 @@ configure_nginx() {
     ;;
   esac
 
-  rm -rf $CONFIG_PATH_ENABL/default
+  rm -rf "$CONFIG_PATH_ENABL"/default
 
-  curl -o $CONFIG_PATH_AVAIL/pterodactyl.conf "$GITHUB_URL"/configs/$DL_FILE
+  curl -o "$CONFIG_PATH_AVAIL"/pterodactyl.conf "$GITHUB_URL"/configs/$DL_FILE
 
-  sed -i -e "s@<domain>@${FQDN}@g" $CONFIG_PATH_AVAIL/pterodactyl.conf
+  sed -i -e "s@<domain>@${FQDN}@g" "$CONFIG_PATH_AVAIL"/pterodactyl.conf
 
-  sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" $CONFIG_PATH_AVAIL/pterodactyl.conf
+  sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" "$CONFIG_PATH_AVAIL"/pterodactyl.conf
 
   case "$OS" in
   ubuntu | debian)
-    ln -sf $CONFIG_PATH_AVAIL/pterodactyl.conf $CONFIG_PATH_ENABL/pterodactyl.conf
+    ln -sf "$CONFIG_PATH_AVAIL"/pterodactyl.conf "$CONFIG_PATH_ENABL"/pterodactyl.conf
     ;;
   esac
 
