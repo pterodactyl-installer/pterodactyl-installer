@@ -2,6 +2,13 @@
 
 This project follows the [semantic versioning](https://semver.org) convention. Changelog points should be divided into fixed, changed, or added.
 
+## next-release
+
+### Fixed
+
+- [#366](https://github.com/pterodactyl-installer/pterodactyl-installer/pull/366) panel/lib/wings Fix ask_database_external, some shellcheck issues, broken support for Alma Linux and Rocky Linux (thanks [@Linux123123](https://github.com/Linux123123) for contributing!).
+- [#377](https://github.com/pterodactyl-installer/pterodactyl-installer/pull/377) wings: Fix wings script calling wrong firewall function (thanks [@Linux123123](https://github.com/Linux123123) for contributing!).
+
 ## v0.12.1 (released on 2022-12-01)
 
 ### Fixed
