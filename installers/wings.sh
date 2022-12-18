@@ -72,7 +72,7 @@ enable_services() {
 dep_install() {
   output "Installing dependencies for $OS $OS_VER..."
 
-  [ "$CONFIGURE_FIREWALL" == true ] && install_firewall && firewall_allow_ports
+  [ "$CONFIGURE_FIREWALL" == true ] && install_firewall && firewall_ports
 
   case "$OS" in
   ubuntu | debian)
