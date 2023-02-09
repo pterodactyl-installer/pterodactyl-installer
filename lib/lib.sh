@@ -38,11 +38,15 @@ export SCRIPT_RELEASE=${SCRIPT_RELEASE:-canary}
 export PTERODACTYL_PANEL_VERSION=""
 export PTERODACTYL_WINGS_VERSION=""
 
+# Path (export everything that is possible, doesn't matter that it exists already)
+export PATH="$PATH:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
+
 # OS
 export OS=""
 export OS_VER_MAJOR=""
 export CPU_ARCHITECTURE=""
 export ARCH=""
+export SUPPORTED=false
 
 # download URLs
 export PANEL_DL_URL="https://github.com/pterodactyl/panel/releases/latest/download/panel.tar.gz"
@@ -97,6 +101,15 @@ print_brake() {
   for ((n = 0; n < $1; n++)); do
     echo -n "#"
   done
+  echo ""
+} 
+
+print_list() {
+  print_brake 30
+  for word in $1; do
+    output "$word"
+  done
+  print_brake 30
   echo ""
 }
 
