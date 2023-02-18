@@ -2,6 +2,13 @@
 
 This project follows the [semantic versioning](https://semver.org) convention. Changelog points should be divided into fixed, changed, or added.
 
+## next-release
+
+### Fixed
+
+- [#385](https://github.com/pterodactyl-installer/pterodactyl-installer/issues/385) lib: Fix a bug that would cause the script to fail on some systems because missing paths in $PATH (thanks [@Linux123123](https://github.com/Linux123123) for contributing!).
+- [#392](https://github.com/pterodactyl-installer/pterodactyl-installer/issues/392) lib: Add back missing function `print_list` used in uninstall script (thanks [@Linux123123](https://github.com/Linux123123) for contributing!).
+
 ## v0.12.2 (released on 2022-12-18)
 
 ### Fixed
