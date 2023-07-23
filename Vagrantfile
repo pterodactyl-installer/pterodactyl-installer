@@ -30,6 +30,10 @@ Vagrant.configure("2") do |config|
     debian_buster.vm.box = "debian/buster64"
   end
 
+  config.vm.define "debian_bookworm" do |debian_bookworm|
+    debian_bookworm.vm.box = "debian/bookworm64"
+  end
+
   config.vm.define "almalinux_8" do |almalinux_8|
     almalinux_8.vm.box = "almalinux/8"
   end

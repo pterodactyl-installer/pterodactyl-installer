@@ -536,6 +536,7 @@ ubuntu)
 debian)
   [ "$OS_VER_MAJOR" == "10" ] && SUPPORTED=true
   [ "$OS_VER_MAJOR" == "11" ] && SUPPORTED=true
+  [ "$OS_VER_MAJOR" == "12" ] && SUPPORTED=true
   export DEBIAN_FRONTEND=noninteractive
   ;;
 rocky | almalinux)

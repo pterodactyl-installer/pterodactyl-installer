@@ -25,6 +25,7 @@ jobs:
           - ubuntu_jammy
           - debian_buster
           - debian_bullseye
+          - debian_bookworm
           - rockylinux_8
           - rockylinux_9
           - almalinux_8
