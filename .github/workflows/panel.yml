@@ -20,7 +20,6 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu_bionic
           - ubuntu_focal
           - ubuntu_jammy
           - debian_buster

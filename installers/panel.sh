@@ -252,9 +252,6 @@ ubuntu_dep() {
   # Add Ubuntu universe repo
   add-apt-repository universe -y
 
-  # Add the MariaDB repo (bionic has mariadb version 10.1 and we need newer than that)
-  [ "$OS_VER_MAJOR" == "18" ] && curl -sS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash
-
   # Add PPA for PHP (we need 8.1)
   LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php
 }
