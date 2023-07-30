@@ -1,6 +1,10 @@
 name: Test Panel Installer
 
 on:
+  schedule:
+    # At 09:00 on Saturday
+    - cron: "0 9 * * 6"
+
   push:
     paths:
       - "installers/panel.sh"
@@ -20,11 +24,11 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu_bionic
           - ubuntu_focal
           - ubuntu_jammy
           - debian_buster
           - debian_bullseye
+          - debian_bookworm
           - rockylinux_8
           - rockylinux_9
           - almalinux_8

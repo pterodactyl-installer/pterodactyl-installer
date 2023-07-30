@@ -33,13 +33,14 @@ List of supported installation setups for panel and Wings (installations support
 | ---------------- | ------- | ------------------ | ----------- |
 | Ubuntu           | 14.04   | :red_circle:       |             |
 |                  | 16.04   | :red_circle: \*    |             |
-|                  | 18.04   | :white_check_mark: | 8.1         |
+|                  | 18.04   | :red_circle: \*    | 8.1         |
 |                  | 20.04   | :white_check_mark: | 8.1         |
 |                  | 22.04   | :white_check_mark: | 8.1         |
 | Debian           | 8       | :red_circle: \*    |             |
 |                  | 9       | :red_circle: \*    |             |
 |                  | 10      | :white_check_mark: | 8.1         |
 |                  | 11      | :white_check_mark: | 8.1         |
+|                  | 12      | :white_check_mark: | 8.1         |
 | CentOS           | 6       | :red_circle:       |             |
 |                  | 7       | :red_circle: \*    |             |
 |                  | 8       | :red_circle: \*    |             |
@@ -88,9 +89,9 @@ Replace name with one of the following (supported installations).
 
 - `ubuntu_jammy`
 - `ubuntu_focal`
-- `ubuntu_bionic`
 - `debian_bullseye`
 - `debian_buster`
+- `debian_bookworm`
 - `almalinux_8`
 - `almalinux_9`
 - `rockylinux_8`

@@ -17,10 +17,6 @@ Vagrant.configure("2") do |config|
     ubuntu_focal.vm.box = "ubuntu/focal64"
   end
 
-  config.vm.define "ubuntu_bionic" do |ubuntu_bionic|
-    ubuntu_bionic.vm.box = "ubuntu/bionic64"
-  end
-
   # debian
   config.vm.define "debian_bullseye" do |debian_bullseye|
     debian_bullseye.vm.box = "debian/bullseye64"
@@ -28,6 +24,10 @@ Vagrant.configure("2") do |config|
 
   config.vm.define "debian_buster" do |debian_buster|
     debian_buster.vm.box = "debian/buster64"
+  end
+
+  config.vm.define "debian_bookworm" do |debian_bookworm|
+    debian_bookworm.vm.box = "debian/bookworm64"
   end
 
   config.vm.define "almalinux_8" do |almalinux_8|
