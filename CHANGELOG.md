@@ -2,6 +2,12 @@
 
 This project follows the [semantic versioning](https://semver.org) convention. Changelog points should be divided into fixed, changed, or added.
 
+## next-release
+
+### Added
+
+- [#416](https://github.com/pterodactyl-installer/pterodactyl-installer/issues/416) panel/wings: add support for Debian 12 (thanks [@Linux123123](https://github.com/Linux123123) for contributing!).
+
 ## v0.12.3 (released on 2023-02-18)
 
 ### Fixed
