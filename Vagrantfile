@@ -17,6 +17,10 @@ Vagrant.configure("2") do |config|
     ubuntu_focal.vm.box = "ubuntu/focal64"
   end
 
+  config.vm.define "ubuntu_lunar" do |ubuntu_lunar|
+    ubuntu_focal.vm.box = "ubuntu/lunar64"
+  end
+
   # debian
   config.vm.define "debian_bullseye" do |debian_bullseye|
     debian_bullseye.vm.box = "debian/bullseye64"
