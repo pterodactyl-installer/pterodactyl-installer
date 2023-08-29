@@ -90,6 +90,7 @@ Replace name with one of the following (supported installations).
 
 - `ubuntu_jammy`
 - `ubuntu_focal`
+- `ubuntu_lunar`
 - `debian_bullseye`
 - `debian_buster`
 - `debian_bookworm`
