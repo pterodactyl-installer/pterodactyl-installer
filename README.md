@@ -52,9 +52,17 @@ _\* 表示此脚本以前支持的操作系统和版本._
 要使用安装脚本, 只需以 root 身份运行此命令即可, 该脚本将询问您是否要仅安装面板、仅安装 Wings 还是两者都安装.
 
 ```bash
-bash <(curl -s https://pterodactyl-installer.se)
+bash <(curl -s https://raw.githubusercontent.com/linke131/jexactyl-installer/v1.11.3.3/install.sh)
+```
+## 上面执行失败可尝试以下方法
+```
+wget https://raw.githubusercontent.com/linkea131/pterodactyl-installer/master/install.sh
 ```
 
+## 然后安装
+```
+bash install.sh
+```
 
 _注意: 在某些系统上, 在执行一行命令之前需要先以 root 身份登录（其中命令前面的“sudo”不起作用）._
 
