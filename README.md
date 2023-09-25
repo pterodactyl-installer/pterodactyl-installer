@@ -45,43 +45,43 @@ panel 和 Wings 支持的安装设置列表（此安装脚本支持的操作系�
 | AlmaLinux        | 8       | :white_check_mark: | 8.1         |
 |                  | 9       | :white_check_mark: | 8.1         |
 
-_\* Indicates an operating system and release that previously was supported by this script._
+_\* 表示此脚本以前支持的操作系统和版本._
 
-## Using the installation scripts
+## 使用安装脚本
 
-To use the installation scripts, simply run this command as root. The script will ask you whether you would like to install just the panel, just Wings or both.
+要使用安装脚本, 只需以 root 身份运行此命令即可, 该脚本将询问您是否要仅安装面板、仅安装 Wings 还是两者都安装.
 
 ```bash
 bash <(curl -s https://pterodactyl-installer.se)
 ```
 
-_Note: On some systems, it's required to be already logged in as root before executing the one-line command (where `sudo` is in front of the command does not work)._
 
-Here is a [YouTube video](https://www.youtube.com/watch?v=E8UJhyUFoHM) that illustrates the installation process.
+_注意: 在某些系统上, 在执行一行命令之前需要先以 root 身份登录（其中命令前面的“sudo”不起作用）._
 
-## Firewall setup
 
-The installation scripts can install and configure a firewall for you. The script will ask whether you want this or not. It is highly recommended to opt-in for the automatic firewall setup.
+## 防火墙设置
 
-## Development & Ops
+安装脚本可以为您安装和配置防火墙. 该脚本将询问您是否需要此操作. 强烈建议选择自动防火墙设置.
 
-### Testing the script locally
+## 发布 & 操作
 
-To test the script, we use [Vagrant](https://www.vagrantup.com). With Vagrant, you can quickly get a fresh machine up and running to test the script.
+### 在本地测试脚本
 
-If you want to test the script on all supported installations in one go, just run the following.
+为了测试脚本，我们使用 [Vagrant](https://www.vagrantup.com). 使用 Vagrant，您可以快速启动并运行一台新机器来测试脚本.
+
+如果您想一次性在所有受支持的安装上测试该脚本，只需运行以下命令.
 
 ```bash
 vagrant up
 ```
 
-If you only want to test a specific distribution, you can run the following.
+如果您只想测试特定发行版, 可以运行以下命令.
 
 ```bash
 vagrant up <name>
 ```
 
-Replace name with one of the following (supported installations).
+将名称替换为以下内容之一 (支持的操作系统).
 
 - `ubuntu_jammy`
 - `ubuntu_focal`
@@ -93,18 +93,20 @@ Replace name with one of the following (supported installations).
 - `rockylinux_8`
 - `rockylinux_9`
 
-Then you can use `vagrant ssh <name of machine>` to SSH into the box. The project directory will be mounted in `/vagrant` so you can quickly modify the script locally and then test the changes by running the script from `/vagrant/installers/panel.sh` and `/vagrant/installers/wings.sh` respectively.
+然后你可以使用 `vagrant ssh <机器名称>` 使用 SSH 连接到服务器. 项目目录将被挂载在 `/vagrant` 因此您可以在本地快速修改脚本，然后通过运行脚本来测试更改 `/vagrant/install_panel.sh` 和 `/vagrant/install_wings.sh` 分别.
 
-### Creating a release
+### 创建正式版本
 
-In `install.sh` github source and script release variables should change every release. Firstly, update the `CHANGELOG.md` so that the release date and release tag are both displayed. No changes should be made to the changelog points themselves. Secondly, update `GITHUB_SOURCE` and `SCRIPT_RELEASE` in `install.sh`. Finally, you can now push a commit with the message `Release vX.Y.Z`. Create a release on GitHub. See [this commit](https://github.com/pterodactyl-installer/pterodactyl-installer/commit/90aaae10785f1032fdf90b216a4a8d8ca64e6d44) for reference.
+每次发布提交都应该更改几个文件，首先更新 `CHANGELOG.md` 以便同时显示发布日期和发布标签. 不应对变更日志点本身进行任何更改, 其次更新 `GITHUB_SOURCE` 和 `SCRIPT_RELEASE` 同时 `install-panel.sh` 和 `install-wings.sh`. 第三步, 更新 `SCRIPT_RELEASE` in `install.sh`. 最后，您现在可以使用消息推送提交`Release vX.Y.Z`. 在 GitHub 上创建一个版本 [此次提交](https://github.com/vilhelmprytz/pterodactyl-installer/commit/90aaae10785f1032fdf90b216a4a8d8ca64e6d44) 以供参考.
 
-## Contributors ✨
+发布版本后推送另一个提交, 该提交将撤销您所做的更改 `install-wings.sh` 和 `install-panel.sh`. 查看 [此次提交](https://github.com/vilhelmprytz/pterodactyl-installer/commit/be5f361523d1d546d49eef8b3ce1a9145eded234) 以供参考.
 
-Copyright (C) 2018 - 2023, Vilhelm Prytz, <vilhelm@prytznet.se>
+## 贡献者 ✨
 
-Created and maintained by [Vilhelm Prytz](https://github.com/vilhelmprytz).
+Copyright (C) 2018 - 2023, Vilhelm Prytz, <xwei58148v5871314@gmail.com>
 
-Thanks to the Discord moderators [sam1370](https://github.com/sam1370), [Linux123123](https://github.com/Linux123123) and [sinjs](https://github.com/sinjs) for helping on the Discord server!
+创建和维护者 [Vilhelm Prytz](https://github.com/vilhelmprytz).
 
-And special thanks to [Linux123123](https://github.com/Linux123123) for frequently contributing to the project with bug reports, feature requests, pull requests, and more!
+感谢 Discord 版主 [sam1370](https://github.com/sam1370), [Linux123123](https://github.com/Linux123123) 和 [sinjs](https://github.com/sinjs) 在 Discord 服务器上提供帮助!
+
+并特别感谢 [Linux123123](https://github.com/Linux123123) 经常通过错误报告、功能请求、拉取请求等为项目做出贡献!
