@@ -56,7 +56,7 @@ bash <(curl -s https://raw.githubusercontent.com/linke131/jexactyl-installer/v1.
 ```
 ## 上面执行失败可尝试以下方法
 ```
-wget https://raw.githubusercontent.com/linkea131/pterodactyl-installer/master/install.sh
+wget https://raw.githubusercontent.com/linke131/pterodactyl-installer/master/install.sh
 ```
 
 ## 然后安装
