@@ -146,7 +146,7 @@ configure() {
     --redis-pass="null" \
     --redis-port="6379" \
     --settings-ui=true \
-    --telementry=true
+    --telemetry=true
 
   # Fill in environment:database credentials automatically
   php artisan p:environment:database \
