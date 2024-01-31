@@ -202,8 +202,8 @@ create_db_user() {
 
   output "Creating database user $db_user_name..."
 
-  mysql -u root -e "CREATE USER '$db_user_name'@'$db_host' IDENTIFIED BY '$db_user_password';"
-  mysql -u root -e "FLUSH PRIVILEGES;"
+  mariadb -u root -e "CREATE USER '$db_user_name'@'$db_host' IDENTIFIED BY '$db_user_password';"
+  mariadb -u root -e "FLUSH PRIVILEGES;"
 
   output "Database user $db_user_name created"
 }
@@ -215,8 +215,8 @@ grant_all_privileges() {
 
   output "Granting all privileges on $db_name to $db_user_name..."
 
-  mysql -u root -e "GRANT ALL PRIVILEGES ON $db_name.* TO '$db_user_name'@'$db_host' WITH GRANT OPTION;"
-  mysql -u root -e "FLUSH PRIVILEGES;"
+  mariadb -u root -e "GRANT ALL PRIVILEGES ON $db_name.* TO '$db_user_name'@'$db_host' WITH GRANT OPTION;"
+  mariadb -u root -e "FLUSH PRIVILEGES;"
 
   output "Privileges granted"
 
@@ -229,7 +229,7 @@ create_db() {
 
   output "Creating database $db_name..."
 
-  mysql -u root -e "CREATE DATABASE $db_name;"
+  mariadb -u root -e "CREATE DATABASE $db_name;"
   grant_all_privileges "$db_name" "$db_user_name" "$db_host"
 
   output "Database $db_name created"

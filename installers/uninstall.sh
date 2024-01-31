@@ -98,7 +98,7 @@ rm_cron() {
 
 rm_database() {
   output "Removing database..."
-  valid_db=$(mysql -u root -e "SELECT schema_name FROM information_schema.schemata;" | grep -v -E -- 'schema_name|information_schema|performance_schema|mysql')
+  valid_db=$(mariadb -u root -e "SELECT schema_name FROM information_schema.schemata;" | grep -v -E -- 'schema_name|information_schema|performance_schema|mysql')
   warning "Be careful! This database will be deleted!"
   if [[ "$valid_db" == *"panel"* ]]; then
     echo -n "* Database called panel has been detected. Is it the pterodactyl database? (y/N): "
@@ -120,10 +120,10 @@ rm_database() {
       break
     fi
   done
-  [[ -n "$DATABASE" ]] && mysql -u root -e "DROP DATABASE $DATABASE;"
+  [[ -n "$DATABASE" ]] && mariadb -u root -e "DROP DATABASE $DATABASE;"
   # Exclude usernames User and root (Hope no one uses username User)
   output "Removing database user..."
-  valid_users=$(mysql -u root -e "SELECT user FROM mysql.user;" | grep -v -E -- 'user|root')
+  valid_users=$(mariadb -u root -e "SELECT user FROM mysql.user;" | grep -v -E -- 'user|root')
   warning "Be careful! This user will be deleted!"
   if [[ "$valid_users" == *"pterodactyl"* ]]; then
     echo -n "* User called pterodactyl has been detected. Is it the pterodactyl user? (y/N): "
@@ -145,8 +145,8 @@ rm_database() {
       break
     fi
   done
-  [[ -n "$DB_USER" ]] && mysql -u root -e "DROP USER $DB_USER@'127.0.0.1';"
-  mysql -u root -e "FLUSH PRIVILEGES;"
+  [[ -n "$DB_USER" ]] && mariadb -u root -e "DROP USER $DB_USER@'127.0.0.1';"
+  mariadb -u root -e "FLUSH PRIVILEGES;"
   success "Removed database and database user."
 }
 
