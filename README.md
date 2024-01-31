@@ -105,7 +105,7 @@ In `install.sh` github source and script release variables should change every r
 
 ## Contributors ✨
 
-Copyright (C) 2018 - 2023, Vilhelm Prytz, <vilhelm@prytznet.se>
+Copyright (C) 2018 - 2024, Vilhelm Prytz, <vilhelm@prytznet.se>
 
 Created and maintained by [Vilhelm Prytz](https://github.com/vilhelmprytz).
 
