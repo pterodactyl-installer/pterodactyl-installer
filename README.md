@@ -36,6 +36,7 @@ List of supported installation setups for panel and Wings (installations support
 |                  | 18.04   | :red_circle: \*    | 8.1         |
 |                  | 20.04   | :white_check_mark: | 8.1         |
 |                  | 22.04   | :white_check_mark: | 8.1         |
+|                  | 24.04   | :white_check_mark: | 8.1         |
 | Debian           | 8       | :red_circle: \*    |             |
 |                  | 9       | :red_circle: \*    |             |
 |                  | 10      | :white_check_mark: | 8.1         |
@@ -87,6 +88,7 @@ vagrant up <name>
 
 Replace name with one of the following (supported installations).
 
+- `ubuntu_noble`
 - `ubuntu_jammy`
 - `ubuntu_focal`
 - `debian_bullseye`
