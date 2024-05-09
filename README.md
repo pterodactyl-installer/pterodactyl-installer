@@ -88,6 +88,7 @@ vagrant up <name>
 
 Replace name with one of the following (supported installations).
 
+- `ubuntu_noble`
 - `ubuntu_jammy`
 - `ubuntu_focal`
 - `debian_bullseye`
