@@ -24,6 +24,7 @@ jobs:
       fail-fast: false
       matrix:
         os:
+          - ubuntu_noble
           - ubuntu_focal
           - ubuntu_jammy
           - debian_buster
