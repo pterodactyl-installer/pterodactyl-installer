@@ -40,7 +40,7 @@ fi
 
 INSTALL_MARIADB="${INSTALL_MARIADB:-false}"
 
-# firewall
+# Firewall
 CONFIGURE_FIREWALL="${CONFIGURE_FIREWALL:-false}"
 
 # SSL (Let's Encrypt)
