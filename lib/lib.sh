@@ -102,7 +102,7 @@ print_brake() {
     echo -n "#"
   done
   echo ""
-} 
+}
 
 print_list() {
   print_brake 30
@@ -530,6 +530,7 @@ case "$OS" in
 ubuntu)
   [ "$OS_VER_MAJOR" == "20" ] && SUPPORTED=true
   [ "$OS_VER_MAJOR" == "22" ] && SUPPORTED=true
+  [ "$OS_VER_MAJOR" == "24" ] && SUPPORTED=true
   export DEBIAN_FRONTEND=noninteractive
   ;;
 debian)
