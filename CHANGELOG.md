@@ -2,6 +2,18 @@
 
 This project follows the [semantic versioning](https://semver.org) convention. Changelog points should be divided into fixed, changed, or added.
 
+## next-release
+
+### Fixed
+
+- [#451](https://github.com/pterodactyl-installer/pterodactyl-installer/pull/451) all: Update copyright year to 2024 (thanks [@BeastGamer81](https://github.com/BeastGamer81) for contributing!).
+- [#452](https://github.com/pterodactyl-installer/pterodactyl-installer/issues/452) panel/wings: Replace mysql commands with mariadb
+- [#480](https://github.com/pterodactyl-installer/pterodactyl-installer/pull/480) panel: update default pteroq.service file
+
+### Added
+
+- [#467](https://github.com/pterodactyl-installer/pterodactyl-installer/issues/467) panel/wings: add support for Ubuntu 24.04
+
 ## v1.0.0 (released on 2023-07-31)
 
 ### Added
