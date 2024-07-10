@@ -2,7 +2,7 @@
 
 This project follows the [semantic versioning](https://semver.org) convention. Changelog points should be divided into fixed, changed, or added.
 
-## next-release
+## v1.1.0 (released on 2024-07-10)
 
 ### Fixed
 
