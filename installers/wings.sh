@@ -138,7 +138,12 @@ firewall_ports() {
   [ "$CONFIGURE_LETSENCRYPT" == true ] && firewall_allow_ports "80 443"
   [ "$CONFIGURE_DB_FIREWALL" == true ] && firewall_allow_ports "3306"
 
-  firewall_allow_ports "22 8080 2022"
+  firewall_allow_ports "22"
+  output "Allowed port 22"
+  firewall_allow_ports "8080"
+  output "Allowed port 8080"
+  firewall_allow_ports "2022"
+  output "Allowed port 2022"
 
   success "Firewall ports opened!"
 }
