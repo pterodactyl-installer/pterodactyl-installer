@@ -65,11 +65,12 @@ rm_docker_containers() {
 rm_wings_files() {
   output "Removing wings files..."
 
-  # stop and remove wings service
   systemctl disable --now wings
-  rm -rf /etc/systemd/system/wings.service
+  [ -f /etc/systemd/system/wings.service ] && rm -rf /etc/systemd/system/wings.service
 
-  rm -rf /etc/pterodactyl /usr/local/bin/wings /var/lib/pterodactyl
+  [ -d /etc/pterodactyl ] && rm -rf /etc/pterodactyl
+  [ -f /usr/local/bin/wings ] && rm -rf /usr/local/bin/wings
+  [ -d /var/lib/pterodactyl ] && rm -rf /var/lib/pterodactyl
   success "Removed wings files."
 }
 
