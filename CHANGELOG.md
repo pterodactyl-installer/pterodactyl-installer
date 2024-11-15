@@ -2,7 +2,7 @@
 
 This project follows the [semantic versioning](https://semver.org) convention. Changelog points should be divided into fixed, changed, or added.
 
-## next-release
+## v1.1.1 (released on 2024-11-15)
 ### Fixed
 - [#514](https://github.com/pterodactyl-installer/pterodactyl-installer/pull/514) panel: Update PHP from 8.1 to 8.3 (thanks [@SuperEvilLuke](https://github.com/SuperEvilLuke) for contributing!)
 - [#502](https://github.com/pterodactyl-installer/pterodactyl-installer/pull/502) panel/wings: Added more checks and more verbose logging to uninstallation script. (thanks [QXIoa](https://github.com/QXIoa) for contributing!)

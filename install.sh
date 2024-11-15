@@ -28,8 +28,8 @@ set -e
 #                                                                                    #
 ######################################################################################
 
-export GITHUB_SOURCE="v1.1.0"
-export SCRIPT_RELEASE="v1.1.0"
+GITHUB_SOURCE="v1.1.1"
+SCRIPT_RELEASE="v1.1.1"
 export GITHUB_BASE_URL="https://raw.githubusercontent.com/pterodactyl-installer/pterodactyl-installer"
 
 LOG_PATH="/var/log/pterodactyl-installer.log"
@@ -50,7 +50,7 @@ source /tmp/lib.sh
 execute() {
   echo -e "\n\n* pterodactyl-installer $(date) \n\n" >>$LOG_PATH
 
-  [[ "$1" == *"canary"* ]] && export GITHUB_SOURCE="master" && export SCRIPT_RELEASE="canary"
+SCRIPT_RELEASE="v1.1.1"
   update_lib_source
   run_ui "${1//_canary/}" |& tee -a $LOG_PATH
 
