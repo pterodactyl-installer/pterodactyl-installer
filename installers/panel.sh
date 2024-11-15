@@ -252,7 +252,7 @@ ubuntu_dep() {
   # Add Ubuntu universe repo
   add-apt-repository universe -y
 
-  # Add PPA for PHP (we need 8.1)
+  # Add PPA for PHP (we need 8.3)
   LC_ALL=C.UTF-8 add-apt-repository -y ppa:ondrej/php
 }
 
@@ -260,7 +260,7 @@ debian_dep() {
   # Install deps for adding repos
   install_packages "dirmngr ca-certificates apt-transport-https lsb-release"
 
-  # Install PHP 8.1 using sury's repo
+  # Install PHP 8.3 using sury's repo
   curl -o /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
   echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/php.list
 }
@@ -270,9 +270,9 @@ alma_rocky_dep() {
   install_packages "policycoreutils selinux-policy selinux-policy-targeted \
     setroubleshoot-server setools setools-console mcstrans"
 
-  # add remi repo (php8.1)
+  # add remi repo (php8.3)
   install_packages "epel-release http://rpms.remirepo.net/enterprise/remi-release-$OS_VER_MAJOR.rpm"
-  dnf module enable -y php:remi-8.1
+  dnf module enable -y php:remi-8.3
 }
 
 dep_install() {
@@ -291,7 +291,7 @@ dep_install() {
     update_repos
 
     # Install dependencies
-    install_packages "php8.1 php8.1-{cli,common,gd,mysql,mbstring,bcmath,xml,fpm,curl,zip} \
+    install_packages "php8.3 php8.3-{cli,common,gd,mysql,mbstring,bcmath,xml,fpm,curl,zip} \
       mariadb-common mariadb-server mariadb-client \
       nginx \
       redis-server \
@@ -377,7 +377,7 @@ configure_nginx() {
 
   case "$OS" in
   ubuntu | debian)
-    PHP_SOCKET="/run/php/php8.1-fpm.sock"
+    PHP_SOCKET="/run/php/php8.3-fpm.sock"
     CONFIG_PATH_AVAIL="/etc/nginx/sites-available"
     CONFIG_PATH_ENABL="/etc/nginx/sites-enabled"
     ;;
