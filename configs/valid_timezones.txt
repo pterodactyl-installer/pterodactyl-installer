@@ -271,7 +271,7 @@ Europe/Gibraltar
 Europe/Helsinki
 Europe/Istanbul
 Europe/Kaliningrad
-Europe/Kiev
+Europe/Kyiv
 Europe/Kirov
 Europe/Lisbon
 Europe/London
