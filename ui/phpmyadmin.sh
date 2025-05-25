@@ -107,7 +107,7 @@ main() {
 
   # set FQDN
   while [ -z "$FQDN" ]; do
-    echo -n "* Set the FQDN of this panel (panel.example.com): "
+    echo -n "* Set the FQDN of PHPMyAdmin (phpmyadmin.example.com): "
     read -r FQDN
     [ -z "$FQDN" ] && error "FQDN cannot be empty"
   done
