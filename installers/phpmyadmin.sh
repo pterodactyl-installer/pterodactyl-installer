@@ -143,7 +143,8 @@ dep_install() {
     update_repos
 
     # Install dependencies
-    install_packages "php8.3 php8.3-{cli,common,gd,mysql,mbstring,bcmath,xml,fpm,curl,zip,imagick,phpseclib,php-gettext,curl,bz2,intl,gmp} \
+    install_packages "php8.3 php8.3-{cli,common,gd,mysql,mbstring,bcmath,xml,fpm,curl,zip,curl,bz2,intl,gmp} \
+      php-{phpseclib,imagick,php-gettext} \
       nginx \
       zip unzip tar \
       git cron"
@@ -155,7 +156,7 @@ dep_install() {
     alma_rocky_dep
 
     # Install dependencies
-    install_packages "php php-{common,fpm,cli,json,mysqlnd,mcrypt,gd,mbstring,pdo,zip,bcmath,dom,opcache,posix,imagick,phpseclib,php-gettext,curl,bz2,intl,gmp} \
+    install_packages "php php-{common,fpm,cli,json,mysqlnd,mcrypt,gd,mbstring,pdo,zip,bcmath,dom,opcache,posix,imagick,curl,bz2,intl,gmp} \
       zip unzip tar \
       git cronie"
 
