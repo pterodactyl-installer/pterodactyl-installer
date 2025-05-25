@@ -38,23 +38,18 @@ fi
 
 # ------------------ Variables ----------------- #
 
-# Install mariadb
-export INSTALL_MARIADB=false
+# Domain name / IP
+export FQDN=""
+
+# Environment
+export email=""
+
+# Assume SSL, will fetch different config if true
+export ASSUME_SSL=false
+export CONFIGURE_LETSENCRYPT=false
 
 # Firewall
 export CONFIGURE_FIREWALL=false
-
-# SSL (Let's Encrypt)
-export CONFIGURE_LETSENCRYPT=false
-export FQDN=""
-export EMAIL=""
-
-# Database host
-export CONFIGURE_DBHOST=false
-export CONFIGURE_DB_FIREWALL=false
-export MYSQL_DBHOST_HOST="127.0.0.1"
-export MYSQL_DBHOST_USER="pterodactyluser"
-export MYSQL_DBHOST_PASSWORD=""
 
 # ------------ User input functions ------------ #
 
@@ -63,19 +58,34 @@ ask_letsencrypt() {
     warning "Let's Encrypt requires port 80/443 to be opened! You have opted out of the automatic firewall configuration; use this at your own risk (if port 80/443 is closed, the script will fail)!"
   fi
 
-  warning "You cannot use Let's Encrypt with your hostname as an IP address! It must be a FQDN (e.g. node.example.org)."
-
   echo -e -n "* Do you want to automatically configure HTTPS using Let's Encrypt? (y/N): "
   read -r CONFIRM_SSL
 
   if [[ "$CONFIRM_SSL" =~ [Yy] ]]; then
     CONFIGURE_LETSENCRYPT=true
+    ASSUME_SSL=false
   fi
 }
 
-####################
-## MAIN FUNCTIONS ##
-####################
+ask_assume_ssl() {
+  output "Let's Encrypt is not going to be automatically configured by this script (user opted out)."
+  output "You can 'assume' Let's Encrypt, which means the script will download a nginx configuration that is configured to use a Let's Encrypt certificate but the script won't obtain the certificate for you."
+  output "If you assume SSL and do not obtain the certificate, your installation will not work."
+  echo -n "* Assume SSL or not? (y/N): "
+  read -r ASSUME_SSL_INPUT
+
+  [[ "$ASSUME_SSL_INPUT" =~ [Yy] ]] && ASSUME_SSL=true
+  true
+}
+
+check_FQDN_SSL() {
+  if [[ $(invalid_ip "$FQDN") == 1 && $FQDN != 'localhost' ]]; then
+    SSL_AVAILABLE=true
+  else
+    warning "* Let's Encrypt will not be available for IP addresses."
+    output "To use Let's Encrypt, you must use a valid domain name."
+  fi
+}
 
 main() {
   # check if we can detect an already existing installation
@@ -91,51 +101,41 @@ main() {
 
   welcome "phpmyadmin"
 
+  email_input email "Provide the email address that will be used to configure Let's Encrypt for PHPMyAdmin: " "Email cannot be empty or invalid"
+
   print_brake 42
 
+  # set FQDN
+  while [ -z "$FQDN" ]; do
+    echo -n "* Set the FQDN of this panel (panel.example.com): "
+    read -r FQDN
+    [ -z "$FQDN" ] && error "FQDN cannot be empty"
+  done
+  
+  # Check if SSL is available
+  check_FQDN_SSL
+
+  # Ask if firewall is needed
   ask_firewall CONFIGURE_FIREWALL
 
-  ask_letsencrypt
-
-  if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
-    while [ -z "$FQDN" ]; do
-      echo -n "* Set the FQDN to use for Let's Encrypt (phpmyadmin.example.com): "
-      read -r FQDN
-
-      ASK=false
-
-      [ -z "$FQDN" ] && error "FQDN cannot be empty"                                                            # check if FQDN is empty
-      bash <(curl -s "$GITHUB_URL"/lib/verify-fqdn.sh) "$FQDN" || ASK=true                                      # check if FQDN is valid
-      [ -d "/etc/letsencrypt/live/$FQDN/" ] && error "A certificate with this FQDN already exists!" && ASK=true # check if cert exists
-
-      [ "$ASK" == true ] && FQDN=""
-      [ "$ASK" == true ] && echo -e -n "* Do you still want to automatically configure HTTPS using Let's Encrypt? (y/N): "
-      [ "$ASK" == true ] && read -r CONFIRM_SSL
-
-      if [[ ! "$CONFIRM_SSL" =~ [Yy] ]] && [ "$ASK" == true ]; then
-        CONFIGURE_LETSENCRYPT=false
-        FQDN=""
-      fi
-    done
+  # Only ask about SSL if it is available
+  if [ "$SSL_AVAILABLE" == true ]; then
+    # Ask if letsencrypt is needed
+    ask_letsencrypt
+    # If it's already true, this should be a no-brainer
+    [ "$CONFIGURE_LETSENCRYPT" == false ] && ask_assume_ssl
   fi
 
-  if [ "$CONFIGURE_LETSENCRYPT" == true ]; then
-    # set EMAIL
-    while ! valid_email "$EMAIL"; do
-      echo -n "* Enter email address for Let's Encrypt: "
-      read -r EMAIL
-
-      valid_email "$EMAIL" || error "Email cannot be empty or invalid"
-    done
-  fi
+  # verify FQDN if user has selected to assume SSL or configure Let's Encrypt
+  [ "$CONFIGURE_LETSENCRYPT" == true ] || [ "$ASSUME_SSL" == true ] && bash <(curl -s "$GITHUB_URL"/lib/verify-fqdn.sh) "$FQDN"
 
   summary
 
-  echo -n "* Proceed with installation? (y/N): "
-
+  # confirm installation
+  echo -e -n "\n* Initial configuration completed. Continue with installation? (y/N): "
   read -r CONFIRM
   if [[ "$CONFIRM" =~ [Yy] ]]; then
-    run_installer "phpmyadmin"
+    run_installer "panel"
   else
     error "Installation aborted."
     exit 1
@@ -146,7 +146,7 @@ main() {
 summary() {
   print_brake 62
   output "Pterodactyl panel $PHPMYADMIN_VERSION with nginx on $OS"
-  output "Email: $EMAIL"
+  output "Email: $email"
   output "Hostname/FQDN: $FQDN"
   output "Configure Firewall? $CONFIGURE_FIREWALL"
   output "Configure Let's Encrypt? $CONFIGURE_LETSENCRYPT"
@@ -154,13 +154,19 @@ summary() {
 }
 
 function goodbye {
-  echo ""
-  print_brake 70
+  print_brake 62
   echo "* PHPMyAdmin installation completed"
-  echo "*"
-  [ "$CONFIGURE_FIREWALL" == false ] && echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you haven't configured your firewall, ports 80 and 443 needs to be open."
-  print_brake 70
-  echo ""
+  output ""
+
+  [ "$CONFIGURE_LETSENCRYPT" == true ] && output "PHPMyAdmin should be accessible from $(hyperlink "$FQDN")"
+  [ "$ASSUME_SSL" == true ] && [ "$CONFIGURE_LETSENCRYPT" == false ] && output "You have opted in to use SSL, but not via Let's Encrypt automatically. PHPMyAdmin will not work until SSL has been configured."
+  [ "$ASSUME_SSL" == false ] && [ "$CONFIGURE_LETSENCRYPT" == false ] && output "PHPMyAdmin should be accessible from $(hyperlink "$FQDN")"
+
+  output ""
+  output "Installation is using nginx on $OS"
+  output "Thank you for using this script."
+  [ "$CONFIGURE_FIREWALL" == false ] && echo -e "* ${COLOR_RED}Note${COLOR_NC}: If you haven't configured the firewall: 80/443 (HTTP/HTTPS) is required to be open!"
+  print_brake 62
 }
 
 # run script
