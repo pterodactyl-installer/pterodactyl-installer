@@ -44,7 +44,7 @@ CONFIGURE_FIREWALL="${CONFIGURE_FIREWALL:-false}"
 # SSL (Let's Encrypt)
 CONFIGURE_LETSENCRYPT="${CONFIGURE_LETSENCRYPT:-false}"
 FQDN="${FQDN:-}"
-EMAIL="${EMAIL:-}"
+email="${email:-}"
 
 # ----------- Installation functions ----------- #
 
@@ -202,7 +202,7 @@ letsencrypt() {
   output "Configuring Let's Encrypt..."
 
   # Obtain certificate
-  certbot --nginx --redirect --no-eff-email --email "$EMAIL" -d "$FQDN" || FAILED=true
+  certbot --nginx --redirect --no-eff-email --email "$email" -d "$FQDN" || FAILED=true
 
   # Check if it succeded
   if [ ! -d "/etc/letsencrypt/live/$FQDN/" ] || [ "$FAILED" == true ]; then
