@@ -86,11 +86,15 @@ while [ "$done" == false ]; do
     "panel"
     "wings"
     "panel;wings"
+    "phpmyadmin"
+    "panel;wings;phpmyadmin"
     # "uninstall"
 
     "panel_canary"
     "wings_canary"
     "panel_canary;wings_canary"
+    "phpmyadmin_canary"
+    "panel_canary;wings_canary;phpmyadmin_canary"
     "uninstall_canary"
   )
 
