@@ -135,7 +135,7 @@ main() {
   echo -e -n "\n* Initial configuration completed. Continue with installation? (y/N): "
   read -r CONFIRM
   if [[ "$CONFIRM" =~ [Yy] ]]; then
-    run_installer "panel"
+    run_installer "phpmyadmin"
   else
     error "Installation aborted."
     exit 1
