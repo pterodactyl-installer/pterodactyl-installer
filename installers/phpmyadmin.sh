@@ -183,7 +183,7 @@ cookie_auth() {
   cp /var/www/phpmyadmin/config.sample.inc.php /var/www/phpmyadmin/config.inc.php
 
   secret=$(LC_ALL=C tr -dc 'A-Za-z0-9!"#%&()*+,-.:;<=>?@[]^_{|}~' </dev/urandom | head -c 32)
-  sed -i sed -e "s/\(\$cfg\\['blowfish_secret'\\] = '\)'/\1$secret'/g" /var/www/phpmyadmin/config.inc.php
+  sed -i -e "s/\(\$cfg\\['blowfish_secret'\\] = '\)'/\1$secret'/g" /var/www/phpmyadmin/config.inc.php
 
   success "Blowfish secret configured!"
 }
