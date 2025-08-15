@@ -30,6 +30,7 @@ jobs:
           - debian_buster
           - debian_bullseye
           - debian_bookworm
+          - debian_trixie
           - rockylinux_8
           - rockylinux_9
           - almalinux_8
