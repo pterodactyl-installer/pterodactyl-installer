@@ -531,6 +531,7 @@ ubuntu)
   [ "$OS_VER_MAJOR" == "20" ] && SUPPORTED=true
   [ "$OS_VER_MAJOR" == "22" ] && SUPPORTED=true
   [ "$OS_VER_MAJOR" == "24" ] && SUPPORTED=true
+  [ "$OS_VER_MAJOR" == "25" ] && SUPPORTED=true
   export DEBIAN_FRONTEND=noninteractive
   ;;
 debian)
