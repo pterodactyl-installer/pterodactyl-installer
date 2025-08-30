@@ -53,6 +53,13 @@ Vagrant.configure("2") do |config|
     end
   end
 
+  config.vm.define "debian_trixie" do |debian_trixie|
+    debian_trixie.vm.box = "debian/trixie64"
+    debian_trixie.vm.provider "virtualbox" do |vb|
+      vb.memory = "4096"
+    end
+  end
+
   # Define AlmaLinux VMs
   config.vm.define "almalinux_8" do |almalinux_8|
     almalinux_8.vm.box = "almalinux/8"
