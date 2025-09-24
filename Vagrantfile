@@ -24,13 +24,6 @@ Vagrant.configure("2") do |config|
     end
   end
 
-  config.vm.define "ubuntu_focal" do |ubuntu_focal|
-    ubuntu_focal.vm.box = "ubuntu/focal64"
-    ubuntu_focal.vm.provider "virtualbox" do |vb|
-      vb.memory = "4096"
-    end
-  end
-
   # Define Debian VMs
   config.vm.define "debian_bullseye" do |debian_bullseye|
     debian_bullseye.vm.box = "debian/bullseye64"
