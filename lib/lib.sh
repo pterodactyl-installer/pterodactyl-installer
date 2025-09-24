@@ -37,6 +37,7 @@ export SCRIPT_RELEASE=${SCRIPT_RELEASE:-canary}
 # Pterodactyl versions
 export PTERODACTYL_PANEL_VERSION=""
 export PTERODACTYL_WINGS_VERSION=""
+export PHPMYADMIN_VERSION=""
 
 # Path (export everything that is possible, doesn't matter that it exists already)
 export PATH="$PATH:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
@@ -52,6 +53,7 @@ export SUPPORTED=false
 export PANEL_DL_URL="https://github.com/pterodactyl/panel/releases/latest/download/panel.tar.gz"
 export WINGS_DL_BASE_URL="https://github.com/pterodactyl/wings/releases/latest/download/wings_linux_"
 export MARIADB_URL="https://downloads.mariadb.com/MariaDB/mariadb_repo_setup"
+export PHPMYADMIN_URL="https://www.phpmyadmin.net/downloads/phpMyAdmin-latest-all-languages.zip"
 export GITHUB_BASE_URL=${GITHUB_BASE_URL:-"https://raw.githubusercontent.com/pterodactyl-installer/pterodactyl-installer"}
 export GITHUB_URL="$GITHUB_BASE_URL/$GITHUB_SOURCE"
 
@@ -134,6 +136,8 @@ welcome() {
     output "Latest pterodactyl/panel is $PTERODACTYL_PANEL_VERSION"
   elif [ "$1" == "wings" ]; then
     output "Latest pterodactyl/wings is $PTERODACTYL_WINGS_VERSION"
+  elif [ "$1" == "phpmyadmin/phpmyadmin" ]; then
+    output "Latest phpmyadmin/phpmyadmin is $PHPMYADMIN_VERSION"
   fi
   print_brake 70
 }
@@ -150,6 +154,7 @@ get_latest_versions() {
   output "Retrieving release information..."
   PTERODACTYL_PANEL_VERSION=$(get_latest_release "pterodactyl/panel")
   PTERODACTYL_WINGS_VERSION=$(get_latest_release "pterodactyl/wings")
+  PHPMYADMIN_VERSION=$(get_latest_release "phpmyadmin/phpmyadmin")
 }
 
 update_lib_source() {
