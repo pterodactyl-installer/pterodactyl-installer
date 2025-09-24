@@ -2,8 +2,22 @@
 
 This project follows the [semantic versioning](https://semver.org) convention. Changelog points should be divided into fixed, changed, or added.
 
-## v1.1.1 (released on 2024-11-15)
+## next-release
+
 ### Fixed
+
+- [a1016ac](https://github.com/pterodactyl-installer/pterodactyl-installer/commit/a1016ac8dfe0a833200b99f84e139063c05ba00b) install: Add back export to variables
+- [#523](https://github.com/pterodactyl-installer/pterodactyl-installer/pull/523) all: update copyright year to 2025
+- [#529](https://github.com/pterodactyl-installer/pterodactyl-installer/pull/529) panel: Europe/Kiev renamed to Europe/Kyiv
+
+### Added
+
+- [#543](https://github.com/pterodactyl-installer/pterodactyl-installer/pull/543) all: Add debian 13 support
+
+## v1.1.1 (released on 2024-11-15)
+
+### Fixed
+
 - [#514](https://github.com/pterodactyl-installer/pterodactyl-installer/pull/514) panel: Update PHP from 8.1 to 8.3 (thanks [@SuperEvilLuke](https://github.com/SuperEvilLuke) for contributing!)
 - [#502](https://github.com/pterodactyl-installer/pterodactyl-installer/pull/502) panel/wings: Added more checks and more verbose logging to uninstallation script. (thanks [QXIoa](https://github.com/QXIoa) for contributing!)
 
