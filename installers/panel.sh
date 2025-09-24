@@ -379,16 +379,16 @@ configure_nginx() {
   ubuntu | debian)
     PHP_SOCKET="/run/php/php8.3-fpm.sock"
     CONFIG_PATH_AVAIL="/etc/nginx/sites-available"
-    CONFIG_PATH_ENABL="/etc/nginx/sites-enabled"
+    CONFIG_PATH_ENABLE="/etc/nginx/sites-enabled"
     ;;
   rocky | almalinux)
     PHP_SOCKET="/var/run/php-fpm/pterodactyl.sock"
     CONFIG_PATH_AVAIL="/etc/nginx/conf.d"
-    CONFIG_PATH_ENABL="$CONFIG_PATH_AVAIL"
+    CONFIG_PATH_ENABLE="$CONFIG_PATH_AVAIL"
     ;;
   esac
 
-  rm -rf "$CONFIG_PATH_ENABL"/default
+  rm -rf "$CONFIG_PATH_ENABLE"/default
 
   curl -o "$CONFIG_PATH_AVAIL"/pterodactyl.conf "$GITHUB_URL"/configs/$DL_FILE
 
@@ -398,7 +398,7 @@ configure_nginx() {
 
   case "$OS" in
   ubuntu | debian)
-    ln -sf "$CONFIG_PATH_AVAIL"/pterodactyl.conf "$CONFIG_PATH_ENABL"/pterodactyl.conf
+    ln -sf "$CONFIG_PATH_AVAIL"/pterodactyl.conf "$CONFIG_PATH_ENABLE"/pterodactyl.conf
     ;;
   esac
 
