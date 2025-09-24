@@ -34,7 +34,7 @@ List of supported installation setups for panel and Wings (installations support
 | Ubuntu           | 14.04   | :red_circle:       |             |
 |                  | 16.04   | :red_circle: \*    |             |
 |                  | 18.04   | :red_circle: \*    |             |
-|                  | 20.04   | :white_check_mark: | 8.3         |
+|                  | 20.04   | :red_circle: \*    |             |
 |                  | 22.04   | :white_check_mark: | 8.3         |
 |                  | 24.04   | :white_check_mark: | 8.3         |
 | Debian           | 8       | :red_circle: \*    |             |
@@ -90,7 +90,6 @@ vagrant up <name>
 Replace name with one of the following (supported installations).
 
 - `ubuntu_jammy`
-- `ubuntu_focal`
 - `debian_bullseye`
 - `debian_buster`
 - `debian_bookworm`
