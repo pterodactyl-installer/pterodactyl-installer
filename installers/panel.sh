@@ -387,6 +387,8 @@ configure_nginx() {
     CONFIG_PATH_ENABL="$CONFIG_PATH_AVAIL"
     ;;
   esac
+  WEBSITE_ROOT="pterodactyl/public"
+  LOG_PREFIX="pterodactyl"
 
   rm -rf "$CONFIG_PATH_ENABL"/default
 
@@ -395,6 +397,10 @@ configure_nginx() {
   sed -i -e "s@<domain>@${FQDN}@g" "$CONFIG_PATH_AVAIL"/pterodactyl.conf
 
   sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" "$CONFIG_PATH_AVAIL"/pterodactyl.conf
+
+  sed -i -e "s@<website_root>@${WEBSITE_ROOT}@g" "$CONFIG_PATH_AVAIL"/pterodactyl.conf
+
+  sed -i -e "s@<log_prefix>@${LOG_PREFIX}@g" "$CONFIG_PATH_AVAIL"/pterodactyl.conf
 
   case "$OS" in
   ubuntu | debian)
