@@ -237,19 +237,29 @@ create_db() {
 
 # --------------- Package Manager -------------- #
 
-# Argument for quite mode
 update_repos() {
   local args=""
-  [[ $1 == true ]] && args="-qq"
+  
+  [[ "$1" == true ]] && args="-qq"
+
   case "$OS" in
-  ubuntu | debian)
-    apt-get -y $args update
-    ;;
-  *)
-    # Do nothing as AlmaLinux and RockyLinux update metadata before installing packages.
-    ;;
+    ubuntu | debian)
+      output "Updating package repositories..."
+      if ! apt-get update -y $args; then
+        error "Failed to update repositories."
+        return 1
+      fi
+      ;;
+    centos | almalinux | rockylinux)
+      # Skip since these distros auto-refresh metadata
+      output "Skipping repository update (handled automatically on $OS)."
+      ;;
+    *)
+      warning "Unsupported OS: $OS — skipping repository update."
+      ;;
   esac
 }
+
 
 # First argument list of packages to install, second argument for quite mode
 install_packages() {

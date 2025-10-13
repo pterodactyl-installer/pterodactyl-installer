@@ -64,35 +64,21 @@ user_firstname="${user_firstname:-}"
 user_lastname="${user_lastname:-}"
 user_password="${user_password:-}"
 
-if [[ -z "${email}" ]]; then
-  error "Email is required"
+missing=()
+
+for var in email user_email user_username user_firstname user_lastname user_password; do
+  if [[ -z "${!var}" ]]; then
+    missing+=("$var")
+  fi
+done
+
+if (( ${#missing[@]} > 0 )); then
+  for m in "${missing[@]}"; do
+    error "${m} is required"
+  done
   exit 1
 fi
 
-if [[ -z "${user_email}" ]]; then
-  error "User email is required"
-  exit 1
-fi
-
-if [[ -z "${user_username}" ]]; then
-  error "User username is required"
-  exit 1
-fi
-
-if [[ -z "${user_firstname}" ]]; then
-  error "User firstname is required"
-  exit 1
-fi
-
-if [[ -z "${user_lastname}" ]]; then
-  error "User lastname is required"
-  exit 1
-fi
-
-if [[ -z "${user_password}" ]]; then
-  error "User password is required"
-  exit 1
-fi
 
 # --------- Main installation functions -------- #
 
