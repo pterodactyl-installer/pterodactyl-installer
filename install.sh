@@ -4,7 +4,7 @@ set -e
 # =========================
 # CONFIG
 # =========================
-GITHUB_BASE_URL="https://raw.githubusercontent.com/yopi-def/pterodactyl-installer/main"
+GITHUB_BASE_URL="https://raw.githubusercontent.com/yopi-def/pterodactyl-installer/master"
 LOG_PATH="/var/log/pterodactyl-installer.log"
 
 # =========================
