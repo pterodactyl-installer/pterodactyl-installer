@@ -2,8 +2,8 @@
 
 set -e
 
-export GITHUB_SOURCE="v1.2.0"
-export SCRIPT_RELEASE="v1.2.0"
+export GITHUB_SOURCE="master"
+export SCRIPT_RELEASE="master"
 export GITHUB_BASE_URL="https://raw.githubusercontent.com/yopi-def/pterodactyl-installer"
 
 LOG_PATH="/var/log/pterodactyl-installer.log"
