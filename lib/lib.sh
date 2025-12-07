@@ -49,7 +49,7 @@ export ARCH=""
 export SUPPORTED=false
 
 # download URLs
-export PANEL_DL_URL="https://github.com/yopi-def/panel/releases/latest/download/panel.tar.gz"
+export PANEL_DL_URL="https://github.com/yopi-def/panel/archive/refs/heads/master.zip"
 export WINGS_DL_BASE_URL="https://github.com/pterodactyl/wings/releases/latest/download/wings_linux_"
 export MARIADB_URL="https://downloads.mariadb.com/MariaDB/mariadb_repo_setup"
 export GITHUB_BASE_URL=${GITHUB_BASE_URL:-"https://raw.githubusercontent.com/yopi-def/pterodactyl-installer"}
