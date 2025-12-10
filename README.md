@@ -1,5 +1,6 @@
 # :bird: pterodactyl-installer
 
+
 [![Shellcheck](https://github.com/pterodactyl-installer/pterodactyl-installer/actions/workflows/shellcheck.yml/badge.svg)](https://github.com/pterodactyl-installer/pterodactyl-installer/actions/workflows/shellcheck.yml)
 [![License: GPL v3](https://img.shields.io/github/license/pterodactyl-installer/pterodactyl-installer)](LICENSE)
 [![Discord](https://img.shields.io/discord/682342331206074373?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://pterodactyl-installer.se/discord)
