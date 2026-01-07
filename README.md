@@ -15,6 +15,8 @@ Read more about [Pterodactyl](https://pterodactyl.io/) here. This script is not 
 - Automatic installation of the Pterodactyl Wings (Docker, systemd).
 - Panel: (optional) automatic configuration of Let's Encrypt.
 - Panel: (optional) automatic configuration of firewall.
+- Wings: (optional) automatic node configuration using panel auto-deploy token.
+- Wings: (optional) database host configuration for creating game server databases.
 - Uninstallation support for both panel and wings.
 
 ## Help and support
@@ -66,6 +68,37 @@ Here is a [YouTube video](https://www.youtube.com/watch?v=E8UJhyUFoHM) that illu
 ## Firewall setup
 
 The installation scripts can install and configure a firewall for you. The script will ask whether you want this or not. It is highly recommended to opt-in for the automatic firewall setup.
+
+## Auto Node Configuration (Wings)
+
+The Wings installer supports automatic node configuration. This feature allows you to automatically configure Wings by connecting to your panel using an auto-deploy token.
+
+### Prerequisites
+
+Before using this feature, you need to:
+
+1. Have a Pterodactyl Panel already installed and running.
+2. Create a node in your panel (Admin -> Nodes -> Create New).
+3. Generate an auto-deploy token from the node's configuration page (Admin -> Nodes -> [Your Node] -> Configuration -> Generate Token).
+
+### Usage
+
+During the Wings installation, the script will ask if you want to automatically configure the node. You have two options:
+
+#### Option 1: Paste Full Auto-Deploy Command (Recommended)
+
+Simply copy the entire auto-deploy command from your panel and paste it when prompted. 
+Example command from panel:
+```bash
+cd /etc/pterodactyl && sudo wings configure --panel-url https://panel.example.com --token ptla_TjZR2yjajHRTENYD8z3X5ZNJd5JG8ak8Z0KFYAFmy8k --node 1
+```
+
+#### Option 2: Manual Entry
+
+Enter the panel URL and token separately:
+
+- **Panel URL**: The full URL of your Pterodactyl Panel (e.g., `https://panel.example.com`).
+- **Auto-deploy Token**: The token generated from your panel (starts with `ptla_`).
 
 ## Development & Ops
 

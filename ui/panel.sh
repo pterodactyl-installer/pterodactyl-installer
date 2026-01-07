@@ -64,6 +64,9 @@ export CONFIGURE_LETSENCRYPT=false
 # Firewall
 export CONFIGURE_FIREWALL=false
 
+# Blueprint framework
+export INSTALL_BLUEPRINT=false
+
 # ------------ User input functions ------------ #
 
 ask_letsencrypt() {
@@ -89,6 +92,19 @@ ask_assume_ssl() {
 
   [[ "$ASSUME_SSL_INPUT" =~ [Yy] ]] && ASSUME_SSL=true
   true
+}
+
+ask_blueprint() {
+  output ""
+  output "Blueprint is an extension framework for Pterodactyl that allows you to"
+  output "install themes, addons, and extensions to enhance your panel."
+  output "More info: https://blueprint.zip/"
+  echo -e -n "* Do you want to install Blueprint framework? (y/N): "
+  read -r CONFIRM_BLUEPRINT
+
+  if [[ "$CONFIRM_BLUEPRINT" =~ [Yy] ]]; then
+    INSTALL_BLUEPRINT=true
+  fi
 }
 
 check_FQDN_SSL() {
@@ -186,6 +202,9 @@ main() {
   # verify FQDN if user has selected to assume SSL or configure Let's Encrypt
   [ "$CONFIGURE_LETSENCRYPT" == true ] || [ "$ASSUME_SSL" == true ] && bash <(curl -s "$GITHUB_URL"/lib/verify-fqdn.sh) "$FQDN"
 
+  # Ask if Blueprint should be installed
+  ask_blueprint
+
   # summary
   summary
 
@@ -217,6 +236,7 @@ summary() {
   output "Configure Firewall? $CONFIGURE_FIREWALL"
   output "Configure Let's Encrypt? $CONFIGURE_LETSENCRYPT"
   output "Assume SSL? $ASSUME_SSL"
+  output "Install Blueprint? $INSTALL_BLUEPRINT"
   print_brake 62
 }
 
@@ -228,6 +248,8 @@ goodbye() {
   [ "$CONFIGURE_LETSENCRYPT" == true ] && output "Your panel should be accessible from $(hyperlink "$FQDN")"
   [ "$ASSUME_SSL" == true ] && [ "$CONFIGURE_LETSENCRYPT" == false ] && output "You have opted in to use SSL, but not via Let's Encrypt automatically. Your panel will not work until SSL has been configured."
   [ "$ASSUME_SSL" == false ] && [ "$CONFIGURE_LETSENCRYPT" == false ] && output "Your panel should be accessible from $(hyperlink "$FQDN")"
+
+  [ "$INSTALL_BLUEPRINT" == true ] && output "Blueprint framework has been installed. Use 'blueprint' command to manage extensions."
 
   output ""
   output "Installation is using nginx on $OS"

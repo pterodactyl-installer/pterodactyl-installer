@@ -43,6 +43,9 @@ INSTALL_MARIADB="${INSTALL_MARIADB:-false}"
 # firewall
 CONFIGURE_FIREWALL="${CONFIGURE_FIREWALL:-false}"
 
+# Game server ports
+CONFIGURE_GAMESERVER_PORTS="${CONFIGURE_GAMESERVER_PORTS:-false}"
+
 # SSL (Let's Encrypt)
 CONFIGURE_LETSENCRYPT="${CONFIGURE_LETSENCRYPT:-false}"
 FQDN="${FQDN:-}"
@@ -55,8 +58,19 @@ MYSQL_DBHOST_HOST="${MYSQL_DBHOST_HOST:-127.0.0.1}"
 MYSQL_DBHOST_USER="${MYSQL_DBHOST_USER:-pterodactyluser}"
 MYSQL_DBHOST_PASSWORD="${MYSQL_DBHOST_PASSWORD:-}"
 
+# Auto node configuration
+CONFIGURE_NODE="${CONFIGURE_NODE:-false}"
+PANEL_URL="${PANEL_URL:-}"
+NODE_TOKEN="${NODE_TOKEN:-}"
+ALLOW_INSECURE="${ALLOW_INSECURE:-false}"
+
 if [[ $CONFIGURE_DBHOST == true && -z "${MYSQL_DBHOST_PASSWORD}" ]]; then
   error "Mysql database host user password is required"
+  exit 1
+fi
+
+if [[ $CONFIGURE_NODE == true && ( -z "${PANEL_URL}" || -z "${NODE_TOKEN}" ) ]]; then
+  error "Panel URL and node token are required for auto node configuration"
   exit 1
 fi
 
@@ -74,33 +88,46 @@ dep_install() {
 
   [ "$CONFIGURE_FIREWALL" == true ] && install_firewall && firewall_ports
 
+  # Check if Docker is already installed
+  if command -v docker &>/dev/null; then
+    output "Docker is already installed, skipping repository setup. Packages will still be verified..."
+  else
+    # Docker not installed, set up repositories
+    case "$OS" in
+    ubuntu | debian)
+      install_packages "ca-certificates gnupg lsb-release"
+
+      mkdir -p /etc/apt/keyrings
+      curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor --yes -o /etc/apt/keyrings/docker.gpg
+
+      echo \
+        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$OS \
+        $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list >/dev/null
+      ;;
+
+    rocky | almalinux)
+      install_packages "dnf-utils"
+      dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
+
+      install_packages "device-mapper-persistent-data lvm2"
+      ;;
+    esac
+
+    # Update the new repos
+    update_repos
+  fi
+
+  # Install Docker packages - ensures all components are present
+  # For existing Docker: installs any missing packages (e.g., containerd.io)
+  # For fresh install: installs all Docker packages after repo setup
+  install_packages "docker-ce docker-ce-cli containerd.io"
+
+  # Install epel-release for certbot on rocky/almalinux (needed regardless of Docker status)
   case "$OS" in
-  ubuntu | debian)
-    install_packages "ca-certificates gnupg lsb-release"
-
-    mkdir -p /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor --yes -o /etc/apt/keyrings/docker.gpg
-
-    echo \
-      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/$OS \
-      $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list >/dev/null
-    ;;
-
   rocky | almalinux)
-    install_packages "dnf-utils"
-    dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
-
     [ "$CONFIGURE_LETSENCRYPT" == true ] && install_packages "epel-release"
-
-    install_packages "device-mapper-persistent-data lvm2"
     ;;
   esac
-
-  # Update the new repos
-  update_repos
-
-  # Install dependencies
-  install_packages "docker-ce docker-ce-cli containerd.io"
 
   # Install mariadb if needed
   [ "$INSTALL_MARIADB" == true ] && install_packages "mariadb-server"
@@ -144,6 +171,27 @@ firewall_ports() {
   output "Allowed port 8080"
   firewall_allow_ports "2022"
   output "Allowed port 2022"
+
+  if [ "$CONFIGURE_GAMESERVER_PORTS" == true ]; then
+    output "Opening game server ports (19132/UDP, 25500-25600/TCP+UDP)..."
+
+    # Use OS-appropriate port range syntax for firewall backends:
+    # - UFW (Debian/Ubuntu) expects colon syntax (25500:25600)
+    # - firewall-cmd (Rocky/AlmaLinux) expects hyphen syntax (25500-25600)
+    GAME_PORT_RANGE="25500:25600"
+    case "$OS" in
+    rocky | almalinux)
+      GAME_PORT_RANGE="25500-25600"
+      ;;
+    esac
+
+    firewall_allow_ports_udp "19132"
+    output "Allowed port 19132/UDP (Minecraft Bedrock)"
+    firewall_allow_ports "$GAME_PORT_RANGE"
+    output "Allowed ports 25500-25600/TCP"
+    firewall_allow_ports_udp "$GAME_PORT_RANGE"
+    output "Allowed ports 25500-25600/UDP"
+  fi
 
   success "Firewall ports opened!"
 }
@@ -193,6 +241,73 @@ configure_mysql() {
   success "MySQL configured!"
 }
 
+configure_node() {
+  output "Configuring node with panel.."
+
+  if [ ! -d "/etc/pterodactyl" ]; then
+    error "Directory /etc/pterodactyl does not exist. Wings may not have been downloaded correctly."
+    exit 1
+  fi
+
+  # Verify wings binary exists and is executable
+  if [ ! -x "/usr/local/bin/wings" ]; then
+    error "Wings binary not found or not executable at /usr/local/bin/wings"
+    exit 1
+  fi
+
+  cd /etc/pterodactyl || exit
+
+  # Build the wings configure command using an array (safe from command injection)
+  WINGS_ARGS=("configure" "--panel-url" "$PANEL_URL" "--token" "$NODE_TOKEN")
+  
+  # Add --allow-insecure flag if needed (for self-signed certs or SSL issues)
+  if [ "$ALLOW_INSECURE" == true ]; then
+    WINGS_ARGS+=("--allow-insecure")
+    warning "Running with --allow-insecure flag (SSL certificate verification disabled)"
+  fi
+
+  # Build a human-readable command string for logging
+  local WINGS_CMD_DISPLAY="wings configure --panel-url [PANEL_URL] --token [HIDDEN]"
+  if [ "$ALLOW_INSECURE" == true ]; then
+    WINGS_CMD_DISPLAY+=" --allow-insecure"
+  fi
+  output "Running: $WINGS_CMD_DISPLAY"
+
+  # Execute the command using array expansion (safe execution) and capture output
+  local WINGS_OUTPUT
+  local WINGS_EXIT_CODE
+  WINGS_OUTPUT=$(wings "${WINGS_ARGS[@]}" 2>&1)
+  WINGS_EXIT_CODE=$?
+
+  if [ $WINGS_EXIT_CODE -eq 0 ]; then
+    success "Node configured successfully!"
+    
+    # Verify config file was created
+    if [ -f "/etc/pterodactyl/config.yml" ]; then
+      output "Configuration file created at /etc/pterodactyl/config.yml"
+    else
+      warning "Configuration command succeeded but config.yml was not found"
+    fi
+  else
+    error "Failed to configure node with panel (exit code: $WINGS_EXIT_CODE)"
+    if [ -n "$WINGS_OUTPUT" ]; then
+      error "Wings output:"
+      echo "$WINGS_OUTPUT" | while IFS= read -r line; do
+        error "  $line"
+      done
+    fi
+    error ""
+    error "Please check:"
+    error "  - Panel URL is correct and reachable"
+    error "  - Token is valid and not expired"
+    error "  - Panel is running and accessible"
+    if [ "$ALLOW_INSECURE" != true ]; then
+      error "  - If using self-signed certificates, try with --allow-insecure option"
+    fi
+    exit 1
+  fi
+}
+
 # --------------- Main functions --------------- #
 
 perform_install() {
@@ -202,6 +317,7 @@ perform_install() {
   systemd_file
   [ "$CONFIGURE_DBHOST" == true ] && configure_mysql
   [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
+  [ "$CONFIGURE_NODE" == true ] && configure_node
 
   return 0
 }

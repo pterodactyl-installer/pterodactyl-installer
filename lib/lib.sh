@@ -427,6 +427,23 @@ firewall_allow_ports() {
   esac
 }
 
+firewall_allow_ports_udp() {
+  case "$OS" in
+  ubuntu | debian)
+    for port in $1; do
+      ufw allow "$port"/udp
+    done
+    ufw --force reload
+    ;;
+  rocky | almalinux)
+    for port in $1; do
+      firewall-cmd --zone=public --add-port="$port"/udp --permanent
+    done
+    firewall-cmd --reload -q
+    ;;
+  esac
+}
+
 # ---------------- System checks --------------- #
 
 # panel x86_64 check
