@@ -58,7 +58,7 @@ execute() {
     echo -e -n "* Installation of $1 completed. Do you want to proceed to $2 installation? (y/N): "
     read -r CONFIRM
     if [[ "$CONFIRM" =~ [Yy] ]]; then
-      execute "$2"
+      IFS=";" read -r i1 i2 <<<"$2" && execute "$i1" "$i2"
     else
       error "Installation of $2 aborted."
       exit 1
@@ -73,24 +73,32 @@ while [ "$done" == false ]; do
   options=(
     "Install the panel"
     "Install Wings"
+    "Install PHPMyAdmin"
     "Install both [0] and [1] on the same machine (wings script runs after panel)"
+    "Install both [0],[1] and [2] on the same machine (panel, then wings, then phpmyadmin)"
     # "Uninstall panel or wings\n"
 
     "Install panel with canary version of the script (the versions that lives in master, may be broken!)"
     "Install Wings with canary version of the script (the versions that lives in master, may be broken!)"
-    "Install both [3] and [4] on the same machine (wings script runs after panel)"
+    "Install PHPMyAdmin with canary version of the script (the versions that lives in master, may be broken!)"
+    "Install both [5] and [6] on the same machine (wings script runs after panel)"
+    "Install both [5],[6] and [7] on the same machine (panel, then wings, then phpmyadmin)"
     "Uninstall panel or wings with canary version of the script (the versions that lives in master, may be broken!)"
   )
 
   actions=(
     "panel"
     "wings"
+    "phpmyadmin"
     "panel;wings"
+    "panel;wings;phpmyadmin"
     # "uninstall"
 
     "panel_canary"
     "wings_canary"
+    "phpmyadmin_canary"
     "panel_canary;wings_canary"
+    "panel_canary;wings_canary;phpmyadmin_canary"
     "uninstall_canary"
   )
 
