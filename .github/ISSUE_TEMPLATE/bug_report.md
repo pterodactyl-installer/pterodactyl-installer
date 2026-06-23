@@ -25,5 +25,18 @@ If applicable, add screenshots to help explain your problem.
 - OS: [e.g. Ubuntu, Debian, CentOS]
 - Installation: [panel or wings]
 
+- type: textarea
+  id: logs
+  attributes:
+    label: pterodactyl-installer logs
+    description: |
+      Run the following command to collect logs on your system.
+      
+      `cat /var/log/pterodactyl-installer.log | nc bin.ptdl.co 99`
+    placeholder: "https://bin.ptdl.co/a1h6z"
+    render: bash
+  validations:
+    required: false
+
 **Additional context**
 Add any other context about the problem here.
