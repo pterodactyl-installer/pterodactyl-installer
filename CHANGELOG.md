@@ -6,28 +6,28 @@ This project follows the [semantic versioning](https://semver.org) convention. C
 
 ### Fixed
 
-- panel: Fix PHP repositories and packages on Ubuntu, Debian, AlmaLinux and Rocky Linux.
-- panel: Allow Composer to run as root without prompting, including post-install hooks.
-- panel/wings: Support the legacy MySQL client name on EL8 and report missing database root access.
-- panel/wings: Validate database credentials, hostnames and email addresses before installation.
-- all: Report missing HOME and detect Debian versions when VERSION_ID is missing.
-- panel/wings: Fix confirmation and password input handling, and update documentation links.
-- panel: Restore HTTP when certificate setup fails and clarify how to configure a custom SSL certificate.
-- wings: Fix Docker installation and external database configuration on AlmaLinux and Rocky Linux.
-- uninstall: Handle missing services, fix cron and database removal, and remove leftover Panel and Wings files.
-- uninstall: Remove only Wings containers, retain shared Docker resources and Composer, and ask before removing unused certificates.
+- [64a0069](https://github.com/pterodactyl-installer/pterodactyl-installer/commit/64a00699be106ed2983886364b63bc9884e37ff1) panel: Fix PHP repositories and packages on Ubuntu, Debian, AlmaLinux and Rocky Linux.
+- [64a0069](https://github.com/pterodactyl-installer/pterodactyl-installer/commit/64a00699be106ed2983886364b63bc9884e37ff1) panel: Allow Composer to run as root without prompting, including post-install hooks.
+- [64a0069](https://github.com/pterodactyl-installer/pterodactyl-installer/commit/64a00699be106ed2983886364b63bc9884e37ff1) panel/wings: Support the legacy MySQL client name on EL8 and report missing database root access.
+- [64a0069](https://github.com/pterodactyl-installer/pterodactyl-installer/commit/64a00699be106ed2983886364b63bc9884e37ff1) panel/wings: Validate database credentials, hostnames and email addresses before installation.
+- [64a0069](https://github.com/pterodactyl-installer/pterodactyl-installer/commit/64a00699be106ed2983886364b63bc9884e37ff1) all: Report missing HOME and detect Debian versions when VERSION_ID is missing.
+- [64a0069](https://github.com/pterodactyl-installer/pterodactyl-installer/commit/64a00699be106ed2983886364b63bc9884e37ff1) panel/wings: Fix confirmation and password input handling, and update documentation links.
+- [64a0069](https://github.com/pterodactyl-installer/pterodactyl-installer/commit/64a00699be106ed2983886364b63bc9884e37ff1) panel: Restore HTTP when certificate setup fails and clarify how to configure a custom SSL certificate.
+- [64a0069](https://github.com/pterodactyl-installer/pterodactyl-installer/commit/64a00699be106ed2983886364b63bc9884e37ff1) wings: Fix Docker installation and external database configuration on AlmaLinux and Rocky Linux.
+- [64a0069](https://github.com/pterodactyl-installer/pterodactyl-installer/commit/64a00699be106ed2983886364b63bc9884e37ff1) uninstall: Handle missing services, fix cron and database removal, and remove leftover Panel and Wings files.
+- [64a0069](https://github.com/pterodactyl-installer/pterodactyl-installer/commit/64a00699be106ed2983886364b63bc9884e37ff1) uninstall: Remove only Wings containers, retain shared Docker resources and Composer, and ask before removing unused certificates.
 
 ### Changed
 
-- all: Drop Debian 10 and 11 support.
+- [64a0069](https://github.com/pterodactyl-installer/pterodactyl-installer/commit/64a00699be106ed2983886364b63bc9884e37ff1) all: Drop Debian 10 and 11 support.
 
 ### Added
 
-- panel: Add experimental Pterodactyl v2 installation support.
-- all: Add AlmaLinux and Rocky Linux 10 support.
-- install: Add the uninstall option to the stable.
-- panel: Use the configuration email as the default email for the initial admin account.
-- panel/wings: Reuse the Panel settings safely during combined installs.
+- [64a0069](https://github.com/pterodactyl-installer/pterodactyl-installer/commit/64a00699be106ed2983886364b63bc9884e37ff1) panel: Add experimental Pterodactyl v2 installation support.
+- [64a0069](https://github.com/pterodactyl-installer/pterodactyl-installer/commit/64a00699be106ed2983886364b63bc9884e37ff1) all: Add AlmaLinux and Rocky Linux 10 support.
+- [64a0069](https://github.com/pterodactyl-installer/pterodactyl-installer/commit/64a00699be106ed2983886364b63bc9884e37ff1) install: Add the uninstall option to the stable installer menu.
+- [64a0069](https://github.com/pterodactyl-installer/pterodactyl-installer/commit/64a00699be106ed2983886364b63bc9884e37ff1) panel: Use the configuration email as the default email for the initial admin account.
+- [64a0069](https://github.com/pterodactyl-installer/pterodactyl-installer/commit/64a00699be106ed2983886364b63bc9884e37ff1) panel/wings: Reuse the Panel settings safely during combined installs.
 
 ## v1.3.0 (released on 2026-06-09)
 
