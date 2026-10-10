@@ -28,8 +28,8 @@ set -e -o pipefail
 #                                                                                    #
 ######################################################################################
 
-export GITHUB_SOURCE="v1.3.0"
-export SCRIPT_RELEASE="v1.3.0"
+export GITHUB_SOURCE="v1.4.0"
+export SCRIPT_RELEASE="v1.4.0"
 export GITHUB_BASE_URL="https://raw.githubusercontent.com/pterodactyl-installer/pterodactyl-installer"
 
 LOG_PATH="/var/log/pterodactyl-installer.log"
