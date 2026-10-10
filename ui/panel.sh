@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -e -o pipefail
 
 ######################################################################################
 #                                                                                    #
@@ -65,40 +65,34 @@ export CONFIGURE_LETSENCRYPT=false
 # Firewall
 export CONFIGURE_FIREWALL=false
 
+if [ -z "${INSTALL_SETTINGS:-}" ]; then
+  INSTALL_SETTINGS=$(mktemp)
+  export INSTALL_SETTINGS
+  trap 'rm -f "$INSTALL_SETTINGS"' EXIT
+fi
+check_install_settings
+
 # ------------ User input functions ------------ #
-
-ask_letsencrypt() {
-  if [ "$CONFIGURE_UFW" == false ] && [ "$CONFIGURE_FIREWALL_CMD" == false ]; then
-    warning "Let's Encrypt requires port 80/443 to be opened! You have opted out of the automatic firewall configuration; use this at your own risk (if port 80/443 is closed, the script will fail)!"
-  fi
-
-  echo -e -n "* Do you want to automatically configure HTTPS using Let's Encrypt? (y/N): "
-  read -r CONFIRM_SSL
-
-  if [[ "$CONFIRM_SSL" =~ [Yy] ]]; then
-    CONFIGURE_LETSENCRYPT=true
-    ASSUME_SSL=false
-  fi
-}
 
 ask_assume_ssl() {
   output "Let's Encrypt is not going to be automatically configured by this script (user opted out)."
-  output "You can 'assume' Let's Encrypt, which means the script will download a nginx configuration that is configured to use a Let's Encrypt certificate but the script won't obtain the certificate for you."
-  output "If you assume SSL and do not obtain the certificate, your installation will not work."
+  output "You can assume SSL to use an nginx HTTPS configuration with your own certificate."
+  output "Place your certificate at /etc/ssl/$FQDN.pem and its private key at /etc/ssl/$FQDN.key before starting nginx."
+  output "After installation, run nginx -t && systemctl restart nginx once both certificate files are in place."
   echo -n "* Assume SSL or not? (y/N): "
   read -r ASSUME_SSL_INPUT
 
-  [[ "$ASSUME_SSL_INPUT" =~ [Yy] ]] && ASSUME_SSL=true
+  is_yes "$ASSUME_SSL_INPUT" && ASSUME_SSL=true
   true
 }
 
 ask_telemetry() {
   output "Pterodactyl Panel collects anonymous telemetry data to help steer the development."
-  output "More Info: https://pterodactyl.io/panel/1.0/additional_configuration.html#telemetry"
+  output "More Info: https://docs.pterodactyl.io/v$PANEL_MAJOR_VERSION/panel/additional-configuration#telemetry"
   echo -n "* Enable sending anonymous telemetry data? (yes/no) [yes]: "
   read -r telemetry_input
 
-  if [[ -z "$telemetry_input" ]] || [[ "$telemetry_input" =~ ^([Yy]|[Yy]es)$ ]]; then
+  if [[ -z "$telemetry_input" ]] || is_yes "$telemetry_input"; then
     telemetry="true"
   else
     telemetry="false"
@@ -106,7 +100,8 @@ ask_telemetry() {
 }
 
 check_FQDN_SSL() {
-  if [[ $(invalid_ip "$FQDN") == 1 && $FQDN != 'localhost' ]]; then
+  SSL_AVAILABLE=false
+  if ! is_ip_address "$FQDN" && [ "$FQDN" != localhost ]; then
     SSL_AVAILABLE=true
   else
     warning "* Let's Encrypt will not be available for IP addresses."
@@ -117,15 +112,13 @@ check_FQDN_SSL() {
 main() {
   # check if we can detect an already existing installation
   if [ -d "/var/www/pterodactyl" ]; then
-    warning "The script has detected that you already have Pterodactyl panel on your system! You cannot run the script multiple times, it will fail!"
-    echo -e -n "* Are you sure you want to proceed? (y/N): "
-    read -r CONFIRM_PROCEED
-    if [[ ! "$CONFIRM_PROCEED" =~ [Yy] ]]; then
-      error "Installation aborted!"
-      exit 1
-    fi
+    error "An existing Panel installation was detected. This script only supports fresh installations."
+    output "You can remove existing installations by running the uninstall script."
+    output "You can upgrade your existing installation using the following guide: https://docs.pterodactyl.io/v2/upgrading/upgrading-from-v1"
+    exit 1
   fi
 
+  ask_panel_version
   welcome "panel"
 
   check_os_x86_64
@@ -138,23 +131,25 @@ main() {
   output "before running this script, the script will do that for you."
   output ""
 
-  MYSQL_DB="-"
-  while [[ "$MYSQL_DB" == *"-"* ]]; do
+  while true; do
     required_input MYSQL_DB "Database name (panel): " "" "panel"
-    [[ "$MYSQL_DB" == *"-"* ]] && error "Database name cannot contain hyphens"
+    valid_database_identifier "$MYSQL_DB" && break
   done
 
-  MYSQL_USER="-"
-  while [[ "$MYSQL_USER" == *"-"* ]]; do
+  while true; do
     required_input MYSQL_USER "Database username (pterodactyl): " "" "pterodactyl"
-    [[ "$MYSQL_USER" == *"-"* ]] && error "Database user cannot contain hyphens"
+    valid_database_identifier "$MYSQL_USER" && break
   done
 
   # MySQL password input
   rand_pw=$(gen_passwd 64)
-  password_input MYSQL_PASSWORD "Password (press enter to use randomly generated password): " "MySQL password cannot be empty" "$rand_pw"
+  while true; do
+    password_input MYSQL_PASSWORD "Password (press enter to use randomly generated password): " "MySQL password cannot be empty" "$rand_pw"
+    valid_panel_database_password "$MYSQL_PASSWORD" && break
+  done
 
-  readarray -t valid_timezones <<<"$(curl -s "$GITHUB_URL"/configs/valid_timezones.txt)"
+  timezone_list=$(curl -fsSL "$GITHUB_URL/configs/valid_timezones.txt")
+  readarray -t valid_timezones <<<"$timezone_list"
   output "List of valid timezones here $(hyperlink "https://www.php.net/manual/en/timezones.php")"
 
   while [ -z "$timezone" ]; do
@@ -163,25 +158,40 @@ main() {
 
     array_contains_element "$timezone_input" "${valid_timezones[@]}" && timezone="$timezone_input"
     [ -z "$timezone_input" ] && timezone="Europe/Stockholm" # because köttbullar!
+    [ -n "$timezone" ] || error "Invalid timezone. Try again."
   done
 
   email_input email "Provide the email address that will be used to configure Let's Encrypt and Pterodactyl: " "Email cannot be empty or invalid"
 
   # Initial admin account
-  email_input user_email "Email address for the initial admin account: " "Email cannot be empty or invalid"
-  required_input user_username "Username for the initial admin account: " "Username cannot be empty"
-  required_input user_firstname "First name for the initial admin account: " "Name cannot be empty"
-  required_input user_lastname "Last name for the initial admin account: " "Name cannot be empty"
-  password_input user_password "Password for the initial admin account: " "Password cannot be empty"
+  email_input user_email "Email address for the initial admin account [$email]: " "Email cannot be empty or invalid" "$email"
+  while true; do
+    required_input user_username "Username for the initial admin account: " "Username cannot be empty"
+    valid_admin_username "$user_username" && break
+  done
+  while true; do
+    required_input user_firstname "First name for the initial admin account: " "Name cannot be empty"
+    valid_admin_name "$user_firstname" && break
+  done
+  while true; do
+    required_input user_lastname "Last name for the initial admin account: " "Name cannot be empty"
+    valid_admin_name "$user_lastname" && break
+  done
+  while true; do
+    password_input user_password "Password for the initial admin account: " "Password cannot be empty"
+    valid_admin_password "$user_password" && break
+  done
 
   print_brake 72
 
   # set FQDN
-  while [ -z "$FQDN" ]; do
+  while true; do
     echo -n "* Set the FQDN of this panel (panel.example.com): "
     read -r FQDN
-    [ -z "$FQDN" ] && error "FQDN cannot be empty"
+    valid_hostname "$FQDN" && break
   done
+  FQDN="${FQDN%.}"
+  [[ "$FQDN" != *:* || "$FQDN" == '['*']' ]] || FQDN="[$FQDN]"
 
   # Check if SSL is available
   check_FQDN_SSL
@@ -198,7 +208,9 @@ main() {
   fi
 
   # verify FQDN if user has selected to assume SSL or configure Let's Encrypt
-  [ "$CONFIGURE_LETSENCRYPT" == true ] || [ "$ASSUME_SSL" == true ] && bash <(curl -s "$GITHUB_URL"/lib/verify-fqdn.sh) "$FQDN"
+  if [ "$CONFIGURE_LETSENCRYPT" == true ] || [ "$ASSUME_SSL" == true ]; then
+    verify_fqdn "$FQDN"
+  fi
 
   # ask telemetry preference
   ask_telemetry
@@ -209,8 +221,9 @@ main() {
   # confirm installation
   echo -e -n "\n* Initial configuration completed. Continue with installation? (y/N): "
   read -r CONFIRM
-  if [[ "$CONFIRM" =~ [Yy] ]]; then
+  if is_yes "$CONFIRM"; then
     run_installer "panel"
+    load_install_settings
   else
     error "Installation aborted."
     exit 1
@@ -244,7 +257,10 @@ goodbye() {
   output ""
 
   [ "$CONFIGURE_LETSENCRYPT" == true ] && output "Your panel should be accessible from $(hyperlink "$FQDN")"
-  [ "$ASSUME_SSL" == true ] && [ "$CONFIGURE_LETSENCRYPT" == false ] && output "You have opted in to use SSL, but not via Let's Encrypt automatically. Your panel will not work until SSL has been configured."
+  if [ "$ASSUME_SSL" == true ] && [ "$CONFIGURE_LETSENCRYPT" == false ]; then
+    output "You have opted in to use SSL, but not via Let's Encrypt automatically. Your panel will not work until SSL has been configured."
+    output "Place your certificate at /etc/ssl/$FQDN.pem and its private key at /etc/ssl/$FQDN.key, then run nginx -t && systemctl restart nginx."
+  fi
   [ "$ASSUME_SSL" == false ] && [ "$CONFIGURE_LETSENCRYPT" == false ] && output "Your panel should be accessible from $(hyperlink "$FQDN")"
 
   output ""

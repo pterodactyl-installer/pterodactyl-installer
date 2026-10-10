@@ -10,10 +10,11 @@ Vagrant.configure("2") do |config|
     inline: "ln -sf /vagrant/lib/lib.sh /tmp/lib.sh"
 
   # Define Ubuntu VMs
-  config.vm.define "ubuntu_resolute" do |ubuntu_noble|
-    ubuntu_noble.vm.box = "alvistack/ubuntu-26.04"
-    ubuntu_noble.vm.provider "virtualbox" do |vb|
+  config.vm.define "ubuntu_resolute" do |ubuntu_resolute|
+    ubuntu_resolute.vm.box = "bento/ubuntu-26.04"
+    ubuntu_resolute.vm.provider "virtualbox" do |vb|
       vb.memory = "4096"
+      vb.cpus = 2
     end
   end
 
@@ -32,20 +33,6 @@ Vagrant.configure("2") do |config|
   end
 
   # Define Debian VMs
-  config.vm.define "debian_bullseye" do |debian_bullseye|
-    debian_bullseye.vm.box = "debian/bullseye64"
-    debian_bullseye.vm.provider "virtualbox" do |vb|
-      vb.memory = "4096"
-    end
-  end
-
-  config.vm.define "debian_buster" do |debian_buster|
-    debian_buster.vm.box = "debian/buster64"
-    debian_buster.vm.provider "virtualbox" do |vb|
-      vb.memory = "4096"
-    end
-  end
-
   config.vm.define "debian_bookworm" do |debian_bookworm|
     debian_bookworm.vm.box = "debian/bookworm64"
     debian_bookworm.vm.provider "virtualbox" do |vb|
@@ -54,7 +41,7 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.define "debian_trixie" do |debian_trixie|
-    debian_trixie.vm.box = "debian/trixie64"
+    debian_trixie.vm.box = "bento/debian-13"
     debian_trixie.vm.provider "virtualbox" do |vb|
       vb.memory = "4096"
     end
@@ -75,6 +62,13 @@ Vagrant.configure("2") do |config|
     end
   end
 
+  config.vm.define "almalinux_10" do |almalinux_10|
+    almalinux_10.vm.box = "almalinux/10"
+    almalinux_10.vm.provider "virtualbox" do |vb|
+      vb.memory = "4096"
+    end
+  end
+
   # Define Rocky Linux VMs
   config.vm.define "rockylinux_8" do |rockylinux_8|
     rockylinux_8.vm.box = "bento/rockylinux-8"
@@ -86,6 +80,13 @@ Vagrant.configure("2") do |config|
   config.vm.define "rockylinux_9" do |rockylinux_9|
     rockylinux_9.vm.box = "bento/rockylinux-9"
     rockylinux_9.vm.provider "virtualbox" do |vb|
+      vb.memory = "4096"
+    end
+  end
+
+  config.vm.define "rockylinux_10" do |rockylinux_10|
+    rockylinux_10.vm.box = "bento/rockylinux-10"
+    rockylinux_10.vm.provider "virtualbox" do |vb|
       vb.memory = "4096"
     end
   end

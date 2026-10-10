@@ -43,73 +43,98 @@ RM_WINGS="${RM_WINGS:-true}"
 
 # ---------- Uninstallation functions ---------- #
 
+disable_service() {
+  if systemctl cat "$1" >/dev/null 2>&1; then
+    systemctl disable --now "$1"
+  fi
+}
+
 rm_panel_files() {
   output "Removing panel files..."
-  rm -rf /var/www/pterodactyl /usr/local/bin/composer
-  [ "$OS" != "centos" ] && [ -L /etc/nginx/sites-enabled/pterodactyl.conf ] && unlink /etc/nginx/sites-enabled/pterodactyl.conf
-  [ "$OS" != "centos" ] && [ -f /etc/nginx/sites-available/pterodactyl.conf ] && rm -f /etc/nginx/sites-available/pterodactyl.conf
-  [ "$OS" != "centos" ] && [ ! -L /etc/nginx/sites-enabled/default ] && [ -f /etc/nginx/sites-available/default ] && ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
-  [ "$OS" == "centos" ] && [ -f /etc/nginx/conf.d/pterodactyl.conf ] && rm -f /etc/nginx/conf.d/pterodactyl.conf
+  rm -rf /var/www/pterodactyl
+  rm -f /var/log/nginx/pterodactyl.app-access.log* /var/log/nginx/pterodactyl.app-error.log*
+  case "$OS" in
+  ubuntu | debian)
+    [ ! -L /etc/nginx/sites-enabled/pterodactyl.conf ] || unlink /etc/nginx/sites-enabled/pterodactyl.conf
+    rm -f /etc/nginx/sites-available/pterodactyl.conf
+    [ -L /etc/nginx/sites-enabled/default ] || [ ! -f /etc/nginx/sites-available/default ] || ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+    ;;
+  rocky | almalinux)
+    rm -f /etc/nginx/conf.d/pterodactyl.conf
+    ;;
+  esac
   systemctl restart nginx
   success "Removed panel files."
 }
 
 rm_docker_containers() {
-  output "Removing docker containers and images..."
+  output "Removing Wings docker containers..."
 
-  docker system prune -a -f
+  local container
+  local containers
+  type -P docker >/dev/null 2>&1 || return 0
+  containers=$(docker ps -aq --filter label=Service=Pterodactyl)
+  for container in $containers; do
+    docker rm -fv "$container"
+  done
 
-  success "Removed docker containers and images."
+  success "Removed Wings docker containers. Shared images and named volumes are retained."
 }
 
 rm_wings_files() {
   output "Removing wings files..."
 
-  systemctl disable --now wings
   [ -f /etc/systemd/system/wings.service ] && rm -rf /etc/systemd/system/wings.service
 
   [ -d /etc/pterodactyl ] && rm -rf /etc/pterodactyl
   [ -f /usr/local/bin/wings ] && rm -rf /usr/local/bin/wings
   [ -d /var/lib/pterodactyl ] && rm -rf /var/lib/pterodactyl
+  rm -rf /var/log/pterodactyl /run/wings /tmp/pterodactyl
+  rm -f /etc/logrotate.d/wings
+  systemctl daemon-reload
   success "Removed wings files."
 }
 
 rm_services() {
   output "Removing services..."
-  systemctl disable --now pteroq
+  disable_service pteroq
   rm -rf /etc/systemd/system/pteroq.service
+  disable_service "$CACHE_SERVICE"
   case "$OS" in
-  debian | ubuntu)
-    systemctl disable --now redis-server
-    ;;
-  centos)
-    systemctl disable --now redis
-    systemctl disable --now php-fpm
+  rocky | almalinux)
+    disable_service php-fpm
     rm -rf /etc/php-fpm.d/www-pterodactyl.conf
     ;;
   esac
+  systemctl daemon-reload
   success "Removed services."
 }
 
 rm_cron() {
   output "Removing cron jobs..."
-  crontab -l | grep -vF "* * * * * php /var/www/pterodactyl/artisan schedule:run >> /dev/null 2>&1" | crontab -
+  { crontab -l 2>/dev/null || true; } | {
+    grep -vF "/var/www/pterodactyl/artisan schedule:run" || [ "$?" == 1 ]
+  } | crontab -
   success "Removed cron jobs."
 }
 
 rm_database() {
   output "Removing database..."
-  valid_db=$(mariadb -u root -e "SELECT schema_name FROM information_schema.schemata;" 2>/dev/null | grep -v -E -- 'schema_name|information_schema|performance_schema|mysql')
+  if ! check_database_connection; then
+    warning "Skipping database removal."
+    return 0
+  fi
+  valid_db=$(mariadb -u root -N -e "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT IN ('information_schema', 'performance_schema', 'mysql', 'sys');")
   if [[ -z "$valid_db" ]]; then
     warning "No valid databases found."
     return
   fi
 
   warning "Be careful! This database will be deleted!"
-  if [[ "$valid_db" == *"panel"* ]]; then
+  if grep -qxF panel <<<"$valid_db"; then
     echo -n "* Database called panel has been detected. Is it the pterodactyl database? (y/N): "
     read -r is_panel
-    if [[ "$is_panel" =~ [Yy] ]]; then
+    if is_yes "$is_panel"; then
       DATABASE=panel
     else
       print_list "$valid_db"
@@ -118,11 +143,11 @@ rm_database() {
     print_list "$valid_db"
   fi
 
-  while [ -z "$DATABASE" ] || [[ "$valid_db" != *"$DATABASE"* ]]; do
+  while [ -z "$DATABASE" ] || ! grep -qxF "$DATABASE" <<<"$valid_db"; do
     echo -n "* Choose the panel database (to skip don't input anything): "
     read -r database_input
     if [[ -n "$database_input" ]]; then
-      if [[ "$valid_db" == *"$database_input"* ]]; then
+      if grep -qxF "$database_input" <<<"$valid_db"; then
         DATABASE="$database_input"
       else
         warning "Invalid database name. Try again."
@@ -133,24 +158,23 @@ rm_database() {
   done
 
   if [[ -n "$DATABASE" ]]; then
-    mariadb -u root -e "DROP DATABASE $DATABASE;" 2>/dev/null || warning "Failed to drop database $DATABASE."
+    mariadb -u root -e "DROP DATABASE \`${DATABASE//\`/\`\`}\`;" 2>/dev/null || warning "Failed to drop database $DATABASE."
   else
     output "No database selected, skipping removal."
   fi
 
-  # Exclude usernames User and root (Hope no one uses username User)
   output "Removing database user..."
-  valid_users=$(mariadb -u root -e "SELECT user FROM mysql.user;" 2>/dev/null | grep -v -E -- 'user|root')
+  valid_users=$(mariadb -u root -N -e "SELECT user FROM mysql.user WHERE host = '127.0.0.1' AND user != 'root';")
   if [[ -z "$valid_users" ]]; then
     warning "No valid database users found."
     return
   fi
 
   warning "Be careful! This user will be deleted!"
-  if [[ "$valid_users" == *"pterodactyl"* ]]; then
+  if grep -qxF pterodactyl <<<"$valid_users"; then
     echo -n "* User called pterodactyl has been detected. Is it the pterodactyl user? (y/N): "
     read -r is_user
-    if [[ "$is_user" =~ [Yy] ]]; then
+    if is_yes "$is_user"; then
       DB_USER=pterodactyl
     else
       print_list "$valid_users"
@@ -159,11 +183,11 @@ rm_database() {
     print_list "$valid_users"
   fi
 
-  while [ -z "$DB_USER" ] || [[ "$valid_users" != *"$DB_USER"* ]]; do
+  while [ -z "$DB_USER" ] || ! grep -qxF "$DB_USER" <<<"$valid_users"; do
     echo -n "* Choose the panel user (to skip don't input anything): "
     read -r user_input
     if [[ -n "$user_input" ]]; then
-      if [[ "$valid_users" == *"$user_input"* ]]; then
+      if grep -qxF "$user_input" <<<"$valid_users"; then
         DB_USER=$user_input
       else
         warning "Invalid username. Try again."
@@ -174,6 +198,7 @@ rm_database() {
   done
 
   if [[ -n "$DB_USER" ]]; then
+    valid_database_identifier "$DB_USER" || return 1
     mariadb -u root -e "DROP USER '$DB_USER'@'127.0.0.1';" 2>/dev/null || warning "Failed to drop user $DB_USER."
   else
     output "No user selected, skipping removal."
@@ -183,16 +208,42 @@ rm_database() {
   success "Removed database and database user (if selected)."
 }
 
+rm_certificates() {
+  local certificate
+  local confirm
+  for certificate in $certificates; do
+    [ -d "/etc/letsencrypt/live/$certificate" ] || continue
+    if grep -rFq "/etc/letsencrypt/live/$certificate/" /etc/nginx /etc/pterodactyl 2>/dev/null; then
+      output "Keeping shared certificate $certificate."
+      continue
+    fi
+    echo -n "* Remove Let's Encrypt certificate $certificate? (y/N): "
+    read -r confirm
+    is_yes "$confirm" && certbot delete --non-interactive --cert-name "$certificate"
+  done
+  return 0
+}
+
 
 # --------------- Main functions --------------- #
 
 perform_uninstall() {
+  certificates=$({
+    if [ "$RM_PANEL" == true ]; then
+      grep -hEo '/etc/letsencrypt/live/[^/[:space:]]+/' /etc/nginx/sites-available/pterodactyl.conf /etc/nginx/conf.d/pterodactyl.conf 2>/dev/null || true
+    fi
+    if [ "$RM_WINGS" == true ]; then
+      grep -Eo '/etc/letsencrypt/live/[^/[:space:]]+/' /etc/pterodactyl/config.yml 2>/dev/null || true
+    fi
+  } | cut -d/ -f5 | sort -u)
+  [ "$RM_PANEL" == true ] && rm_services
   [ "$RM_PANEL" == true ] && rm_panel_files
   [ "$RM_PANEL" == true ] && rm_cron
   [ "$RM_PANEL" == true ] && rm_database
-  [ "$RM_PANEL" == true ] && rm_services
+  [ "$RM_WINGS" == true ] && disable_service wings
   [ "$RM_WINGS" == true ] && rm_docker_containers
   [ "$RM_WINGS" == true ] && rm_wings_files
+  rm_certificates
 
   return 0
 }

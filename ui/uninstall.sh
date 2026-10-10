@@ -50,7 +50,7 @@ main() {
     output "Panel installation has been detected."
     echo -e -n "* Do you want to remove panel? (y/N): "
     read -r RM_PANEL_INPUT
-    [[ "$RM_PANEL_INPUT" =~ [Yy] ]] && RM_PANEL=true
+    is_yes "$RM_PANEL_INPUT" && RM_PANEL=true
   fi
 
   if [ -d "/etc/pterodactyl" ]; then
@@ -58,7 +58,7 @@ main() {
     warning "This will remove all the servers!"
     echo -e -n "* Do you want to remove Wings (daemon)? (y/N): "
     read -r RM_WINGS_INPUT
-    [[ "$RM_WINGS_INPUT" =~ [Yy] ]] && RM_WINGS=true
+    is_yes "$RM_WINGS_INPUT" && RM_WINGS=true
   fi
 
   if [ "$RM_PANEL" == false ] && [ "$RM_WINGS" == false ]; then
@@ -71,7 +71,7 @@ main() {
   # confirm uninstallation
   echo -e -n "* Continue with uninstallation? (y/N): "
   read -r CONFIRM
-  if [[ "$CONFIRM" =~ [Yy] ]]; then
+  if is_yes "$CONFIRM"; then
     run_installer "uninstall"
   else
     error "Uninstallation aborted."

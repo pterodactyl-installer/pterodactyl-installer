@@ -7,6 +7,9 @@
 
 Unofficial scripts for installing Pterodactyl Panel & Wings. Works with the latest version of Pterodactyl!
 
+> [!TIP]
+> With Pterodactyl Panel v2 pre-release support!
+
 Read more about [Pterodactyl](https://pterodactyl.io/) here. This script is not associated with the official Pterodactyl Project.
 
 ## Features
@@ -38,8 +41,8 @@ List of supported installation setups for panel and Wings (installations support
 |                  | 26.04   | :white_check_mark: | 8.3         |
 | Debian           | 8       | :red_circle: \*    |             |
 |                  | 9       | :red_circle: \*    |             |
-|                  | 10      | :white_check_mark: | 8.3         |
-|                  | 11      | :white_check_mark: | 8.3         |
+|                  | 10      | :red_circle: \*    |             |
+|                  | 11      | :red_circle: \*    |             |
 |                  | 12      | :white_check_mark: | 8.3         |
 |                  | 13      | :white_check_mark: | 8.3         |
 | CentOS           | 6       | :red_circle:       |             |
@@ -47,8 +50,10 @@ List of supported installation setups for panel and Wings (installations support
 |                  | 8       | :red_circle: \*    |             |
 | Rocky Linux      | 8       | :white_check_mark: | 8.3         |
 |                  | 9       | :white_check_mark: | 8.3         |
+|                  | 10      | :white_check_mark: | 8.3         |
 | AlmaLinux        | 8       | :white_check_mark: | 8.3         |
 |                  | 9       | :white_check_mark: | 8.3         |
+|                  | 10      | :white_check_mark: | 8.3         |
 
 _\* Indicates an operating system and release that previously was supported by this script._
 
