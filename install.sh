@@ -79,7 +79,7 @@ while [ "$done" == false ]; do
     "Install the panel"
     "Install Wings"
     "Install both [0] and [1] on the same machine (wings script runs after panel)"
-    'Uninstall panel or wings\n'
+    $'Uninstall panel or wings\n'
 
     "Install panel with canary version of the script (the versions that lives in master, may be broken!)"
     "Install Wings with canary version of the script (the versions that lives in master, may be broken!)"
